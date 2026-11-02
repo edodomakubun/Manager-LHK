@@ -14,3 +14,4 @@ database_id = "3c07923a-83a3-4426-8267-3c7288dcd689"
 
 [assets]
 directory = "../frontend"
+binding = "ASSETS"
