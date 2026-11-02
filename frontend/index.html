@@ -360,6 +360,24 @@
           </div>
         </div>
 
+        <!-- WhatsApp Group Card (Muncul jika admin telah menyetel link) -->
+        <div id="dashWaGroupCard" class="card-cms p-3 mb-4 d-none" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-left: 5px solid #22c55e !important;">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm text-white" style="width: 44px; height: 44px; background: #25D366; font-size: 1.5rem; flex-shrink: 0;">
+                <i class="bi bi-whatsapp"></i>
+              </div>
+              <div>
+                <h6 class="fw-bold mb-1 text-dark">Group WhatsApp E-Agenda LHK</h6>
+                <p class="small text-muted mb-0">Wadah resmi koordinasi, pengumuman, dan bantuan teknis pengisian LHK.</p>
+              </div>
+            </div>
+            <a href="#" id="dashWaGroupLink" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2 shadow-sm" style="background-color: #25D366; border-color: #25D366;">
+              <i class="bi bi-whatsapp"></i> <span>Gabung Group WhatsApp</span>
+            </a>
+          </div>
+        </div>
+
         <!-- Kartu Metrik Ringkas -->
         <div class="row g-3 mb-4">
           <div class="col-6 col-md-3">
@@ -964,9 +982,22 @@
                 placeholder="https://script.google.com/macros/s/.../exec">
               <small class="text-muted">URL Webhook hasil deploy Script Google Apps Script di akun Drive Anda.</small>
             </div>
-            <div class="mb-4">
+            <div class="mb-3">
               <label class="form-label">Token Rahasia Bridge (SECRET_TOKEN)</label>
               <input type="text" class="form-control" id="settingGasToken" value="SECRET_LHK_TOKEN_2026">
+            </div>
+            <div class="mb-4 p-3 bg-light rounded-3 border">
+              <label class="form-label fw-bold text-dark d-flex align-items-center gap-2">
+                <i class="bi bi-whatsapp text-success fs-5"></i> Link / Tautan Group WhatsApp Guru
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-success-subtle text-success border-success-subtle"><i class="bi bi-link-45deg"></i></span>
+                <input type="url" class="form-control border-success-subtle" id="settingWhatsappGroupUrl"
+                  placeholder="https://chat.whatsapp.com/...">
+              </div>
+              <small class="text-muted d-block mt-1">
+                <i class="bi bi-info-circle me-1"></i>Masukkan link undangan Group WhatsApp sekolah. Tombol gabung grup ini akan otomatis muncul pada <strong>Dashboard Guru</strong> dan <strong>Buku Panduan Penggunaan</strong>.
+              </small>
             </div>
             <button type="submit" class="btn btn-cms-primary" id="btnSimpanSettings">
               <i class="bi bi-save me-1"></i> Simpan Pengaturan

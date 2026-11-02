@@ -45,6 +45,18 @@ const Dashboard = {
         elStatus.innerHTML = '<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle-fill me-1"></i>Belum Terisi Hari Ini</span>';
       }
     }
+
+    // Tampilkan Link Group WhatsApp jika Admin sudah mengaturnya
+    const cardWa = document.getElementById('dashWaGroupCard');
+    const linkWa = document.getElementById('dashWaGroupLink');
+    if (cardWa && linkWa) {
+      if (data.whatsappGroupUrl && data.whatsappGroupUrl.trim().length > 0) {
+        linkWa.href = data.whatsappGroupUrl.trim();
+        cardWa.classList.remove('d-none');
+      } else {
+        cardWa.classList.add('d-none');
+      }
+    }
   },
 
   renderRecentLhk: function (records) {

@@ -616,6 +616,7 @@ const AdminManager = {
         if (document.getElementById('settingTemplateDocId')) document.getElementById('settingTemplateDocId').value = s.master_template_doc_id || '';
         if (document.getElementById('settingGasUrl')) document.getElementById('settingGasUrl').value = s.gas_bridge_url || '';
         if (document.getElementById('settingGasToken')) document.getElementById('settingGasToken').value = s.gas_secret_token || 'SECRET_LHK_TOKEN_2026';
+        if (document.getElementById('settingWhatsappGroupUrl')) document.getElementById('settingWhatsappGroupUrl').value = s.whatsapp_group_url || '';
       }
     } catch (e) {
       console.warn('Gagal memuat setting:', e);
@@ -636,7 +637,8 @@ const AdminManager = {
         master_template_sheet_id: document.getElementById('settingTemplateSheetId').value,
         master_template_doc_id: document.getElementById('settingTemplateDocId').value,
         gas_bridge_url: document.getElementById('settingGasUrl').value,
-        gas_secret_token: document.getElementById('settingGasToken').value
+        gas_secret_token: document.getElementById('settingGasToken').value,
+        whatsapp_group_url: document.getElementById('settingWhatsappGroupUrl') ? document.getElementById('settingWhatsappGroupUrl').value.trim() : ''
       };
 
       const res = await Api.saveAdminSettings(payload);

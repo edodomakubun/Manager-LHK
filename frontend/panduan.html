@@ -560,10 +560,24 @@
             </div>
           </div>
 
-          <div class="info-box">
-            <i class="bi bi-globe me-2"></i><strong>Tautan Resmi Aplikasi Web CMS:</strong> 
-            <a href="https://lhk-pak.cmsmanager.my.id" target="_blank" class="fw-bold text-decoration-underline text-info-emphasis">https://lhk-pak.cmsmanager.my.id</a> 
-            (atau URL domain resmi yang dibagikan oleh Operator Sekolah).
+          <div class="row g-2 mt-3">
+            <div class="col-md-6 col-12">
+              <div class="info-box my-0 h-100">
+                <i class="bi bi-globe me-2"></i><strong>Tautan Resmi Aplikasi Web CMS:</strong><br>
+                <a href="https://lhk-pak.cmsmanager.my.id" target="_blank" class="fw-bold text-decoration-underline text-info-emphasis">https://lhk-pak.cmsmanager.my.id</a>
+              </div>
+            </div>
+            <div class="col-md-6 col-12">
+              <div class="pro-tip-box my-0 h-100 d-flex flex-column justify-content-between" id="panduanWaBox">
+                <div>
+                  <i class="bi bi-whatsapp me-2 text-success fs-5"></i><strong>Group WhatsApp E-Agenda LHK:</strong>
+                  <p class="small text-muted mb-2 mt-1">Grup resmi koordinasi dewan guru dan bantuan teknis pengoperasian web CMS.</p>
+                </div>
+                <a href="https://chat.whatsapp.com/" id="panduanWaGroupBtn" target="_blank" class="btn btn-success btn-sm rounded-pill px-3 py-1 fw-bold align-self-start shadow-sm" style="background-color: #25D366; border-color: #25D366;">
+                  <i class="bi bi-whatsapp me-1"></i> Gabung Group WhatsApp
+                </a>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -1329,6 +1343,17 @@
       var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
       myModal.show();
     }
+
+    // Ambil Link Group WhatsApp dari server secara otomatis
+    fetch('/api/public/info')
+      .then(r => r.json())
+      .then(d => {
+        if (d && d.whatsappGroupUrl && d.whatsappGroupUrl.trim().length > 0) {
+          const btn = document.getElementById('panduanWaGroupBtn');
+          if (btn) btn.href = d.whatsappGroupUrl.trim();
+        }
+      })
+      .catch(() => {});
 
     // Active TOC link on scroll
     window.addEventListener('scroll', function() {

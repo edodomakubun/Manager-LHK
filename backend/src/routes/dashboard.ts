@@ -19,6 +19,7 @@ dashboardRoutes.get('/metrics', async (c) => {
 
   const settings = await db.getAllSettings();
   const activeYear = settings['active_academic_year'] || '2026/2027';
+  const whatsappGroupUrl = settings['whatsapp_group_url'] || '';
 
   // Dapatkan bulan saat ini dalam Bahasa Indonesia
   const namaBulanArr = [
@@ -33,6 +34,7 @@ dashboardRoutes.get('/metrics', async (c) => {
     sukses: true,
     bulanIni,
     tahunAjaranAktif: activeYear,
+    whatsappGroupUrl,
     metrics
   });
 });

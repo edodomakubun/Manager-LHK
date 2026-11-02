@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { DatabaseQueries } from './db/queries';
 import { authRoutes } from './routes/auth';
 import { adminRoutes } from './routes/admin';
 import { classRoutes } from './routes/classes';
@@ -26,6 +27,21 @@ app.get('/api/health', (c) => {
     version: '1.0.0',
     timestamp: new Date().toISOString()
   });
+});
+
+// Endpoint informasi publik (untuk buku panduan & dashboard publik)
+app.get('/api/public/info', async (c) => {
+  try {
+    const db = new DatabaseQueries(c.env.DB);
+    const settings = await db.getAllSettings();
+    return c.json({
+      sukses: true,
+      whatsappGroupUrl: settings['whatsapp_group_url'] || '',
+      tahunAjaranAktif: settings['active_academic_year'] || '2026/2027'
+    });
+  } catch (err: any) {
+    return c.json({ sukses: false, whatsappGroupUrl: '' }, 500);
+  }
 });
 
 // Daftarkan rute-rute API

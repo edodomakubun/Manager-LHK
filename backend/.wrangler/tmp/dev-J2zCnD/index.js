@@ -5520,6 +5520,7 @@ dashboardRoutes.get("/metrics", async (c) => {
   const db = new DatabaseQueries(c.env.DB);
   const settings = await db.getAllSettings();
   const activeYear = settings["active_academic_year"] || "2026/2027";
+  const whatsappGroupUrl = settings["whatsapp_group_url"] || "";
   const namaBulanArr = [
     "Januari",
     "Februari",
@@ -5540,6 +5541,7 @@ dashboardRoutes.get("/metrics", async (c) => {
     sukses: true,
     bulanIni,
     tahunAjaranAktif: activeYear,
+    whatsappGroupUrl,
     metrics
   });
 });
@@ -5558,6 +5560,19 @@ app.get("/api/health", (c) => {
     version: "1.0.0",
     timestamp: (/* @__PURE__ */ new Date()).toISOString()
   });
+});
+app.get("/api/public/info", async (c) => {
+  try {
+    const db = new DatabaseQueries(c.env.DB);
+    const settings = await db.getAllSettings();
+    return c.json({
+      sukses: true,
+      whatsappGroupUrl: settings["whatsapp_group_url"] || "",
+      tahunAjaranAktif: settings["active_academic_year"] || "2026/2027"
+    });
+  } catch (err) {
+    return c.json({ sukses: false, whatsappGroupUrl: "" }, 500);
+  }
 });
 app.route("/api/auth", authRoutes);
 app.route("/api/admin", adminRoutes);
