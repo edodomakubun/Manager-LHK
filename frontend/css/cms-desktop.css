@@ -1,0 +1,135 @@
+/* ========================================================
+   RESPONSIVITAS DESKTOP (LAYAR >= 992px)
+   Beralih dari Mobile-First ke Full Sidebar CMS
+   ======================================================== */
+
+@media (min-width: 992px) {
+  /* SEMBUNYIKAN BOTTOM NAVIGATION DI DESKTOP */
+  .cms-bottom-nav {
+    display: none !important;
+  }
+
+  /* SIDEBAR PERMANEN DI SISI KIRI */
+  .cms-desktop-sidebar {
+    display: flex !important;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 270px;
+    background: #ffffff;
+    border-right: 1px solid var(--border-color);
+    z-index: 1035;
+    overflow-y: auto;
+  }
+
+  .sidebar-header {
+    padding: 1.5rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .sidebar-profile {
+    padding: 1.25rem;
+    background: #f8fafc;
+    border-radius: var(--radius-md);
+    margin: 1rem 1.25rem 0.5rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .sidebar-nav-list {
+    padding: 1rem 1.25rem;
+    list-style: none;
+    margin: 0;
+    flex: 1;
+  }
+
+  .sidebar-nav-item {
+    margin-bottom: 0.35rem;
+  }
+
+  .sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 1rem;
+    color: #475569;
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+  }
+
+  .sidebar-nav-link i {
+    font-size: 1.2rem;
+    width: 24px;
+    color: #64748b;
+  }
+
+  .sidebar-nav-link:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+
+  .sidebar-nav-link.active {
+    background: var(--primary-gradient);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+  }
+
+  .sidebar-nav-link.active i {
+    color: #ffffff;
+  }
+
+  .sidebar-section-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #94a3b8;
+    letter-spacing: 0.8px;
+    margin: 1.25rem 0 0.5rem 0.75rem;
+  }
+
+  /* TOPBAR DESKTOP GESER KE KANAN */
+  .cms-topbar {
+    left: 270px;
+  }
+
+  .btn-drawer-toggle {
+    display: none !important;
+  }
+
+  /* KONTEN UTAMA DESKTOP */
+  .cms-main-content {
+    margin-left: 270px;
+    padding: 2rem 2.5rem;
+    padding-bottom: 3rem;
+    max-width: 1400px;
+  }
+
+  /* TABEL DATA PADA DESKTOP */
+  .desktop-table-wrapper {
+    display: block !important;
+  }
+
+  .mobile-cards-wrapper {
+    display: none !important;
+  }
+}
+
+/* KETIKA LAYAR KECIL (< 992px) */
+@media (max-width: 991.98px) {
+  .cms-desktop-sidebar {
+    display: none !important;
+  }
+
+  .desktop-table-wrapper {
+    display: none !important;
+  }
+
+  .mobile-cards-wrapper {
+    display: block !important;
+  }
+}
+

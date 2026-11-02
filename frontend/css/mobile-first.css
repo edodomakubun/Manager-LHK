@@ -1,0 +1,266 @@
+/* ========================================================
+   DESAIN KHUSUS MOBILE-FIRST (SMARTPHONE & TABLET)
+   ======================================================== */
+
+/* TOPBAR MOBILE */
+.cms-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--topbar-height);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  z-index: 1030;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.topbar-brand-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--primary-gradient);
+  color: white;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* KONTEN UTAMA (MOBILE PADDING) */
+.cms-main-content {
+  margin-top: calc(var(--topbar-height) + 12px);
+  padding-bottom: calc(var(--bottom-nav-height) + 24px);
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  min-height: 100vh;
+}
+
+/* BOTTOM NAVIGATION BAR (JEMPOL BAWAH) */
+.cms-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--bottom-nav-height);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 1040;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  color: #64748b;
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.72rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.bottom-nav-item i {
+  font-size: 1.35rem;
+  margin-bottom: 2px;
+  transition: transform 0.2s ease;
+}
+
+.bottom-nav-item.active {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.bottom-nav-item.active i {
+  transform: translateY(-2px);
+  color: var(--primary-color);
+}
+
+/* KHUSUS TOMBOL TENGAH: INPUT LHK (FAB STYLE) */
+.bottom-nav-item.nav-item-fab {
+  position: relative;
+  top: -14px;
+}
+
+.bottom-nav-item.nav-item-fab .fab-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--primary-gradient);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 18px rgba(5, 150, 105, 0.4);
+  font-size: 1.5rem;
+  margin-bottom: 2px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bottom-nav-item.nav-item-fab:active .fab-icon {
+  transform: scale(0.92);
+}
+
+/* KARTU TIMELINE MOBILE (RIWAYAT AGENDA) */
+.timeline-card-mobile {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.timeline-card-mobile:active {
+  transform: scale(0.99);
+}
+
+.timeline-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #ecfdf5;
+  color: #047857;
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.timeline-photos-grid {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  margin: 0.75rem 0;
+  scrollbar-width: thin;
+}
+
+.timeline-photo-thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1.5px solid #e2e8f0;
+  cursor: pointer;
+}
+
+/* ACTION BUTTONS DALAM KARTU */
+.timeline-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.btn-touch-sm {
+  min-width: 38px;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  gap: 0.35rem;
+}
+
+/* OFFCANVAS DRAWER */
+.offcanvas-cms {
+  border-radius: 0 1.5rem 1.5rem 0;
+}
+
+.offcanvas-user-header {
+  background: var(--primary-gradient);
+  color: white;
+  padding: 1.5rem 1.25rem;
+}
+
+.user-avatar-circle {
+  width: 52px;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.25);
+  border: 2px solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.drawer-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  color: #334155;
+  text-decoration: none;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  margin-bottom: 0.3rem;
+  transition: all 0.15s ease;
+  min-height: 48px;
+}
+
+.drawer-menu-link i {
+  font-size: 1.25rem;
+  color: #64748b;
+  width: 24px;
+}
+
+.drawer-menu-link:hover,
+.drawer-menu-link.active {
+  background: #ecfdf5;
+  color: #047857;
+  font-weight: 600;
+}
+
+.drawer-menu-link:hover i,
+.drawer-menu-link.active i {
+  color: var(--primary-color);
+}
+

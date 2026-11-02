@@ -1,0 +1,16 @@
+name = "lhk-cms-backend"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+JWT_SECRET = "LHK_SUPER_SECRET_JWT_KEY_2026_CHANGEME"
+ENVIRONMENT = "production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lhk-db"
+database_id = "3c07923a-83a3-4426-8267-3c7288dcd689"
+
+[assets]
+directory = "../frontend"
