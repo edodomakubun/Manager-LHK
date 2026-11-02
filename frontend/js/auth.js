@@ -69,6 +69,11 @@ const Auth = {
         el.classList.add('d-none');
       }
     });
+
+    // Periksa status langganan & pembekuan akun guru
+    if (window.SubscriptionManager && user.role !== 'admin') {
+      SubscriptionManager.checkAccountStatus(user);
+    }
   },
 
   login: async function (username, password) {
@@ -110,6 +115,9 @@ const Auth = {
 
   logout: function () {
     if (confirm('Apakah Anda yakin ingin keluar dari akun CMS?')) {
+      if (window.SubscriptionManager) {
+        SubscriptionManager.hideFreezeOverlay();
+      }
       Api.setToken(null);
       Auth.currentUser = null;
       window.currentUser = null;

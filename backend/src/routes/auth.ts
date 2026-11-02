@@ -37,7 +37,9 @@ authRoutes.post('/login', async (c) => {
     username: user.username,
     role: user.role,
     nama_lengkap: user.nama_lengkap,
-    nip: user.nip
+    nip: user.nip,
+    is_frozen: user.is_frozen || 0,
+    subscription_status: user.subscription_status || 'active'
   };
 
   const secret = c.env.JWT_SECRET || 'LHK_SUPER_SECRET_JWT_KEY_2026_CHANGEME';
@@ -60,6 +62,9 @@ authRoutes.post('/login', async (c) => {
       mapel: user.mapel,
       nama_sekolah: user.nama_sekolah,
       foto_profil: user.foto_profil,
+      is_frozen: user.is_frozen || 0,
+      subscription_status: user.subscription_status || 'active',
+      subscription_period: user.subscription_period || '',
       classes,
       folder_guru_id: user.folder_guru_id,
       spreadsheet_id: user.spreadsheet_id,
@@ -95,6 +100,9 @@ authRoutes.get('/me', authMiddleware, async (c) => {
       mapel: user.mapel,
       nama_sekolah: user.nama_sekolah,
       foto_profil: user.foto_profil,
+      is_frozen: user.is_frozen || 0,
+      subscription_status: user.subscription_status || 'active',
+      subscription_period: user.subscription_period || '',
       classes,
       folder_guru_id: user.folder_guru_id,
       folder_dokumentasi_id: user.folder_dokumentasi_id,

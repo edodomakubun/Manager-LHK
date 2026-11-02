@@ -44,6 +44,17 @@ documentRoutes.post('/export', async (c) => {
     return c.json({ sukses: false, pesan: 'Data guru tidak ditemukan.' }, 404);
   }
 
+  if (user.is_frozen && session.role !== 'admin') {
+    const settings = await db.getAllSettings();
+    if (settings['payment_feature_enabled'] !== 'false') {
+      return c.json({
+        sukses: false,
+        is_frozen: true,
+        pesan: 'Akun Anda sedang dibekukan karena belum melakukan pembayaran langganan bulanan. Silakan lakukan pembayaran dan unggah bukti transfer.'
+      }, 403);
+    }
+  }
+
   // 1. Ambil data baris agenda dari D1
   const records = await db.getLhkRecords({
     userId: targetUserId,

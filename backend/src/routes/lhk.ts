@@ -70,6 +70,17 @@ lhkRoutes.post('/', async (c) => {
     return c.json({ sukses: false, pesan: 'Profil pengguna tidak ditemukan.' }, 404);
   }
 
+  if (user.is_frozen) {
+    const settings = await db.getAllSettings();
+    if (settings['payment_feature_enabled'] !== 'false') {
+      return c.json({
+        sukses: false,
+        is_frozen: true,
+        pesan: 'Akun Anda sedang dibekukan karena belum melakukan pembayaran langganan bulanan. Silakan lakukan pembayaran dan unggah bukti transfer.'
+      }, 403);
+    }
+  }
+
   const {
     tanggal,
     tanggalTeks,
@@ -184,6 +195,18 @@ lhkRoutes.put('/:id', async (c) => {
     return c.json({ sukses: false, pesan: 'Akses ditolak.' }, 403);
   }
 
+  const user = await db.getUserById(existing.user_id);
+  if (user && user.is_frozen && session.role !== 'admin') {
+    const settings = await db.getAllSettings();
+    if (settings['payment_feature_enabled'] !== 'false') {
+      return c.json({
+        sukses: false,
+        is_frozen: true,
+        pesan: 'Akun Anda sedang dibekukan karena belum melakukan pembayaran langganan bulanan. Silakan lakukan pembayaran dan unggah bukti transfer.'
+      }, 403);
+    }
+  }
+
   let tglFormat = body.tanggalTeks;
   if (!tglFormat && body.tanggal && body.tanggal.includes('-')) {
     const bagianTgl = body.tanggal.split('-');
@@ -193,7 +216,6 @@ lhkRoutes.put('/:id', async (c) => {
     tglFormat = `${hArr[tglObj.getDay()]}, ${bagianTgl[2]} ${mArr[tglObj.getMonth()]} ${bagianTgl[0]}`;
   }
 
-  const user = await db.getUserById(existing.user_id);
   let updatedFotoIds = [
     existing.foto_tm_id,
     existing.foto_ntm1_id,
@@ -274,8 +296,19 @@ lhkRoutes.delete('/:id', async (c) => {
     return c.json({ sukses: false, pesan: 'Akses ditolak.' }, 403);
   }
 
-  // Ambil data user pemilik LHK untuk mendapatkan spreadsheet_id
   const user = await db.getUserById(existing.user_id);
+  if (user && user.is_frozen && session.role !== 'admin') {
+    const settings = await db.getAllSettings();
+    if (settings['payment_feature_enabled'] !== 'false') {
+      return c.json({
+        sukses: false,
+        is_frozen: true,
+        pesan: 'Akun Anda sedang dibekukan karena belum melakukan pembayaran langganan bulanan. Silakan lakukan pembayaran dan unggah bukti transfer.'
+      }, 403);
+    }
+  }
+
+  // Ambil foto IDs untuk dihapus di Google Drive
   const fotoIds = [
     existing.foto_tm_id,
     existing.foto_ntm1_id,

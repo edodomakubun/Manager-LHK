@@ -53,6 +53,7 @@ const CmsRouter = {
       'cptp': 'Master CP & TP Kelas',
       'profil': 'Profil Pengguna',
       'admin-users': 'Manajemen Akun Guru',
+      'admin-billing': 'Langganan & Pembayaran',
       'admin-rekap': 'Monitoring & Rekapitulasi',
       'admin-settings': 'Pengaturan Sistem'
     };
@@ -101,6 +102,9 @@ const CmsRouter = {
         break;
       case 'admin-users':
         if (window.AdminManager) window.AdminManager.loadUsers();
+        break;
+      case 'admin-billing':
+        if (window.AdminManager) window.AdminManager.loadBilling();
         break;
       case 'admin-rekap':
         if (window.AdminManager) window.AdminManager.loadRekap();

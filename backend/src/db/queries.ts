@@ -64,7 +64,8 @@ export class DatabaseQueries {
     const allowed = [
       'nama_lengkap', 'nip', 'pangkat_golongan', 'jabatan', 'mapel', 'nama_sekolah',
       'folder_guru_id', 'folder_dokumentasi_id', 'folder_dok_laporan_id', 'folder_template_id', 'folder_db_id',
-      'spreadsheet_id', 'template_doc_id', 'foto_profil', 'is_active', 'password_hash'
+      'spreadsheet_id', 'template_doc_id', 'foto_profil', 'is_active', 'password_hash',
+      'is_frozen', 'subscription_status', 'subscription_period'
     ];
 
     for (const key of allowed) {
@@ -347,6 +348,151 @@ export class DatabaseQueries {
       totalDokumen: docsCount?.total_dokumen || 0,
       totalKelas: classCount?.total_kelas || 0
     };
+  }
+
+  // ==========================================
+  // SUBSCRIPTION & PAYMENT QUERIES
+  // ==========================================
+
+  async freezeUser(userId: string, isFrozen: number, status?: string): Promise<void> {
+    const subStatus = status || (isFrozen ? 'frozen' : 'active');
+    await this.db.prepare(`
+      UPDATE users 
+      SET is_frozen = ?, subscription_status = ?, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ?
+    `).bind(isFrozen, subStatus, userId).run();
+  }
+
+  async getSubscriptionsList(): Promise<any[]> {
+    const query = `
+      SELECT 
+        u.id, u.username, u.nama_lengkap, u.nip, u.mapel, u.nama_sekolah, u.foto_profil,
+        u.is_active, u.is_frozen, u.subscription_status, u.subscription_period,
+        p.id as last_payment_id,
+        p.bulan as last_payment_bulan,
+        p.tahun as last_payment_tahun,
+        p.nominal as last_payment_nominal,
+        p.bukti_bayar as last_payment_bukti,
+        p.status as last_payment_status,
+        p.catatan_user as last_payment_catatan,
+        p.created_at as last_payment_date
+      FROM users u
+      LEFT JOIN (
+        SELECT sp1.*
+        FROM subscription_payments sp1
+        INNER JOIN (
+          SELECT user_id, MAX(created_at) as max_created
+          FROM subscription_payments
+          GROUP BY user_id
+        ) sp2 ON sp1.user_id = sp2.user_id AND sp1.created_at = sp2.max_created
+      ) p ON u.id = p.user_id
+      WHERE u.role = 'guru'
+      ORDER BY u.is_frozen DESC, p.created_at DESC, u.nama_lengkap ASC
+    `;
+    const res = await this.db.prepare(query).all();
+    return res.results;
+  }
+
+  async createPaymentSubmission(data: {
+    id: string;
+    user_id: string;
+    bulan: string;
+    tahun: string;
+    nominal: number;
+    bukti_bayar: string;
+    catatan_user?: string;
+  }): Promise<void> {
+    await this.db.prepare(`
+      INSERT INTO subscription_payments (id, user_id, bulan, tahun, nominal, bukti_bayar, catatan_user, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
+    `).bind(
+      data.id,
+      data.user_id,
+      data.bulan,
+      data.tahun,
+      data.nominal,
+      data.bukti_bayar,
+      data.catatan_user || ''
+    ).run();
+
+    // Perbarui status langganan user menjadi pending_verification
+    await this.db.prepare(`
+      UPDATE users 
+      SET subscription_status = 'pending_verification', updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ?
+    `).bind(data.user_id).run();
+  }
+
+  async getPaymentsList(statusFilter?: string): Promise<any[]> {
+    let sql = `
+      SELECT 
+        sp.*,
+        u.nama_lengkap, u.nip, u.username, u.nama_sekolah, u.foto_profil
+      FROM subscription_payments sp
+      JOIN users u ON sp.user_id = u.id
+    `;
+    if (statusFilter) {
+      sql += ` WHERE sp.status = ? ORDER BY sp.created_at DESC`;
+      const res = await this.db.prepare(sql).bind(statusFilter).all();
+      return res.results;
+    }
+    sql += ` ORDER BY sp.created_at DESC`;
+    const res = await this.db.prepare(sql).all();
+    return res.results;
+  }
+
+  async getPaymentById(id: string): Promise<any | null> {
+    const sql = `
+      SELECT 
+        sp.*,
+        u.nama_lengkap, u.nip, u.username, u.nama_sekolah, u.foto_profil, u.is_frozen
+      FROM subscription_payments sp
+      JOIN users u ON sp.user_id = u.id
+      WHERE sp.id = ?
+    `;
+    return await this.db.prepare(sql).bind(id).first();
+  }
+
+  async verifyPayment(
+    paymentId: string, 
+    status: 'approved' | 'rejected', 
+    adminId: string, 
+    notes?: string
+  ): Promise<void> {
+    const payment = await this.getPaymentById(paymentId);
+    if (!payment) throw new Error('Data pembayaran tidak ditemukan.');
+
+    await this.db.prepare(`
+      UPDATE subscription_payments 
+      SET status = ?, catatan_admin = ?, verified_at = CURRENT_TIMESTAMP, verified_by = ?
+      WHERE id = ?
+    `).bind(status, notes || '', adminId, paymentId).run();
+
+    if (status === 'approved') {
+      // Buka pembekuan akun user, status menjadi active
+      const periode = `${payment.bulan} ${payment.tahun}`;
+      await this.db.prepare(`
+        UPDATE users 
+        SET is_frozen = 0, subscription_status = 'active', subscription_period = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).bind(periode, payment.user_id).run();
+    } else {
+      // Jika ditolak, akun tetap dibekukan atau kembali ke status frozen
+      await this.db.prepare(`
+        UPDATE users 
+        SET is_frozen = 1, subscription_status = 'frozen', updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).bind(payment.user_id).run();
+    }
+  }
+
+  async getLatestUserPayment(userId: string): Promise<any | null> {
+    return await this.db.prepare(`
+      SELECT * FROM subscription_payments 
+      WHERE user_id = ? 
+      ORDER BY created_at DESC 
+      LIMIT 1
+    `).bind(userId).first();
   }
 }
 

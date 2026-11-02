@@ -314,3 +314,158 @@ adminRoutes.put('/settings', async (c) => {
   return c.json({ sukses: true, pesan: 'Pengaturan sistem berhasil disimpan!' });
 });
 
+/**
+ * GET /api/admin/subscriptions - Daftar status langganan seluruh guru (Realtime)
+ */
+adminRoutes.get('/subscriptions', async (c) => {
+  const db = new DatabaseQueries(c.env.DB);
+  const list = await db.getSubscriptionsList();
+  const settings = await db.getAllSettings();
+
+  const totalGuru = list.length;
+  const activeCount = list.filter(u => !u.is_frozen && u.subscription_status === 'active').length;
+  const pendingCount = list.filter(u => u.subscription_status === 'pending_verification').length;
+  const frozenCount = list.filter(u => u.is_frozen === 1).length;
+
+  return c.json({
+    sukses: true,
+    summary: {
+      totalGuru,
+      activeCount,
+      pendingCount,
+      frozenCount
+    },
+    settings: {
+      enabled: settings['payment_feature_enabled'] !== 'false',
+      amount: parseInt(settings['payment_amount'] || '50000', 10),
+      qr_code: settings['payment_qr_code'] || '',
+      instructions: settings['payment_instructions'] || 'Biaya langganan CMS Rp 50.000/bulan. Silakan scan QR Code di atas dan unggah bukti transfer.'
+    },
+    users: list
+  });
+});
+
+/**
+ * POST /api/admin/subscriptions/freeze - Bekukan atau buka pembekuan akun guru
+ */
+adminRoutes.post('/subscriptions/freeze', async (c) => {
+  const body = await c.req.json();
+  const userId = body.userId || body.user_id;
+  const isFrozenInput = body.is_frozen !== undefined ? body.is_frozen : body.freeze;
+
+  if (!userId) {
+    return c.json({ sukses: false, pesan: 'User ID wajib disertakan.' }, 400);
+  }
+
+  const db = new DatabaseQueries(c.env.DB);
+  const user = await db.getUserById(userId);
+  if (!user) {
+    return c.json({ sukses: false, pesan: 'Pengguna tidak ditemukan.' }, 404);
+  }
+
+  if (user.role === 'admin') {
+    return c.json({ sukses: false, pesan: 'Akun Administrator tidak dapat dibekukan.' }, 400);
+  }
+
+  const freezeVal = (isFrozenInput === 1 || isFrozenInput === true || isFrozenInput === '1' || isFrozenInput === 'true') ? 1 : 0;
+  await db.freezeUser(userId, freezeVal);
+
+  const statusTeks = freezeVal ? 'dibekukan' : 'dibuka aksesnya';
+  return c.json({
+    sukses: true,
+    pesan: `Akun ${user.nama_lengkap} berhasil ${statusTeks}.`,
+    is_frozen: freezeVal
+  });
+});
+
+/**
+ * GET /api/admin/subscriptions/payments - Daftar seluruh riwayat pengiriman bukti pembayaran
+ */
+adminRoutes.get('/subscriptions/payments', async (c) => {
+  const statusFilter = c.req.query('status'); // 'pending' | 'approved' | 'rejected'
+  const db = new DatabaseQueries(c.env.DB);
+  const payments = await db.getPaymentsList(statusFilter);
+
+  return c.json({ sukses: true, payments });
+});
+
+/**
+ * GET /api/admin/subscriptions/payments/:id - Ambil detail spesifik bukti bayar
+ */
+adminRoutes.get('/subscriptions/payments/:id', async (c) => {
+  const id = c.req.param('id');
+  const db = new DatabaseQueries(c.env.DB);
+  const payment = await db.getPaymentById(id);
+
+  if (!payment) {
+    return c.json({ sukses: false, pesan: 'Bukti pembayaran tidak ditemukan.' }, 404);
+  }
+
+  return c.json({ sukses: true, payment });
+});
+
+/**
+ * POST /api/admin/subscriptions/payments/:id/verify - Verifikasi bukti bayar (Approve / Reject)
+ */
+adminRoutes.post('/subscriptions/payments/:id/verify', async (c) => {
+  const id = c.req.param('id');
+  const session = c.get('user');
+  const body = await c.req.json();
+  const { status, notes } = body; // status: 'approved' | 'rejected'
+
+  if (status !== 'approved' && status !== 'rejected') {
+    return c.json({ sukses: false, pesan: 'Status verifikasi harus "approved" atau "rejected".' }, 400);
+  }
+
+  const db = new DatabaseQueries(c.env.DB);
+  try {
+    await db.verifyPayment(id, status, session.nama_lengkap || session.username, notes);
+
+    const pesan = status === 'approved' 
+      ? 'Pembayaran berhasil diverifikasi! Akun guru telah diaktifkan kembali dan pembekuan dibuka.'
+      : 'Bukti pembayaran telah ditolak. Akun guru tetap dibekukan untuk mengunggah bukti yang sah.';
+
+    return c.json({ sukses: true, pesan });
+  } catch (err: any) {
+    return c.json({ sukses: false, pesan: err.message }, 400);
+  }
+});
+
+/**
+ * GET & PUT /api/admin/payment-settings - Pengaturan QR Code & Nominal Langganan
+ */
+adminRoutes.get('/payment-settings', async (c) => {
+  const db = new DatabaseQueries(c.env.DB);
+  const settings = await db.getAllSettings();
+
+  return c.json({
+    sukses: true,
+    settings: {
+      enabled: settings['payment_feature_enabled'] !== 'false',
+      amount: parseInt(settings['payment_amount'] || '50000', 10),
+      qr_code: settings['payment_qr_code'] || '',
+      instructions: settings['payment_instructions'] || 'Biaya langganan CMS Rp 50.000/bulan. Silakan scan QR Code di atas dan unggah bukti transfer.'
+    }
+  });
+});
+
+adminRoutes.put('/payment-settings', async (c) => {
+  const body = await c.req.json();
+  const db = new DatabaseQueries(c.env.DB);
+
+  if (body.enabled !== undefined) {
+    await db.updateSetting('payment_feature_enabled', body.enabled ? 'true' : 'false');
+  }
+  if (body.amount !== undefined) {
+    await db.updateSetting('payment_amount', String(body.amount));
+  }
+  if (body.qr_code !== undefined) {
+    await db.updateSetting('payment_qr_code', body.qr_code);
+  }
+  if (body.instructions !== undefined) {
+    await db.updateSetting('payment_instructions', String(body.instructions).trim());
+  }
+
+  return c.json({ sukses: true, pesan: 'Pengaturan pembayaran berhasil disimpan!' });
+});
+

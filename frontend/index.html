@@ -188,6 +188,13 @@
             </a>
           </li>
           <li class="sidebar-nav-item">
+            <a href="javascript:void(0)" class="sidebar-nav-link" data-view="admin-billing"
+              onclick="CmsRouter.navigate('admin-billing')">
+              <i class="bi bi-credit-card-2-front-fill text-warning"></i> <span>Langganan & Pembayaran</span>
+              <span class="badge bg-danger rounded-pill ms-auto d-none" id="billingNavPendingBadge">0</span>
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
             <a href="javascript:void(0)" class="sidebar-nav-link" data-view="admin-rekap"
               onclick="CmsRouter.navigate('admin-rekap')">
               <i class="bi bi-bar-chart-line-fill"></i> <span>Monitoring Rekap</span>
@@ -314,6 +321,9 @@
           <div class="small fw-bold text-uppercase text-muted px-2 mb-2">Administrasi Sekolah</div>
           <a href="javascript:void(0)" class="drawer-menu-link" onclick="CmsRouter.navigate('admin-users')">
             <i class="bi bi-people-fill"></i> <span>Kelola Akun Guru</span>
+          </a>
+          <a href="javascript:void(0)" class="drawer-menu-link" onclick="CmsRouter.navigate('admin-billing')">
+            <i class="bi bi-credit-card-2-front-fill text-warning"></i> <span>Langganan & Pembayaran</span>
           </a>
           <a href="javascript:void(0)" class="drawer-menu-link" onclick="CmsRouter.navigate('admin-rekap')">
             <i class="bi bi-bar-chart-line-fill"></i> <span>Monitoring Rekap</span>
@@ -950,6 +960,83 @@
         </div>
       </div>
 
+      <!-- View Admin: Manajemen Langganan & Pembayaran -->
+      <div id="view-admin-billing" class="cms-view d-none admin-only">
+        <!-- Header & Action -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+          <div>
+            <h4 class="fw-bold mb-1 text-dark"><i class="bi bi-credit-card-2-front-fill me-2 text-warning"></i>Langganan & Pembayaran Guru</h4>
+            <p class="text-muted small mb-0">Kelola QR Code, tagihan Rp 50.000/bln, verifikasi bukti transfer, dan status pembekuan akun guru secara realtime.</p>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <div class="form-check form-switch bg-light border rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-2 shadow-sm">
+              <input class="form-check-input ms-0" type="checkbox" role="switch" id="togglePaymentFeature" onchange="AdminManager.toggleQuickPaymentFeature(this)">
+              <label class="form-check-label small fw-semibold text-dark cursor-pointer" for="togglePaymentFeature">Aktifkan QR Code & Tagihan</label>
+            </div>
+            <button class="btn btn-primary btn-sm rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm" onclick="AdminManager.openPaymentSettingsModal()">
+              <i class="bi bi-qr-code-scan"></i> <span>Pengaturan QR & Biaya</span>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill p-2" onclick="AdminManager.loadBilling()" title="Refresh Data">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Summary Cards -->
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-md-3">
+            <div class="card-cms p-3 text-center h-100 border-start border-4 border-primary">
+              <small class="text-muted d-block mb-1">Total Guru</small>
+              <h4 class="fw-bold mb-0 text-dark" id="billingTotalGuru">0</h4>
+              <small class="text-muted" style="font-size: 0.72rem;">Pengguna CMS</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="card-cms p-3 text-center h-100 border-start border-4 border-success">
+              <small class="text-muted d-block mb-1">Lunas / Aktif</small>
+              <h4 class="fw-bold mb-0 text-success" id="billingActiveCount">0</h4>
+              <small class="text-muted" style="font-size: 0.72rem;">Akses Normal</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="card-cms p-3 text-center h-100 border-start border-4 border-warning">
+              <small class="text-muted d-block mb-1">Menunggu Verifikasi</small>
+              <h4 class="fw-bold mb-0 text-warning text-dark" id="billingPendingCount">0</h4>
+              <small class="text-muted" style="font-size: 0.72rem;">Ada Bukti Baru</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="card-cms p-3 text-center h-100 border-start border-4 border-danger">
+              <small class="text-muted d-block mb-1">Akun Dibekukan</small>
+              <h4 class="fw-bold mb-0 text-danger" id="billingFrozenCount">0</h4>
+              <small class="text-muted" style="font-size: 0.72rem;">Belum Bayar</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tampilan Mobile (Kartu Guru) -->
+        <div id="adminBillingMobileCards" class="d-md-none mb-3"></div>
+
+        <!-- Tampilan Desktop (Tabel Guru & Status) -->
+        <div class="card-cms p-0 overflow-hidden d-none d-md-block">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 50px;" class="text-center">No</th>
+                  <th>Nama Guru & NIP</th>
+                  <th style="width: 140px;">Mata Pelajaran</th>
+                  <th style="width: 160px;" class="text-center">Status Langganan</th>
+                  <th style="width: 170px;">Bukti Pembayaran</th>
+                  <th style="width: 150px;" class="text-end">Aksi Pembekuan</th>
+                </tr>
+              </thead>
+              <tbody id="adminBillingTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- View Admin: Pengaturan Sistem -->
       <div id="view-admin-settings" class="cms-view d-none admin-only">
         <div class="card-cms p-4" style="max-width: 800px; margin: 0 auto;">
@@ -1544,6 +1631,219 @@
     </div>
   </div>
 
+  <!-- Modal Periksa Bukti Pembayaran (Admin) -->
+  <div class="modal fade" id="modalBuktiBayar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow">
+        <div class="modal-header border-bottom pb-3">
+          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-receipt me-2 text-warning"></i>Verifikasi Bukti Pembayaran</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="row g-2 mb-3 small">
+            <div class="col-6">
+              <span class="text-muted d-block">Nama Guru:</span>
+              <strong class="text-dark" id="modalBuktiNama">-</strong>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block">NIP:</span>
+              <strong class="text-dark" id="modalBuktiNip">-</strong>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block">Periode Langganan:</span>
+              <strong class="text-primary" id="modalBuktiPeriode">-</strong>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block">Nominal Tagihan:</span>
+              <strong class="text-success" id="modalBuktiNominal">-</strong>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block">Waktu Pengiriman:</span>
+              <span id="modalBuktiTanggal" class="text-muted">-</span>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block">Status Saat Ini:</span>
+              <span id="modalBuktiStatusBadge">-</span>
+            </div>
+            <div class="col-12 mt-1">
+              <span class="text-muted d-block">Catatan Guru:</span>
+              <span id="modalBuktiCatatan" class="fst-italic text-dark">-</span>
+            </div>
+          </div>
+
+          <div class="text-center p-2 bg-light border rounded-3 mb-3">
+            <img id="modalBuktiImg" src="" alt="Foto Struk Bukti Transfer" class="img-fluid rounded shadow-sm" style="max-height: 280px; object-fit: contain;">
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-success flex-fill py-2 rounded-pill fw-semibold" id="btnApprovePayment" onclick="AdminManager.verifyCurrentPayment('approved')">
+              <i class="bi bi-check-circle-fill me-1"></i> Verifikasi & Buka Akses
+            </button>
+            <button type="button" class="btn btn-outline-danger flex-fill py-2 rounded-pill fw-semibold" id="btnRejectPayment" onclick="AdminManager.verifyCurrentPayment('rejected')">
+              <i class="bi bi-x-circle-fill me-1"></i> Tolak Bukti
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pengaturan Pembayaran & QR Code (Admin) -->
+  <div class="modal fade" id="modalSettingPayment" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow">
+        <div class="modal-header border-bottom pb-3">
+          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-qr-code-scan me-2 text-primary"></i>Pengaturan Pembayaran & QR Code</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form onsubmit="event.preventDefault(); AdminManager.savePaymentSettings();">
+            <div class="form-check form-switch p-3 bg-light rounded-3 border mb-3">
+              <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="settingPayEnabled" checked>
+              <label class="form-check-label fw-bold text-dark cursor-pointer" for="settingPayEnabled">
+                Aktifkan Fitur Pembayaran & Tampilkan QR Code
+              </label>
+              <small class="text-muted d-block mt-1">Jika dinonaktifkan, QR Code dan tagihan langganan disembunyikan dari guru.</small>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold small text-dark">Nominal Biaya Langganan (Rp / Bulan)</label>
+              <div class="input-group">
+                <span class="input-group-text">Rp</span>
+                <input type="number" class="form-control fw-bold text-success" id="settingPayAmount" value="50000" min="0" step="1000">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold small text-dark">Foto QR Code Pembayaran (QRIS / Rekening)</label>
+              <input type="file" class="form-control form-control-sm" id="settingQrFileInput" accept="image/*" onchange="AdminManager.handleQrUpload(this)">
+              <small class="text-muted d-block mt-1">Unggah foto QRIS atau QR Bank Anda. Gambar akan otomatis dioptimalkan.</small>
+            </div>
+
+            <div class="text-center p-2 bg-light border rounded-3 mb-3">
+              <img id="settingQrPreview" src="" alt="Pratinjau QR Code" class="img-fluid rounded d-none" style="max-height: 160px;">
+              <div id="settingQrPlaceholder" class="py-3 text-muted small">
+                <i class="bi bi-image fs-2 d-block mb-1"></i> Belum ada QR Code diunggah
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-bold small text-dark">Petunjuk & Rekening Pembayaran</label>
+              <textarea class="form-control form-control-sm" id="settingPayInstructions" rows="3" placeholder="Contoh: Silakan transfer ke Bank BCA 12345678 a.n Sekolah atau scan QRIS di atas."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2 rounded-pill fw-semibold shadow-sm" id="btnSavePaymentSettings">
+              Simpan Pengaturan Pembayaran
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layar Pembekuan Akun Guru (Freeze Screen Overlay) -->
+  <div id="freezeScreenOverlay" class="d-none" style="position: fixed; inset: 0; z-index: 1080; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(8px); overflow-y: auto; padding: 20px 10px;">
+    <div class="container d-flex align-items-center justify-content-center min-vh-100 py-4">
+      <div class="card border-0 shadow-lg rounded-4 overflow-hidden w-100" style="max-width: 520px; background: #ffffff;">
+        <!-- Card Header Alert -->
+        <div class="p-4 text-center text-white" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-white text-danger mb-2 shadow" style="width: 56px; height: 56px; font-size: 1.8rem;">
+            <i class="bi bi-lock-fill"></i>
+          </div>
+          <h5 class="fw-bold mb-1">Akses Akun Anda Sedang Dibekukan</h5>
+          <p class="small mb-0 opacity-90">Masa aktif langganan bulan ini telah berakhir. Silakan lakukan perpanjangan agar seluruh fitur CMS dapat digunakan kembali.</p>
+        </div>
+
+        <div class="card-body p-4">
+          <!-- Identitas Guru -->
+          <div class="d-flex align-items-center justify-content-between p-2 mb-3 bg-light rounded-3 border">
+            <div>
+              <span class="small text-muted d-block">Akun Pengajar:</span>
+              <strong class="text-dark" id="freezeUserName">Bapak/Ibu Guru</strong>
+            </div>
+            <span class="badge bg-danger" id="freezeUserNip">NIP. -</span>
+          </div>
+
+          <!-- Alert Jika Bukti Ditolak -->
+          <div id="freezeRejectedAlert" class="alert alert-danger d-flex align-items-start gap-2 py-2 px-3 small d-none">
+            <i class="bi bi-exclamation-triangle-fill fs-5 flex-shrink-0"></i>
+            <div>
+              <strong>Bukti Sebelumnya Ditolak:</strong>
+              <div id="freezeRejectedNote">-</div>
+            </div>
+          </div>
+
+          <!-- Box 1: Jika Sedang Menunggu Verifikasi -->
+          <div id="freezePendingBox" class="p-3 text-center bg-warning-subtle border border-warning-subtle rounded-3 d-none">
+            <div class="text-warning-emphasis mb-2" style="font-size: 2.2rem;">
+              <i class="bi bi-clock-history"></i>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">Bukti Pembayaran Sedang Diverifikasi</h6>
+            <p class="small text-muted mb-2">Terima kasih! Bukti transfer Anda telah dikirim pada <strong id="freezePendingDate">-</strong> dan sedang diverifikasi oleh Admin. Akses akun Anda akan segera dibuka otomatis.</p>
+            <div class="text-center my-2">
+              <img id="freezePendingPreview" src="" alt="Bukti Transfer" class="img-thumbnail d-none" style="max-height: 140px;">
+            </div>
+            <div class="d-flex gap-2 justify-content-center mt-3">
+              <button type="button" class="btn btn-warning btn-sm rounded-pill px-3 py-2 fw-bold" id="btnRecheckStatus" onclick="SubscriptionManager.recheckStatus()">
+                <i class="bi bi-arrow-repeat me-1"></i> Cek Status Sekarang
+              </button>
+              <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2" onclick="Auth.logout()">
+                <i class="bi bi-box-arrow-left me-1"></i> Keluar
+              </button>
+            </div>
+          </div>
+
+          <!-- Box 2: Form Pembayaran & QR Code (Jika Belum Kirim Bukti) -->
+          <div id="freezePaymentFormBox">
+            <div class="text-center mb-3">
+              <span class="text-muted small">Biaya Langganan Bulanan:</span>
+              <h3 class="fw-bold text-success mb-1" id="freezePaymentAmount">Rp 50.000</h3>
+              <p class="small text-muted mb-0" id="freezeInstructions">Silakan scan QR Code pembayaran di bawah ini melalui BCA, Mandiri, BRI, BNI, GoPay, OVO, Dana, atau ShopeePay.</p>
+            </div>
+
+            <!-- Tampilan QR Code -->
+            <div class="text-center my-3 p-3 bg-light border rounded-3">
+              <img id="freezeQrCodeImg" src="" alt="QR Code Pembayaran" class="img-fluid rounded border shadow-sm d-none" style="max-height: 200px;">
+              <div id="freezeQrPlaceholder" class="py-4 text-muted small">
+                <i class="bi bi-qr-code fs-1 d-block mb-1"></i>
+                Admin belum mengunggah QR Code. Silakan hubungi operator sekolah untuk metode pembayaran.
+              </div>
+            </div>
+
+            <!-- Form Upload Bukti -->
+            <form onsubmit="event.preventDefault(); SubscriptionManager.submitPayment();">
+              <div class="mb-3">
+                <label class="form-label fw-bold text-dark small">Unggah Foto Bukti Transfer / Struk <span class="text-danger">*</span></label>
+                <input type="file" class="form-control form-control-sm" id="freezeBuktiInput" accept="image/*" onchange="SubscriptionManager.handleBuktiSelected(this)">
+                <small class="text-muted d-block mt-1" id="freezeUploadHint">Format JPG, PNG, WEBP, atau HEIC. Foto akan otomatis dikompres.</small>
+              </div>
+
+              <!-- Preview Bukti -->
+              <div id="freezeBuktiPreviewContainer" class="text-center mb-3 d-none">
+                <img id="freezeBuktiPreview" src="" alt="Pratinjau Bukti" class="img-thumbnail" style="max-height: 120px;">
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label small text-muted">Catatan Pembayaran (Opsional)</label>
+                <input type="text" class="form-control form-control-sm" id="freezeCatatanInput" placeholder="Contoh: Transfer atas nama Budi via Bank BRI">
+              </div>
+
+              <button type="submit" class="btn btn-success w-100 py-2 rounded-pill fw-bold shadow-sm" id="btnSubmitBuktiBayar">
+                <i class="bi bi-send-fill me-2"></i> Kirim Bukti Pembayaran
+              </button>
+            </form>
+
+            <div class="text-center mt-3 pt-2 border-top">
+              <button type="button" class="btn btn-link btn-sm text-danger text-decoration-none" onclick="Auth.logout()">
+                <i class="bi bi-box-arrow-left me-1"></i> Keluar dari Akun CMS
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Floating PWA Install Banner (Mobile & Desktop) -->
   <div id="pwaInstallBanner" class="pwa-install-banner d-none">
     <div class="d-flex align-items-center justify-content-between gap-2">
@@ -1652,6 +1952,7 @@
   <script src="js/dokumen.js"></script>
   <script src="js/cptp.js"></script>
   <script src="js/admin.js"></script>
+  <script src="js/subscription.js"></script>
   <script src="js/pwa-installer.js"></script>
 
   <script>

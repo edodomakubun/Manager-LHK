@@ -655,6 +655,366 @@ const AdminManager = {
         btn.innerHTML = '<i class="bi bi-save me-1"></i> Simpan Pengaturan';
       }
     }
+  },
+
+  // ========================================================
+  // 4. MANAJEMEN LANGGANAN & PEMBAYARAN (BILLING)
+  // ========================================================
+  subscriptions: [],
+  currentPaymentDetail: null,
+  cachedBase64Qr: '',
+
+  loadBilling: async function () {
+    const tableBody = document.getElementById('adminBillingTableBody');
+    const mobileContainer = document.getElementById('adminBillingMobileCards');
+    if (tableBody) {
+      tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><span class="spinner-border spinner-border-sm text-success me-2"></span>Memuat data langganan guru...</td></tr>';
+    }
+
+    try {
+      const res = await Api.getAdminSubscriptions();
+      if (res && res.sukses) {
+        AdminManager.subscriptions = res.users || [];
+
+        // Render Summary
+        const s = res.summary || {};
+        if (document.getElementById('billingTotalGuru')) document.getElementById('billingTotalGuru').innerText = s.totalGuru || 0;
+        if (document.getElementById('billingActiveCount')) document.getElementById('billingActiveCount').innerText = s.activeCount || 0;
+        if (document.getElementById('billingPendingCount')) document.getElementById('billingPendingCount').innerText = s.pendingCount || 0;
+        if (document.getElementById('billingFrozenCount')) document.getElementById('billingFrozenCount').innerText = s.frozenCount || 0;
+
+        // Badge pending di menu jika ada
+        const navBadge = document.getElementById('billingNavPendingBadge');
+        if (navBadge) {
+          if (s.pendingCount > 0) {
+            navBadge.textContent = s.pendingCount;
+            navBadge.classList.remove('d-none');
+          } else {
+            navBadge.classList.add('d-none');
+          }
+        }
+
+        // Render Status Toggle QR di UI
+        const toggleQr = document.getElementById('togglePaymentFeature');
+        if (toggleQr && res.settings) {
+          toggleQr.checked = res.settings.enabled;
+        }
+
+        AdminManager.renderBillingList(AdminManager.subscriptions);
+      }
+    } catch (err) {
+      if (tableBody) {
+        tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Gagal memuat: ${err.message}</td></tr>`;
+      }
+    }
+  },
+
+  renderBillingList: function (users) {
+    const tableBody = document.getElementById('adminBillingTableBody');
+    const mobileContainer = document.getElementById('adminBillingMobileCards');
+    if (!tableBody) return;
+
+    if (users.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Belum ada akun guru.</td></tr>';
+      if (mobileContainer) mobileContainer.innerHTML = '<div class="text-center py-4 text-muted">Belum ada akun guru.</div>';
+      return;
+    }
+
+    // 1. Desktop Table
+    let html = '';
+    users.forEach((u, idx) => {
+      const isFrozen = u.is_frozen === 1;
+      const isPending = u.subscription_status === 'pending_verification';
+
+      let statusBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i>Lunas / Aktif</span>';
+      if (isPending) {
+        statusBadge = '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1"><i class="bi bi-clock-history me-1"></i>Menunggu Verifikasi</span>';
+      } else if (isFrozen) {
+        statusBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i class="bi bi-lock-fill me-1"></i>Dibekukan</span>';
+      }
+
+      html += `
+        <tr>
+          <td class="text-center">${idx + 1}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              ${u.foto_profil ? `
+                <img src="${u.foto_profil}" class="rounded-circle border object-fit-cover flex-shrink-0" width="38" height="38" alt="Foto">
+              ` : `
+                <div class="rounded-circle bg-success-subtle text-success border border-success-subtle d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 38px; height: 38px; font-size: 0.9rem;">
+                  ${(u.nama_lengkap || 'G').substring(0, 1).toUpperCase()}
+                </div>
+              `}
+              <div>
+                <div class="fw-bold text-dark">${u.nama_lengkap}</div>
+                <small class="text-muted">${u.nip ? `NIP. ${u.nip}` : 'NIP. -'}</small>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="badge bg-light text-primary border">${u.mapel || 'Guru'}</span>
+          </td>
+          <td class="text-center">
+            ${statusBadge}
+          </td>
+          <td>
+            ${u.last_payment_id ? `
+              <button class="btn btn-sm ${isPending ? 'btn-warning text-dark fw-bold' : 'btn-outline-secondary'} py-1 px-2" onclick="AdminManager.openBuktiModal('${u.last_payment_id}')">
+                <i class="bi bi-receipt me-1"></i> ${isPending ? 'Periksa Bukti (Baru!)' : 'Lihat Bukti'}
+              </button>
+            ` : `
+              <span class="text-muted small">Belum ada bukti</span>
+            `}
+          </td>
+          <td class="text-end text-nowrap">
+            ${isFrozen ? `
+              <button class="btn btn-sm btn-success px-3" onclick="AdminManager.toggleFreeze('${u.id}', 1, '${u.nama_lengkap}')" title="Buka Pembekuan Akun">
+                <i class="bi bi-unlock-fill me-1"></i> Buka Akses
+              </button>
+            ` : `
+              <button class="btn btn-sm btn-outline-danger px-3" onclick="AdminManager.toggleFreeze('${u.id}', 0, '${u.nama_lengkap}')" title="Bekukan Tampilan Akun">
+                <i class="bi bi-lock-fill me-1"></i> Bekukan
+              </button>
+            `}
+          </td>
+        </tr>
+      `;
+    });
+    tableBody.innerHTML = html;
+
+    // 2. Mobile Cards
+    if (mobileContainer) {
+      let mHtml = '';
+      users.forEach(u => {
+        const isFrozen = u.is_frozen === 1;
+        const isPending = u.subscription_status === 'pending_verification';
+
+        mHtml += `
+          <div class="card-cms p-3 mb-3 border ${isFrozen ? 'border-danger-subtle bg-danger-subtle bg-opacity-10' : ''}">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <div class="fw-bold text-dark">${u.nama_lengkap}</div>
+              <div>
+                ${isPending ? '<span class="badge bg-warning text-dark">Perlu Verifikasi</span>' : isFrozen ? '<span class="badge bg-danger">Dibekukan</span>' : '<span class="badge bg-success">Aktif</span>'}
+              </div>
+            </div>
+            <div class="small text-muted mb-3">${u.nip ? `NIP. ${u.nip}` : 'NIP. -'} • ${u.mapel || 'Guru'}</div>
+            <div class="d-flex gap-2">
+              ${u.last_payment_id ? `
+                <button class="btn btn-sm ${isPending ? 'btn-warning text-dark fw-bold' : 'btn-outline-secondary'} flex-fill" onclick="AdminManager.openBuktiModal('${u.last_payment_id}')">
+                  <i class="bi bi-receipt me-1"></i> Bukti Bayar
+                </button>
+              ` : ''}
+              ${isFrozen ? `
+                <button class="btn btn-sm btn-success flex-fill" onclick="AdminManager.toggleFreeze('${u.id}', 1, '${u.nama_lengkap}')">
+                  <i class="bi bi-unlock-fill me-1"></i> Buka Akses
+                </button>
+              ` : `
+                <button class="btn btn-sm btn-outline-danger flex-fill" onclick="AdminManager.toggleFreeze('${u.id}', 0, '${u.nama_lengkap}')">
+                  <i class="bi bi-lock-fill me-1"></i> Bekukan
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+      });
+      mobileContainer.innerHTML = mHtml;
+    }
+  },
+
+  toggleFreeze: async function (userId, currentlyFrozen, nama) {
+    const actionText = currentlyFrozen ? 'membuka pembekuan akses akun' : 'membekukan tampilan akun';
+    if (!confirm(`Apakah Anda yakin ingin ${actionText} untuk ${nama}?`)) return;
+
+    try {
+      const res = await Api.freezeUser(userId, currentlyFrozen ? 0 : 1);
+      if (res && res.sukses) {
+        alert(res.pesan);
+        AdminManager.loadBilling();
+      } else {
+        throw new Error(res.pesan || 'Gagal mengubah status pembekuan.');
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  },
+
+  openBuktiModal: async function (paymentId) {
+    try {
+      const res = await Api.getAdminPaymentDetail(paymentId);
+      if (!res || !res.sukses || !res.payment) {
+        throw new Error(res ? res.pesan : 'Data bukti tidak ditemukan.');
+      }
+
+      const p = res.payment;
+      AdminManager.currentPaymentDetail = p;
+
+      document.getElementById('modalBuktiNama').textContent = p.nama_lengkap || '-';
+      document.getElementById('modalBuktiNip').textContent = p.nip ? `NIP. ${p.nip}` : '-';
+      document.getElementById('modalBuktiPeriode').textContent = `${p.bulan} ${p.tahun}`;
+      document.getElementById('modalBuktiNominal').textContent = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(p.nominal || 50000);
+      document.getElementById('modalBuktiTanggal').textContent = p.created_at ? new Date(p.created_at).toLocaleString('id-ID') : '-';
+      document.getElementById('modalBuktiCatatan').textContent = p.catatan_user || 'Tidak ada catatan.';
+
+      const imgEl = document.getElementById('modalBuktiImg');
+      if (imgEl) imgEl.src = p.bukti_bayar || '';
+
+      const badgeStatus = document.getElementById('modalBuktiStatusBadge');
+      if (badgeStatus) {
+        if (p.status === 'approved') {
+          badgeStatus.innerHTML = '<span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>Sudah Diverifikasi (Lunas)</span>';
+        } else if (p.status === 'rejected') {
+          badgeStatus.innerHTML = '<span class="badge bg-danger"><i class="bi bi-x-circle-fill me-1"></i>Bukti Ditolak</span>';
+        } else {
+          badgeStatus.innerHTML = '<span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i>Menunggu Verifikasi</span>';
+        }
+      }
+
+      // Tampilkan tombol aksi jika masih pending
+      const btnApprove = document.getElementById('btnApprovePayment');
+      const btnReject = document.getElementById('btnRejectPayment');
+      if (btnApprove) btnApprove.disabled = (p.status === 'approved');
+      if (btnReject) btnReject.disabled = (p.status === 'rejected');
+
+      const modalEl = document.getElementById('modalBuktiBayar');
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+    } catch (err) {
+      alert('Gagal memuat bukti pembayaran: ' + err.message);
+    }
+  },
+
+  verifyCurrentPayment: async function (status) {
+    if (!AdminManager.currentPaymentDetail) return;
+    const paymentId = AdminManager.currentPaymentDetail.id;
+
+    let notes = '';
+    if (status === 'rejected') {
+      notes = prompt('Masukkan alasan penolakan bukti pembayaran:', 'Nominal tidak sesuai / Bukti tidak jelas');
+      if (notes === null) return; // Batal
+    } else {
+      if (!confirm('Verifikasi bukti transfer ini sah dan buka pembekuan akun guru sekarang?')) return;
+    }
+
+    try {
+      const res = await Api.verifyPayment(paymentId, status, notes);
+      if (res && res.sukses) {
+        alert(res.pesan);
+        const modalEl = document.getElementById('modalBuktiBayar');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+        AdminManager.loadBilling();
+      } else {
+        throw new Error(res.pesan || 'Gagal memverifikasi bukti.');
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  },
+
+  openPaymentSettingsModal: async function () {
+    try {
+      const res = await Api.getPaymentSettings();
+      if (res && res.sukses && res.settings) {
+        const s = res.settings;
+        document.getElementById('settingPayEnabled').checked = s.enabled;
+        document.getElementById('settingPayAmount').value = s.amount || 50000;
+        document.getElementById('settingPayInstructions').value = s.instructions || '';
+
+        AdminManager.cachedBase64Qr = s.qr_code || '';
+        const qrPreview = document.getElementById('settingQrPreview');
+        const qrPlaceholder = document.getElementById('settingQrPlaceholder');
+
+        if (s.qr_code) {
+          if (qrPreview) {
+            qrPreview.src = s.qr_code;
+            qrPreview.classList.remove('d-none');
+          }
+          if (qrPlaceholder) qrPlaceholder.classList.add('d-none');
+        } else {
+          if (qrPreview) qrPreview.classList.add('d-none');
+          if (qrPlaceholder) qrPlaceholder.classList.remove('d-none');
+        }
+
+        const modalEl = document.getElementById('modalSettingPayment');
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+      }
+    } catch (err) {
+      alert('Gagal memuat pengaturan pembayaran: ' + err.message);
+    }
+  },
+
+  handleQrUpload: async function (inputEl) {
+    const file = inputEl.files[0];
+    if (!file) return;
+
+    try {
+      let base64 = '';
+      if (window.ImageCompressor && typeof ImageCompressor.compressImage === 'function') {
+        const compressed = await ImageCompressor.compressImage(file, { maxWidth: 800, quality: 0.85 });
+        base64 = compressed.base64;
+      } else {
+        base64 = await SubscriptionManager.fileToBase64(file);
+      }
+
+      AdminManager.cachedBase64Qr = base64;
+      const qrPreview = document.getElementById('settingQrPreview');
+      const qrPlaceholder = document.getElementById('settingQrPlaceholder');
+
+      if (qrPreview) {
+        qrPreview.src = base64;
+        qrPreview.classList.remove('d-none');
+      }
+      if (qrPlaceholder) qrPlaceholder.classList.add('d-none');
+    } catch (err) {
+      alert('Gagal memproses QR Code: ' + err.message);
+    }
+  },
+
+  savePaymentSettings: async function () {
+    const btn = document.getElementById('btnSavePaymentSettings');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
+    }
+
+    try {
+      const payload = {
+        enabled: document.getElementById('settingPayEnabled').checked,
+        amount: parseInt(document.getElementById('settingPayAmount').value || '50000', 10),
+        qr_code: AdminManager.cachedBase64Qr || '',
+        instructions: document.getElementById('settingPayInstructions').value.trim()
+      };
+
+      const res = await Api.savePaymentSettings(payload);
+      if (res && res.sukses) {
+        alert(res.pesan || 'Pengaturan pembayaran berhasil disimpan!');
+        const modalEl = document.getElementById('modalSettingPayment');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+        AdminManager.loadBilling();
+      } else {
+        throw new Error(res.pesan || 'Gagal menyimpan pengaturan.');
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = 'Simpan Pengaturan Pembayaran';
+      }
+    }
+  },
+
+  toggleQuickPaymentFeature: async function (checkboxEl) {
+    try {
+      const isEnabled = checkboxEl.checked;
+      await Api.savePaymentSettings({ enabled: isEnabled });
+      AdminManager.loadBilling();
+    } catch (err) {
+      alert('Gagal memperbarui status: ' + err.message);
+      checkboxEl.checked = !checkboxEl.checked;
+    }
   }
 };
 

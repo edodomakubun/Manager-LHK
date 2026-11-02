@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS users (
     template_doc_id TEXT,                      -- ID File Template Google Docs Guru (di folder Template)
     foto_profil TEXT,                          -- URL / Base64 / ID Foto Profil Guru
     is_active INTEGER NOT NULL DEFAULT 1,
+    is_frozen INTEGER NOT NULL DEFAULT 0,      -- 0: aktif, 1: dibekukan karena belum bayar
+    subscription_status TEXT NOT NULL DEFAULT 'active', -- 'active' | 'frozen' | 'pending_verification'
+    subscription_period TEXT,                  -- Periode langganan aktif, misal: 'November 2026'
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -99,6 +102,25 @@ CREATE TABLE IF NOT EXISTS system_settings (
     description TEXT
 );
 
+-- 7. TABEL PEMBAYARAN LANGGANAN CMS (SUBSCRIPTION_PAYMENTS)
+CREATE TABLE IF NOT EXISTS subscription_payments (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    bulan TEXT NOT NULL,
+    tahun TEXT NOT NULL,
+    nominal INTEGER NOT NULL DEFAULT 50000,
+    bukti_bayar TEXT NOT NULL,
+    catatan_user TEXT,
+    status TEXT NOT NULL DEFAULT 'pending', -- 'pending' | 'approved' | 'rejected'
+    catatan_admin TEXT,
+    verified_at DATETIME,
+    verified_by TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_sub_payments_user ON subscription_payments(user_id);
+CREATE INDEX IF NOT EXISTS idx_sub_payments_status ON subscription_payments(status);
+
 -- ========================================================
 -- DATA SEED AWAL (DEFAULT SETTINGS & USERS)
 -- ========================================================
@@ -110,7 +132,11 @@ INSERT OR IGNORE INTO system_settings (key, value, description) VALUES
 ('master_template_sheet_id', '1ADGABBavrjHExqvPRUVCyz8gQXUUPIFgflPHEfiKqJk', 'Master Template Spreadsheet'),
 ('master_template_doc_id', '1FnlDbYxiQUGOnK8yv4527j2Q_TutNTb_9AQCfO1lOHU', 'Master Template Google Docs'),
 ('gas_bridge_url', '', 'URL Web App Google Apps Script Bridge'),
-('gas_secret_token', 'SECRET_LHK_TOKEN_2026', 'Token Pengaman Webhook Bridge');
+('gas_secret_token', 'SECRET_LHK_TOKEN_2026', 'Token Pengaman Webhook Bridge'),
+('payment_feature_enabled', 'true', 'Sakelar Fitur Pembayaran & QR Code (true/false)'),
+('payment_amount', '50000', 'Nominal Biaya Langganan Bulanan (Rp)'),
+('payment_qr_code', '', 'Gambar QR Code Pembayaran (Base64)'),
+('payment_instructions', 'Biaya langganan CMS Rp 50.000/bulan. Silakan scan QR Code di atas dan unggah bukti transfer.', 'Petunjuk pembayaran');
 
 -- Default Superadmin: username = admin, password = admin123
 INSERT OR IGNORE INTO users (

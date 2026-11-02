@@ -11,6 +11,8 @@ export interface UserSession {
   role: 'admin' | 'guru';
   nama_lengkap: string;
   nip?: string;
+  is_frozen?: number;
+  subscription_status?: string;
 }
 
 export interface UserRecord {
@@ -33,8 +35,36 @@ export interface UserRecord {
   template_doc_id?: string;
   foto_profil?: string;
   is_active: number;
+  is_frozen?: number;
+  subscription_status?: string;
+  subscription_period?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface SubscriptionPaymentRecord {
+  id: string;
+  user_id: string;
+  bulan: string;
+  tahun: string;
+  nominal: number;
+  bukti_bayar: string;
+  catatan_user?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  catatan_admin?: string;
+  verified_at?: string;
+  verified_by?: string;
+  created_at?: string;
+  nama_lengkap?: string;
+  nip?: string;
+  username?: string;
+}
+
+export interface PaymentSettings {
+  payment_feature_enabled: boolean;
+  payment_amount: number;
+  payment_qr_code: string;
+  payment_instructions: string;
 }
 
 export interface LhkRecord {

@@ -3,7 +3,7 @@
  * Versi Cache: v1.0.0
  */
 
-const CACHE_NAME = 'lhk-cms-v1';
+const CACHE_NAME = 'lhk-cms-v1.1';
 
 const STATIC_ASSETS = [
   '/',
@@ -21,6 +21,7 @@ const STATIC_ASSETS = [
   '/js/dokumen.js',
   '/js/cptp.js',
   '/js/admin.js',
+  '/js/subscription.js',
   '/js/image-compressor.js',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',

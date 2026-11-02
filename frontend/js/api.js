@@ -173,6 +173,37 @@ const Api = {
   saveAdminSettings: (settings) => Api.request('/api/admin/settings', {
     method: 'PUT',
     body: JSON.stringify(settings)
+  }),
+
+  // --- SUBSCRIPTION & PAYMENT MANAGEMENT ---
+  getSubscriptionStatus: () => Api.request('/api/subscription/status'),
+
+  submitSubscriptionPayment: (payload) => Api.request('/api/subscription/submit-payment', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  }),
+
+  getAdminSubscriptions: () => Api.request('/api/admin/subscriptions'),
+
+  freezeUser: (userId, is_frozen) => Api.request('/api/admin/subscriptions/freeze', {
+    method: 'POST',
+    body: JSON.stringify({ userId, is_frozen })
+  }),
+
+  getAdminPayments: (status) => Api.request('/api/admin/subscriptions/payments' + (status ? `?status=${encodeURIComponent(status)}` : '')),
+
+  getAdminPaymentDetail: (id) => Api.request(`/api/admin/subscriptions/payments/${id}`),
+
+  verifyPayment: (id, status, notes) => Api.request(`/api/admin/subscriptions/payments/${id}/verify`, {
+    method: 'POST',
+    body: JSON.stringify({ status, notes })
+  }),
+
+  getPaymentSettings: () => Api.request('/api/admin/payment-settings'),
+
+  savePaymentSettings: (payload) => Api.request('/api/admin/payment-settings', {
+    method: 'PUT',
+    body: JSON.stringify(payload)
   })
 };
 

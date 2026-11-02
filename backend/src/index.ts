@@ -8,6 +8,7 @@ import { cptpRoutes } from './routes/cptp';
 import { lhkRoutes } from './routes/lhk';
 import { documentRoutes } from './routes/documents';
 import { dashboardRoutes } from './routes/dashboard';
+import { subscriptionRoutes } from './routes/subscription';
 import type { Env } from './types';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -52,6 +53,7 @@ app.route('/api/cptp', cptpRoutes);
 app.route('/api/lhk', lhkRoutes);
 app.route('/api/documents', documentRoutes);
 app.route('/api/dashboard', dashboardRoutes);
+app.route('/api/subscription', subscriptionRoutes);
 
 // Fallback untuk melayani frontend static assets via Cloudflare Worker Assets
 app.get('*', async (c) => {
