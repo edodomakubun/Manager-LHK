@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS system_settings (
 -- Settings default
 INSERT OR IGNORE INTO system_settings (key, value, description) VALUES
 ('active_academic_year', '2026/2027', 'Tahun ajaran aktif saat ini'),
-('master_parent_folder_id', '1MTawYi7A7ldPvJCxNsqR0iGB2c-dNWUw', 'Folder Master Utama LHK di Drive Admin'),
+('master_parent_folder_id', '1r271Uodmsj9R645hC__yeG-rU15JGexr', 'Folder Master Utama LHK di Drive Admin'),
 ('master_template_sheet_id', '1ADGABBavrjHExqvPRUVCyz8gQXUUPIFgflPHEfiKqJk', 'Master Template Spreadsheet'),
 ('master_template_doc_id', '1FnlDbYxiQUGOnK8yv4527j2Q_TutNTb_9AQCfO1lOHU', 'Master Template Google Docs'),
 ('gas_bridge_url', '', 'URL Web App Google Apps Script Bridge'),

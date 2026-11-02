@@ -21,6 +21,29 @@ const BRIDGE_SECRET_TOKEN = 'SECRET_LHK_TOKEN_2026';
 const TIMEZONE = 'Asia/Jayapura';
 
 /**
+ * ==============================================================================
+ * 🔑 FUNGSI UJI OTORISASI PERTAMA KALI (RUN 1X DI SCRIPT EDITOR)
+ * ==============================================================================
+ * Jalankan fungsi ini 1x di editor Apps Script dengan menekan tombol [▶ Run / Jalankan]
+ * agar Google memunculkan jendela perizinan akses Google Drive, Docs & Sheets.
+ */
+function testOtorisasiIzin() {
+  Logger.log("Menguji izin Google Drive...");
+  const root = DriveApp.getRootFolder();
+  Logger.log("Akses Drive OK! Root Folder: " + root.getName());
+  
+  const masterFolderId = "1r271Uodmsj9R645hC__yeG-rU15JGexr";
+  try {
+    const masterFolder = DriveApp.getFolderById(masterFolderId);
+    Logger.log("Folder MASTER_LHK_SEKOLAH terdeteksi: " + masterFolder.getName());
+  } catch (e) {
+    Logger.log("Peringatan Folder Master: " + e.message);
+  }
+  
+  Logger.log("=== SEMUA IZIN BERHASIL DIBERIKAN! ===");
+}
+
+/**
  * Handle HTTP GET (Healthcheck & Info)
  */
 function doGet(e) {
@@ -100,30 +123,89 @@ function handleInitGuruDrive(data) {
     const folderTemplate = folderGuru.createFolder("Template");
     const folderSpreadsheetDB = folderGuru.createFolder("SpreadsheetDB");
 
-    // Atur izin baca publik untuk tautan berkas
-    folderDokumentasi.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    folderDokLaporan.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-
-    // 3. Kloning Master Spreadsheet ke dalam sub-folder "SpreadsheetDB"
-    let sheetId = "";
-    let sheetUrl = "";
-    if (masterTemplateSheetId) {
-      const masterSheet = DriveApp.getFileById(masterTemplateSheetId);
-      const sheetGuru = masterSheet.makeCopy("Database LHK - " + namaGuru, folderSpreadsheetDB);
-      sheetGuru.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-      sheetId = sheetGuru.getId();
-      sheetUrl = sheetGuru.getUrl();
+    // Atur izin baca publik untuk tautan berkas (graceful jika dibatasi kebijakan organisasi)
+    try {
+      folderDokumentasi.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      folderDokLaporan.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch (eShare) {
+      Logger.log("Peringatan share folder: " + eShare.message);
     }
 
-    // 4. Kloning Master Template Google Docs ke dalam sub-folder "Template"
+    // 3. Buat / Kloning Spreadsheet DB Guru ke dalam "SpreadsheetDB"
+    let sheetId = "";
+    let sheetUrl = "";
+    let sheetSuccess = false;
+
+    // Coba kloning jika master template sheet diatur & bukan placeholder lama
+    if (masterTemplateSheetId && masterTemplateSheetId !== "1ADGABBavrjHExqvPRUVCyz8gQXUUPIFgflPHEfiKqJk") {
+      try {
+        const masterSheet = DriveApp.getFileById(masterTemplateSheetId);
+        const sheetGuru = masterSheet.makeCopy("Database LHK - " + namaGuru, folderSpreadsheetDB);
+        try { sheetGuru.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(_) {}
+        sheetId = sheetGuru.getId();
+        sheetUrl = sheetGuru.getUrl();
+        sheetSuccess = true;
+      } catch (eCopySheet) {
+        Logger.log("Peringatan kloning sheet template: " + eCopySheet.message);
+      }
+    }
+
+    // Jika master sheet tidak ada / tidak bisa diakses, BUAT SPREADSHEET BARU DENGAN 16 KOLOM LHK RESMI
+    if (!sheetSuccess) {
+      try {
+        const newSS = SpreadsheetApp.create("Database LHK - " + namaGuru);
+        const sheet = newSS.getActiveSheet();
+        sheet.setName("LHK");
+
+        // 16 Kolom Standar Sesuai Format Agenda
+        const headers = [
+          "ID Laporan", "Tanggal", "Bulan", "Tahun Ajaran",
+          "Capaian Pembelajaran (CP)", "Tujuan Pembelajaran (TP)", "Kelas", "Non Tatap Muka (NTM)",
+          "Foto Dokumentasi 1", "Foto Dokumentasi 2", "Foto Dokumentasi 3", "Foto Dokumentasi 4",
+          "Foto Dokumentasi 5", "Foto Dokumentasi 6", "Volume", "Keterangan"
+        ];
+        sheet.appendRow(headers);
+
+        // Styling Header (Emerald Toska, Teks Putih Tebal)
+        const headerRange = sheet.getRange(1, 1, 1, 16);
+        headerRange.setBackground("#0f766e");
+        headerRange.setFontColor("#ffffff");
+        headerRange.setFontWeight("bold");
+        headerRange.setHorizontalAlignment("center");
+        sheet.setFrozenRows(1);
+
+        // Pindahkan berkas spreadsheet ke sub-folder SpreadsheetDB
+        const fileSS = DriveApp.getFileById(newSS.getId());
+        try {
+          fileSS.moveTo(folderSpreadsheetDB);
+        } catch (_) {
+          folderSpreadsheetDB.addFile(fileSS);
+          DriveApp.getRootFolder().removeFile(fileSS);
+        }
+        try { fileSS.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(_) {}
+
+        sheetId = newSS.getId();
+        sheetUrl = newSS.getUrl();
+        sheetSuccess = true;
+      } catch (errNewSheet) {
+        Logger.log("Gagal buat spreadsheet otomatis: " + errNewSheet.message);
+      }
+    }
+
+    // 4. Buat / Kloning Template Dokumen ke dalam sub-folder "Template"
     let docId = "";
     let docUrl = "";
-    if (masterTemplateDocId) {
-      const masterDoc = DriveApp.getFileById(masterTemplateDocId);
-      const docGuru = masterDoc.makeCopy("Template Dokumen - " + namaGuru, folderTemplate);
-      docGuru.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-      docId = docGuru.getId();
-      docUrl = docGuru.getUrl();
+
+    if (masterTemplateDocId && masterTemplateDocId !== "1FnlDbYxiQUGOnK8yv4527j2Q_TutNTb_9AQCfO1lOHU") {
+      try {
+        const masterDoc = DriveApp.getFileById(masterTemplateDocId);
+        const docGuru = masterDoc.makeCopy("Template Dokumen - " + namaGuru, folderTemplate);
+        try { docGuru.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(_) {}
+        docId = docGuru.getId();
+        docUrl = docGuru.getUrl();
+      } catch (eCopyDoc) {
+        Logger.log("Peringatan kloning doc template: " + eCopyDoc.message);
+      }
     }
 
     return {
@@ -164,7 +246,7 @@ function handleUploadDanSimpanLhk(data) {
           const fData = fotoArr[i];
           const blob = Utilities.newBlob(Utilities.base64Decode(fData.base64), fData.tipe || "image/jpeg", fData.nama || `foto_${i+1}.jpg`);
           const file = folder.createFile(blob);
-          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+          try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(_) {}
           idFotoList[i] = file.getId();
         } else if (fotoArr[i] && fotoArr[i].existingId) {
           idFotoList[i] = fotoArr[i].existingId;

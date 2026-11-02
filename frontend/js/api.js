@@ -162,7 +162,7 @@ const Api = {
     body: JSON.stringify({ newPassword })
   }),
 
-  provisionUserDrive: (id) => Api.request(`/api/admin/users/${id}/provision-drive', {
+  provisionUserDrive: (id) => Api.request(`/api/admin/users/${id}/provision-drive`, {
     method: 'POST'
   }),
 

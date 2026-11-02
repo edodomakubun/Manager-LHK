@@ -4909,9 +4909,9 @@ adminRoutes.post("/users", async (c) => {
     try {
       const gas = await GasBridgeService.create(c.env);
       const settings = await db.getAllSettings();
-      const masterFolderId = settings["master_parent_folder_id"] || "1MTawYi7A7ldPvJCxNsqR0iGB2c-dNWUw";
-      const masterSheetId = settings["master_template_sheet_id"] || "1ADGABBavrjHExqvPRUVCyz8gQXUUPIFgflPHEfiKqJk";
-      const masterDocId = settings["master_template_doc_id"] || "1FnlDbYxiQUGOnK8yv4527j2Q_TutNTb_9AQCfO1lOHU";
+      const masterFolderId = settings["master_parent_folder_id"] || "1r271Uodmsj9R645hC__yeG-rU15JGexr";
+      const masterSheetId = settings["master_template_sheet_id"] || "";
+      const masterDocId = settings["master_template_doc_id"] || "";
       driveResult = await gas.initGuruDrive({
         masterParentFolderId: masterFolderId,
         masterTemplateSheetId: masterSheetId,
@@ -5029,9 +5029,9 @@ adminRoutes.post("/users/:id/provision-drive", async (c) => {
   }
   const gas = await GasBridgeService.create(c.env);
   const settings = await db.getAllSettings();
-  const masterFolderId = settings["master_parent_folder_id"] || "1MTawYi7A7ldPvJCxNsqR0iGB2c-dNWUw";
-  const masterSheetId = settings["master_template_sheet_id"] || "1ADGABBavrjHExqvPRUVCyz8gQXUUPIFgflPHEfiKqJk";
-  const masterDocId = settings["master_template_doc_id"] || "1FnlDbYxiQUGOnK8yv4527j2Q_TutNTb_9AQCfO1lOHU";
+  const masterFolderId = settings["master_parent_folder_id"] || "1r271Uodmsj9R645hC__yeG-rU15JGexr";
+  const masterSheetId = settings["master_template_sheet_id"] || "";
+  const masterDocId = settings["master_template_doc_id"] || "";
   const res = await gas.initGuruDrive({
     masterParentFolderId: masterFolderId,
     masterTemplateSheetId: masterSheetId,
