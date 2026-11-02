@@ -1,0 +1,582 @@
+// ==========================================
+// 🔧 KONFIGURASI UTAMA DATABASE & DRIVE
+// ==========================================
+// ID ini diambil dari URL Spreadsheet Anda
+const SPREADSHEET_ID = '1ADGABBavrjHExqvPRUVCyz8gQXUUPIFgflPHEfiKqJk'; 
+
+// ID Template Google Docs dan Folder Output di Google Drive
+const TEMPLATE_DOC_ID = '1FnlDbYxiQUGOnK8yv4527j2Q_TutNTb_9AQCfO1lOHU'; 
+const FOLDER_OUTPUT_ID = '1MTawYi7A7ldPvJCxNsqR0iGB2c-dNWUw';
+
+// Zona Waktu Aplikasi: Asia/Jayapura (WIT - GMT+9)
+const TIMEZONE = 'Asia/Jayapura';
+
+// ==========================================
+// 🌐 1. FUNGSI RENDER WEB APP (FRONTEND)
+// ==========================================
+function doGet() {
+  return HtmlService.createTemplateFromFile('index')
+    .evaluate()
+    .setTitle('Agenda Harian Guru - E-Agenda LKH')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1'); // Responsif di layar HP & Desktop
+}
+
+// ==========================================
+// 📥 2. FUNGSI MENERIMA DATA DARI FRONTEND (MENDUKUNG 6 FOTO)
+// ==========================================
+function simpanDataKeSheets(dataForm) {
+  try {
+    const folder = DriveApp.getFolderById(FOLDER_OUTPUT_ID);
+    
+    // Array untuk menyimpan 6 ID Foto (1 Tatap Muka + 5 NTM)
+    const idFotoList = ["", "", "", "", "", ""];
+    
+    // Loop untuk mengunggah hingga 6 foto ke Google Drive
+    if (dataForm.fotoArr && Array.isArray(dataForm.fotoArr)) {
+      for (let i = 0; i < 6; i++) {
+        if (dataForm.fotoArr[i] && dataForm.fotoArr[i].base64) {
+          const fData = dataForm.fotoArr[i];
+          const blob = Utilities.newBlob(Utilities.base64Decode(fData.base64), fData.tipe, fData.nama);
+          idFotoList[i] = folder.createFile(blob).getId();
+        }
+      }
+    }
+    
+    const waktuSekarang = new Date();
+    const idLaporan = "AGR-" + waktuSekarang.getTime();
+    
+    // Format Tanggal sesuai kalender Indonesia
+    const bagianTgl = dataForm.tanggal.split('-'); 
+    const tglObj = new Date(parseInt(bagianTgl[0]), parseInt(bagianTgl[1]) - 1, parseInt(bagianTgl[2]));
+    const namaHariArr = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const namaBulanArr = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const tglFormat = `${namaHariArr[tglObj.getDay()]}, ${bagianTgl[2]} ${namaBulanArr[tglObj.getMonth()]} ${bagianTgl[0]}`;
+
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheets()[0]; 
+    
+    // URUTAN KOLOM DI SPREADSHEET:
+    // 1:ID | 2:Tgl | 3:Bln | 4:Thn | 5:CP | 6:TP | 7:Kelas | 8:NTM 
+    // 9:Foto1 | 10:Foto2 | 11:Foto3 | 12:Foto4 | 13:Foto5 | 14:Foto6 
+    // 15:Volume | 16:Keterangan
+    
+    const barisBaru = [
+      idLaporan, tglFormat, dataForm.bulan, dataForm.tahunAjaran,
+      dataForm.cp || "", dataForm.tp || "", dataForm.kelas || "", dataForm.nonTatapMuka || "",
+      idFotoList[0], idFotoList[1], idFotoList[2], idFotoList[3], idFotoList[4], idFotoList[5],
+      dataForm.volume || "0", dataForm.keterangan || "Terlaksana"
+    ];
+    
+    sheet.appendRow(barisBaru);
+    
+    // Otomatis rapikan urutan baris di spreadsheet berdasarkan tanggal (kronologis)
+    rapikanDanUrutkanSpreadsheet(sheet);
+    
+    return "Data berhasil disimpan!";
+  } catch (error) {
+    throw new Error("Gagal menyimpan data: " + error.message);
+  }
+}
+
+// ==========================================
+// 🖨️ 3. MESIN PENCETAK LAPORAN (PDF & DOCX)
+// ==========================================
+function buatLaporanBulanan(bulanTarget, tahunAjaranTarget, formatFile) {
+  try {
+    const format = (formatFile || 'pdf').toLowerCase();
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheets()[0];
+    const data = sheet.getDataRange().getValues(); 
+    
+    const folder = DriveApp.getFolderById(FOLDER_OUTPUT_ID);
+    
+    // 1. Saring data khusus untuk bulan dan tahun ajaran yang ditargetkan
+    const dataBulanIni = data.filter((baris, index) => {
+      if (index === 0) return false;
+      const matchBulan = String(baris[2]).trim().toLowerCase() === String(bulanTarget).trim().toLowerCase();
+      const matchTahun = !tahunAjaranTarget || String(baris[3]).trim() === String(tahunAjaranTarget).trim();
+      return matchBulan && matchTahun;
+    });
+    
+    if (dataBulanIni.length === 0) {
+      return {
+        sukses: false,
+        pesan: "Tidak ditemukan data agenda untuk bulan " + bulanTarget + (tahunAjaranTarget ? " (" + tahunAjaranTarget + ")" : "")
+      };
+    }
+    
+    // 🟢 URUTKAN DATA SECARA KRONOLOGIS (TANGGAL AWAL KE TANGGAL AKHIR)
+    // Menjamin kegiatan selalu berurutan (misal: 28 September sebelum 29 September)
+    // meskipun pengguna menginput tanggal 29 terlebih dahulu baru tanggal 28.
+    dataBulanIni.sort((a, b) => {
+      const waktuA = ekstrakWaktuTanggal(a[1]);
+      const waktuB = ekstrakWaktuTanggal(b[1]);
+      if (waktuA !== waktuB) {
+        return waktuA - waktuB; // Ascending: dari tanggal awal (1) hingga akhir (30/31)
+      }
+      return String(a[0]).localeCompare(String(b[0]));
+    });
+    
+    // 2. Kloning template Google Docs
+    const thnAjar = dataBulanIni[0][3] || tahunAjaranTarget || "";
+    const thnSlug = String(thnAjar).replace(/[\/\\]/g, '-');
+    const namaDocBaru = "Laporan Agenda - " + bulanTarget + " " + thnSlug;
+    
+    const fileTemplate = DriveApp.getFileById(TEMPLATE_DOC_ID);
+    const fileBaru = fileTemplate.makeCopy(namaDocBaru, folder);
+    const docBaru = DocumentApp.openById(fileBaru.getId());
+    const body = docBaru.getBody();
+    
+    // 3. Logika Tanggal Cetak (Tanda Tangan Mengambil Tanggal Agenda Terakhir)
+    const barisTerakhirBulanIni = dataBulanIni[dataBulanIni.length - 1];
+    let tglRaw = barisTerakhirBulanIni[1];
+    let tanggalCetak = "";
+
+    if (tglRaw instanceof Date) {
+      const namaHariArr = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+      const namaBulanArr = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+      tanggalCetak = `${namaHariArr[tglRaw.getDay()]}, ${String(tglRaw.getDate()).padStart(2,'0')} ${namaBulanArr[tglRaw.getMonth()]} ${tglRaw.getFullYear()}`;
+    } else {
+      tanggalCetak = String(tglRaw || "");
+    }
+    
+    // Mengganti tag header di Google Docs
+    body.replaceText("<<Tahun_Ajaran>>", String(thnAjar)); 
+    body.replaceText("<<Bulan>>", String(bulanTarget));
+    body.replaceText("<<Tanggal_Cetak>>", tanggalCetak);
+    
+    // 4. Logika Pengisian Tabel Agenda
+    const tables = body.getTables();
+    let table = null;
+    for (let t = 0; t < tables.length; t++) {
+      if (tables[t].getRow(0).getNumCells() >= 6) { 
+        table = tables[t]; 
+        break; 
+      }
+    }
+    if (!table) throw new Error("Tabel Agenda tidak ditemukan pada template Google Docs!");
+    
+    const barisTemplate = table.getRow(1); 
+    
+    for (let i = 0; i < dataBulanIni.length; i++) {
+      const rowData = dataBulanIni[i];
+      const barisBaru = table.appendTableRow(barisTemplate.copy());
+      
+      // Kolom 0: Nomor Urut
+      barisBaru.getCell(0).setText(String(i + 1));
+      
+      // Format Tanggal
+      let tgl = rowData[1];
+      if (tgl instanceof Date) {
+        const namaHariArr = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+        const namaBulanArr = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        tgl = `${namaHariArr[tgl.getDay()]}, ${String(tgl.getDate()).padStart(2,'0')} ${namaBulanArr[tgl.getMonth()]} ${tgl.getFullYear()}`;
+      }
+      
+      barisBaru.replaceText("<<Tanggal>>", String(tgl));
+      barisBaru.replaceText("<<CP>>", rowData[4] ? "CP: " + String(rowData[4]) : "");
+      barisBaru.replaceText("<<TP>>", rowData[5] ? "TP: " + String(rowData[5]) : "");
+      barisBaru.replaceText("<<Kelas>>", rowData[6] ? "Kelas: " + String(rowData[6]) : "");
+      barisBaru.replaceText("<<Non_Tatap_Muka>>", rowData[7] ? String(rowData[7]) : "-");
+      
+      barisBaru.replaceText("<<Volume>>", rowData[14] ? String(rowData[14]) : "0");
+      barisBaru.replaceText("<<Keterangan>>", rowData[15] ? String(rowData[15]) : "Terlaksana");
+      
+      // --- LOGIKA SISIP HINGGA 6 FOTO ---
+      const selFoto = barisBaru.getCell(4); 
+      selFoto.setText(""); 
+      
+      const kumpulanIDFoto = [rowData[8], rowData[9], rowData[10], rowData[11], rowData[12], rowData[13]];
+      const jumlahFotoAktif = kumpulanIDFoto.filter(id => id && String(id).trim() !== "").length;
+      
+      let adaGambar = false;
+      for (let f = 0; f < kumpulanIDFoto.length; f++) {
+        const idGambar = kumpulanIDFoto[f];
+        if (idGambar && String(idGambar).trim() !== "") {
+          try {
+            const blob = DriveApp.getFileById(idGambar).getBlob();
+            if (adaGambar) selFoto.getChild(0).asParagraph().appendText(" "); 
+            
+            const img = selFoto.getChild(0).asParagraph().appendInlineImage(blob);
+            const rasio = img.getHeight() / img.getWidth();
+            
+            // Penyesuaian ukuran lebar foto: jika banyak foto dibuat 85px, jika sedikit 140px
+            const lebarBaru = (jumlahFotoAktif > 3) ? 85 : 140; 
+            img.setWidth(lebarBaru);
+            img.setHeight(lebarBaru * rasio);
+            adaGambar = true;
+          } catch (e) {
+            Logger.log("Gagal memuat foto ID: " + idGambar + " (" + e.message + ")");
+          }
+        }
+      }
+      
+      if (!adaGambar) selFoto.setText("-");
+    }
+    
+    // Hapus baris template (indeks 1)
+    table.removeRow(1);
+    docBaru.saveAndClose();
+    
+    // 5. Ekspor berdasarkan pilihan format (DOCX atau PDF)
+    if (format === 'docx') {
+      // Set sharing agar bisa diunduh
+      fileBaru.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      const downloadDocxUrl = "https://docs.google.com/document/d/" + fileBaru.getId() + "/export?format=docx";
+      const viewDocUrl = fileBaru.getUrl();
+      
+      return {
+        sukses: true,
+        format: "docx",
+        url: downloadDocxUrl,
+        viewUrl: viewDocUrl,
+        namaFile: namaDocBaru + ".docx",
+        totalKegiatan: dataBulanIni.length
+      };
+    } else {
+      // Format PDF (Default)
+      const namaFilePdf = "PDF_Laporan_Agenda_" + bulanTarget + "_" + thnSlug + ".pdf";
+      const filePdf = folder.createFile(docBaru.getAs('application/pdf')).setName(namaFilePdf);
+      
+      // Set izin view agar bisa dibuka langsung di browser
+      filePdf.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      
+      return {
+        sukses: true,
+        format: "pdf",
+        url: filePdf.getUrl(),
+        downloadUrl: filePdf.getDownloadUrl(),
+        namaFile: namaFilePdf,
+        totalKegiatan: dataBulanIni.length
+      };
+    }
+  } catch (error) {
+    throw new Error("Gagal membuat dokumen laporan: " + error.message);
+  }
+}
+
+// ==========================================
+// 🛠️ 4. FUNGSI SIMULASI DEVELOPER
+// ==========================================
+function simulasiCetakLaporan() {
+  const bulanSimulasi = "Maret"; 
+  const tahunSimulasi = "2025/2026";
+  const formatSimulasi = "pdf"; // Bisa ganti "docx" atau "pdf"
+  
+  Logger.log("⚙️ Memulai simulasi cetak laporan: " + bulanSimulasi + " (" + formatSimulasi.toUpperCase() + ")");
+  const res = buatLaporanBulanan(bulanSimulasi, tahunSimulasi, formatSimulasi);
+  Logger.log(res);
+}
+
+// ==========================================
+// 📊 5. FUNGSI MENGAMBIL DATA RIWAYAT
+// ==========================================
+function getRiwayatLaporan(bulanTarget, tahunAjaranTarget) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheets()[0];
+    // Gunakan getDisplayValues() agar format tanggal sesuai dengan tampilan di Spreadsheet
+    const data = sheet.getDataRange().getDisplayValues(); 
+    
+    // Mode 1: Jika bulanTarget kosong (sebelum memilih bulan),
+    // langsung ambil HANYA 1 data dengan tanggal PALING BARU di database tanpa memandang bulan & tahun ajaran.
+    if (!bulanTarget || String(bulanTarget).trim() === "" || String(bulanTarget).trim().toLowerCase() === "terakhir") {
+      if (data.length <= 1) return []; // Database kosong / hanya header
+      
+      let barisTerbaru = data[1];
+      let waktuTerbaru = ekstrakWaktuTanggal(barisTerbaru[1]);
+      for (let i = 2; i < data.length; i++) {
+        const waktuI = ekstrakWaktuTanggal(data[i][1]);
+        if (waktuI >= waktuTerbaru) {
+          waktuTerbaru = waktuI;
+          barisTerbaru = data[i];
+        }
+      }
+      
+      const kumpulanIDFoto = [barisTerbaru[8], barisTerbaru[9], barisTerbaru[10], barisTerbaru[11], barisTerbaru[12], barisTerbaru[13]];
+      const fotoValid = kumpulanIDFoto.filter(id => id && id.trim() !== "");
+      
+      return [{
+        id: barisTerbaru[0],
+        tanggal: barisTerbaru[1],
+        bulan: barisTerbaru[2],
+        tahunAjaran: barisTerbaru[3],
+        cp: barisTerbaru[4],
+        tp: barisTerbaru[5],
+        kelas: barisTerbaru[6],
+        ntm: barisTerbaru[7], 
+        volume: barisTerbaru[14],
+        keterangan: barisTerbaru[15],
+        fotos: fotoValid,
+        kumpulanFotoId: kumpulanIDFoto,
+        adaTM: (barisTerbaru[4] !== "" || barisTerbaru[5] !== "" || barisTerbaru[6] !== "")
+      }];
+    }
+
+    // Mode 2: Jika bulanTarget dipilih, lakukan filter spesifik sesuai bulan & tahun ajaran
+    const hasil = [];
+    for (let i = 1; i < data.length; i++) {
+      const baris = data[i];
+      const matchBulan = String(baris[2]).trim().toLowerCase() === String(bulanTarget).trim().toLowerCase();
+      const matchTahun = !tahunAjaranTarget || String(tahunAjaranTarget).trim() === "" || String(tahunAjaranTarget).trim().toLowerCase() === "semua" || String(baris[3]).trim() === String(tahunAjaranTarget).trim();
+      
+      if (matchBulan && matchTahun) {
+        const kumpulanIDFoto = [baris[8], baris[9], baris[10], baris[11], baris[12], baris[13]];
+        const fotoValid = kumpulanIDFoto.filter(id => id && id.trim() !== "");
+        
+        hasil.push({
+          id: baris[0],
+          tanggal: baris[1],
+          bulan: baris[2],
+          tahunAjaran: baris[3],
+          cp: baris[4],
+          tp: baris[5],
+          kelas: baris[6],
+          ntm: baris[7], 
+          volume: baris[14],
+          keterangan: baris[15],
+          fotos: fotoValid,
+          kumpulanFotoId: kumpulanIDFoto,
+          adaTM: (baris[4] !== "" || baris[5] !== "" || baris[6] !== "")
+        });
+      }
+    }
+    
+    // Urutkan data riwayat berdasarkan tanggal (tanggal terbaru muncul di paling atas)
+    hasil.sort((a, b) => {
+      const waktuA = ekstrakWaktuTanggal(a.tanggal);
+      const waktuB = ekstrakWaktuTanggal(b.tanggal);
+      if (waktuA !== waktuB) {
+        return waktuB - waktuA; // Descending: tanggal paling akhir muncul paling atas di riwayat
+      }
+      return String(b.id).localeCompare(String(a.id));
+    });
+    return hasil;
+  } catch (error) {
+    throw new Error("Gagal mengambil data riwayat: " + error.message);
+  }
+}
+
+// ==========================================
+// 🗑️ 6. FUNGSI MENGHAPUS DATA AGENDA
+// ==========================================
+function hapusDataAgenda(idLaporan) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheets()[0];
+    const data = sheet.getDataRange().getValues();
+    
+    let barisDitemukan = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === String(idLaporan).trim()) {
+        barisDitemukan = i + 1; // 1-indexed untuk Spreadsheet
+        break;
+      }
+    }
+    
+    if (barisDitemukan === -1) {
+      return { sukses: false, pesan: "Data agenda dengan ID " + idLaporan + " tidak ditemukan." };
+    }
+    
+    sheet.deleteRow(barisDitemukan);
+    return { sukses: true, pesan: "Data agenda berhasil dihapus!" };
+  } catch (error) {
+    throw new Error("Gagal menghapus data agenda: " + error.message);
+  }
+}
+
+// ==========================================
+// ✏️ 7. FUNGSI MEMPERBARUI (EDIT) DATA AGENDA
+// ==========================================
+function updateDataAgenda(dataEdit) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheets()[0];
+    const data = sheet.getDataRange().getValues();
+    
+    let barisDitemukan = -1;
+    let dataLama = null;
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === String(dataEdit.id).trim()) {
+        barisDitemukan = i + 1;
+        dataLama = data[i];
+        break;
+      }
+    }
+    
+    if (barisDitemukan === -1) {
+      return { sukses: false, pesan: "Data agenda tidak ditemukan di spreadsheet." };
+    }
+    
+    const folder = DriveApp.getFolderById(FOLDER_OUTPUT_ID);
+    
+    // Array 6 ID Foto: default dari foto lama
+    const idFotoList = [
+      dataLama[8] || "", dataLama[9] || "", dataLama[10] || "",
+      dataLama[11] || "", dataLama[12] || "", dataLama[13] || ""
+    ];
+    
+    // Jika ada foto baru yang diunggah / diganti:
+    if (dataEdit.fotoArr && Array.isArray(dataEdit.fotoArr)) {
+      for (let i = 0; i < 6; i++) {
+        if (dataEdit.fotoArr[i]) {
+          if (dataEdit.fotoArr[i].base64) {
+            // Upload foto baru ke Drive
+            const fData = dataEdit.fotoArr[i];
+            const blob = Utilities.newBlob(Utilities.base64Decode(fData.base64), fData.tipe, fData.nama);
+            idFotoList[i] = folder.createFile(blob).getId();
+          } else if (dataEdit.fotoArr[i].hapus) {
+            // Jika pengguna menghapus foto
+            idFotoList[i] = "";
+          } else if (dataEdit.fotoArr[i].existingId !== undefined) {
+            // Mempertahankan foto lama
+            idFotoList[i] = dataEdit.fotoArr[i].existingId;
+          }
+        }
+      }
+    }
+    
+    // Format Tanggal jika tanggal diberikan dalam format YYYY-MM-DD
+    let tglFormat = dataLama[1];
+    if (dataEdit.tanggal && dataEdit.tanggal.includes('-')) {
+      const bagianTgl = dataEdit.tanggal.split('-');
+      const tglObj = new Date(parseInt(bagianTgl[0]), parseInt(bagianTgl[1]) - 1, parseInt(bagianTgl[2]));
+      const namaHariArr = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+      const namaBulanArr = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+      tglFormat = `${namaHariArr[tglObj.getDay()]}, ${bagianTgl[2]} ${namaBulanArr[tglObj.getMonth()]} ${bagianTgl[0]}`;
+    } else if (dataEdit.tanggal) {
+      tglFormat = dataEdit.tanggal;
+    }
+    
+    // Nilai baris baru
+    const barisUpdate = [
+      dataEdit.id,
+      tglFormat,
+      dataEdit.bulan || dataLama[2],
+      dataEdit.tahunAjaran || dataLama[3],
+      dataEdit.cp !== undefined ? dataEdit.cp : dataLama[4],
+      dataEdit.tp !== undefined ? dataEdit.tp : dataLama[5],
+      dataEdit.kelas !== undefined ? dataEdit.kelas : dataLama[6],
+      dataEdit.nonTatapMuka !== undefined ? dataEdit.nonTatapMuka : dataLama[7],
+      idFotoList[0], idFotoList[1], idFotoList[2], idFotoList[3], idFotoList[4], idFotoList[5],
+      dataEdit.volume !== undefined ? dataEdit.volume : dataLama[14],
+      dataEdit.keterangan !== undefined ? dataEdit.keterangan : dataLama[15]
+    ];
+    
+    sheet.getRange(barisDitemukan, 1, 1, 16).setValues([barisUpdate]);
+    
+    // Otomatis rapikan urutan spreadsheet jika tanggal diubah
+    rapikanDanUrutkanSpreadsheet(sheet);
+    
+    return { sukses: true, pesan: "Data agenda berhasil diperbarui!" };
+  } catch (error) {
+    throw new Error("Gagal memperbarui data agenda: " + error.message);
+  }
+}
+
+// ==========================================
+// 🕒 8. FUNGSI BANTUAN PENGURUTAN TANGGAL KRONOLOGIS
+// ==========================================
+/**
+ * Mengekstrak nilai milidetik (timestamp) dari berbagai format tanggal:
+ * - Objek Date bawaan
+ * - Teks format Indonesia: "Selasa, 29 September 2026", "28 September 2026"
+ * - Teks format ISO: "2026-09-28"
+ * - Teks format DD-MM-YYYY: "28-09-2026"
+ */
+function ekstrakWaktuTanggal(val) {
+  if (!val) return 0;
+  if (val instanceof Date) {
+    return isNaN(val.getTime()) ? 0 : val.getTime();
+  }
+  
+  const str = String(val).trim();
+  if (!str) return 0;
+  
+  // Kamus bulan dalam Bahasa Indonesia dan Bahasa Inggris
+  const daftarBulan = [
+    { nama: ["januari", "january", "jan"], idx: 0 },
+    { nama: ["februari", "february", "feb"], idx: 1 },
+    { nama: ["maret", "march", "mar"], idx: 2 },
+    { nama: ["april", "apr"], idx: 3 },
+    { nama: ["mei", "may"], idx: 4 },
+    { nama: ["juni", "june", "jun"], idx: 5 },
+    { nama: ["juli", "july", "jul"], idx: 6 },
+    { nama: ["agustus", "august", "agu", "aug"], idx: 7 },
+    { nama: ["september", "sep", "sept"], idx: 8 },
+    { nama: ["oktober", "october", "okt", "oct"], idx: 9 },
+    { nama: ["november", "nov"], idx: 10 },
+    { nama: ["desember", "december", "des", "dec"], idx: 11 }
+  ];
+  
+  // 1. Format teks: contoh "Selasa, 29 September 2026" atau "28 September 2026"
+  const matchIndo = str.match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
+  if (matchIndo) {
+    const hari = parseInt(matchIndo[1], 10);
+    const teksBulan = matchIndo[2].toLowerCase();
+    const tahun = parseInt(matchIndo[3], 10);
+    
+    for (let b = 0; b < daftarBulan.length; b++) {
+      if (daftarBulan[b].nama.some(n => teksBulan.startsWith(n) || n.startsWith(teksBulan))) {
+        return new Date(tahun, daftarBulan[b].idx, hari).getTime();
+      }
+    }
+  }
+  
+  // 2. Format ISO: YYYY-MM-DD atau YYYY/MM/DD
+  const matchIso = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (matchIso) {
+    return new Date(parseInt(matchIso[1], 10), parseInt(matchIso[2], 10) - 1, parseInt(matchIso[3], 10)).getTime();
+  }
+  
+  // 3. Format DD-MM-YYYY atau DD/MM/YYYY
+  const matchDmy = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (matchDmy) {
+    return new Date(parseInt(matchDmy[3], 10), parseInt(matchDmy[2], 10) - 1, parseInt(matchDmy[1], 10)).getTime();
+  }
+  
+  // 4. Fallback bawaan JavaScript Date.parse
+  const parsed = Date.parse(str);
+  if (!isNaN(parsed)) return parsed;
+  
+  return 0;
+}
+
+/**
+ * Merapikan seluruh baris di Spreadsheet agar selalu berurutan sesuai tanggal (kronologis dari lama ke baru)
+ */
+function rapikanDanUrutkanSpreadsheet(sheet) {
+  try {
+    const lastRow = sheet.getLastRow();
+    const lastCol = sheet.getLastColumn() || 16;
+    if (lastRow <= 2) return; // Hanya ada baris header atau 1 data
+    
+    const range = sheet.getRange(2, 1, lastRow - 1, lastCol);
+    const rows = range.getValues();
+    
+    rows.sort((a, b) => {
+      const waktuA = ekstrakWaktuTanggal(a[1]);
+      const waktuB = ekstrakWaktuTanggal(b[1]);
+      if (waktuA !== waktuB) {
+        return waktuA - waktuB; // Urutan kronologis naik (tanggal awal ke akhir)
+      }
+      return String(a[0]).localeCompare(String(b[0]));
+    });
+    
+    range.setValues(rows);
+  } catch (err) {
+    Logger.log("Peringatan saat merapikan urutan spreadsheet: " + err.message);
+  }
+}
+
+/**
+ * Fungsi manual yang bisa dijalankan langsung dari menu Run Apps Script Editor
+ * untuk mengurutkan semua data yang sudah terlanjur tersimpan di Spreadsheet.
+ */
+function urutkanSemuaDataSpreadsheet() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheets()[0];
+  rapikanDanUrutkanSpreadsheet(sheet);
+  Logger.log("✅ Data di spreadsheet berhasil diurutkan berdasarkan tanggal!");
+}

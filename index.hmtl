@@ -1,0 +1,2923 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Agenda Harian Guru</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Desain CSS Modern */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f7f6;
+            color: #334155;
+            overflow: hidden;
+        }
+
+        body.siap {
+            overflow: auto;
+            padding-bottom: 80px;
+        }
+
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            transition: opacity 0.8s ease-out, visibility 0.8s ease-out;
+        }
+
+        #splash-screen.sembunyi {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .splash-logo {
+            font-size: 5.5rem;
+            animation: float 3s ease-in-out infinite, glow 2s infinite alternate;
+        }
+
+        .splash-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-top: 1rem;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .splash-loader {
+            margin-top: 3rem;
+            width: 45px;
+            height: 45px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        @keyframes glow {
+            0% {
+                filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4));
+            }
+
+            100% {
+                filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8));
+            }
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .card {
+            border: none;
+            border-radius: 1.25rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 1.5rem;
+            border-bottom: none;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.2rem;
+            border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #10b981;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.15);
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #475569;
+            font-size: 0.95rem;
+        }
+
+        .section-title {
+            color: #0f172a;
+            font-weight: 600;
+            font-size: 1.15rem;
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            background-color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover,
+        .upload-area:focus-within {
+            border-color: #10b981;
+            background-color: #ecfdf5;
+        }
+
+        /* Tombol Navigasi Wizard */
+        .btn-nav {
+            border-radius: 0.75rem;
+            padding: 0.8rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-next {
+            background: #10b981;
+            color: white;
+            border: none;
+        }
+
+        .btn-next:hover {
+            background: #059669;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-prev {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+        }
+
+        .btn-prev:hover {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+            color: white;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            background: #e2e8f0;
+            height: 6px;
+            width: 100%;
+        }
+
+        .progress-bar-custom {
+            background: #059669;
+            height: 100%;
+            width: 25%;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 1.5rem 0;
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .step-indicator span.active {
+            color: #059669;
+            font-weight: 700;
+        }
+
+        /* Wizard Transitions */
+        .step-container {
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.4s ease-out;
+            display: none;
+        }
+
+        .step-container.active {
+            opacity: 1;
+            transform: translateX(0);
+            display: block;
+        }
+
+        /* Animasi sembunyi/tampil wadah TM */
+        #wadahKegiatanTM {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            transform-origin: top;
+        }
+
+        /* Custom Autocomplete List */
+        .smart-dropdown-list {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 1050;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            max-height: 220px;
+            overflow-y: auto;
+            margin-top: 5px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            padding: 0.5rem 0;
+            list-style: none;
+        }
+
+        .smart-dropdown-list.show {
+            display: block;
+            animation: fadeInUp 0.2s ease-out;
+        }
+
+        .smart-dropdown-item {
+            padding: 0.6rem 1.2rem;
+            cursor: pointer;
+            color: #475569;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #f8fafc;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .smart-dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .smart-dropdown-item:hover {
+            background-color: #ecfdf5;
+            color: #059669;
+        }
+
+        /* Floating Volume Badge */
+        .floating-volume {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 1040;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 50px;
+            box-shadow: 0 10px 25px rgba(217, 119, 6, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .floating-volume:hover {
+            transform: scale(1.05) translateY(-3px);
+        }
+
+        .floating-volume .vol-num {
+            background: white;
+            color: #d97706;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* Summary Box */
+        .summary-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+
+        /* Hide default Apps Script Warning */
+        #warning,
+        .warning-bar,
+        .warning-banner,
+        .warning-banner-bar {
+            display: none !important;
+        }
+
+        /* Riwayat & Tab Styles */
+        .nav-tabs-custom {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-tab-btn {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 0.75rem;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-tab-btn.active {
+            background: #ecfdf5;
+            color: #10b981;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.1);
+        }
+
+        .nav-tab-btn:hover:not(.active) {
+            background: #f8fafc;
+        }
+
+        .riwayat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #10b981;
+            transition: transform 0.2s;
+        }
+
+        .riwayat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .riwayat-date {
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 1.1rem;
+        }
+
+        .riwayat-badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+
+        .badge-tm {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-ntm {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .riwayat-content {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
+        .riwayat-content ul {
+            padding-left: 20px;
+            margin-bottom: 0;
+        }
+
+        .riwayat-footer {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px dashed #e2e8f0;
+            padding-top: 15px;
+        }
+
+        .skeleton-box {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeletonLoading 1.5s infinite;
+            border-radius: 0.5rem;
+        }
+
+        @keyframes skeletonLoading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #10b981;
+            line-height: 1;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SPLASH SCREEN -->
+    <div id="splash-screen">
+        <i class="bi bi-journal-check splash-logo"></i>
+        <div class="splash-title">E-Agenda Guru</div>
+        <div class="splash-subtitle">Agenda Harian M.Kormasela</div>
+        <div class="splash-loader"></div>
+    </div>
+
+    <!-- FLOATING VOLUME INDICATOR -->
+    <div class="floating-volume" id="floatVolume" title="Total Volume Kegiatan">
+        <i class="bi bi-bar-chart-fill"></i> Volume
+        <div class="vol-num" id="volumeDisplay">0</div>
+    </div>
+
+    <div class="container mt-4 mb-5" style="max-width: 850px;">
+
+        <!-- NAVIGASI TAB -->
+        <div class="nav-tabs-custom">
+            <button class="nav-tab-btn active" onclick="pindahTab('input')" id="tabInput"><i
+                    class="bi bi-pencil-square me-2"></i>Isi Agenda</button>
+            <button class="nav-tab-btn" onclick="pindahTab('riwayat')" id="tabRiwayat"><i
+                    class="bi bi-clock-history me-2"></i>Riwayat Laporan</button>
+        </div>
+
+        <!-- WADAH HALAMAN INPUT -->
+        <div id="halamanInput">
+            <div class="card">
+                <div class="card-header text-white text-center pb-4">
+                    <h4 class="mb-0 fw-bold"><i class="bi bi-journal-text me-2"></i>Agenda Harian Guru</h4>
+                    <p class="mb-0 opacity-75">M. Kormasela</p>
+                </div>
+
+                <!-- PROGRESS BAR WIZARD -->
+                <div class="progress-container">
+                    <div class="progress-bar-custom" id="progressBar"></div>
+                </div>
+                <div class="step-indicator mb-3">
+                    <span id="ind1" class="active">1. Tanggal</span>
+                    <span id="ind2">2. Tatap Muka</span>
+                    <span id="ind3">3. Non Tatap Muka</span>
+                    <span id="ind4">4. Selesai</span>
+                </div>
+
+                <div class="card-body p-4 p-md-5 pt-3">
+
+                    <form id="formAgenda">
+                        <!-- Input Tersembunyi untuk Volume Final -->
+                        <input type="hidden" id="volume" value="0">
+
+                        <!-- ========================================== -->
+                        <!-- STEP 1: BAGIAN TANGGAL                     -->
+                        <!-- ========================================== -->
+                        <div id="step1" class="step-container active">
+                            <h5 class="text-success fw-bold mb-4 border-bottom pb-2"><i
+                                    class="bi bi-calendar-event me-2"></i>Data Waktu Pelaksanaan</h5>
+                            <div class="row g-4 mb-5">
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted">Tanggal</label>
+                                    <input type="date" class="form-control" id="tanggal" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted">Bulan</label>
+                                    <select class="form-select" id="bulan" required>
+                                        <option value="Januari">Januari</option>
+                                        <option value="Februari">Februari</option>
+                                        <option value="Maret">Maret</option>
+                                        <option value="April">April</option>
+                                        <option value="Mei">Mei</option>
+                                        <option value="Juni">Juni</option>
+                                        <option value="Juli">Juli</option>
+                                        <option value="Agustus">Agustus</option>
+                                        <option value="September">September</option>
+                                        <option value="Oktober">Oktober</option>
+                                        <option value="November">November</option>
+                                        <option value="Desember">Desember</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted">Tahun Ajaran</label>
+                                    <select class="form-select" id="tahunAjaran" required>
+                                        <option value="2025/2026">2025/2026</option>
+                                        <option value="2026/2027" selected>2026/2027</option>
+                                        <option value="2027/2028">2027/2028</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Alert Smart Verifikasi Tanggal vs Bulan -->
+                            <div id="peringatanBulan" class="alert alert-warning border-0 shadow-sm d-none mt-3"
+                                style="border-radius: 0.75rem;">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-exclamation-triangle-fill fs-5 text-warning me-2"></i>
+                                    <div>
+                                        <strong class="d-block text-dark">Perhatian Kesesuaian Waktu!</strong>
+                                        <span id="teksPeringatanBulan" class="small text-muted">Bulan yang dipilih tidak
+                                            sesuai dengan tanggal pada kalender.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-4">
+                                <button type="button" class="btn btn-nav btn-next px-4" id="btnNextStep1"
+                                    onclick="goToStep(2)">Lanjut <i class="bi bi-arrow-right ms-1"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- ========================================== -->
+                        <!-- STEP 2: KEGIATAN TATAP MUKA                -->
+                        <!-- ========================================== -->
+                        <div id="step2" class="step-container">
+                            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                                <h5 class="text-success fw-bold mb-0"><i class="bi bi-book-half me-2"></i>Kegiatan Tatap
+                                    Muka</h5>
+                                <div class="form-check form-switch fs-5 mb-0">
+                                    <input class="form-check-input shadow-none" type="checkbox" role="switch"
+                                        id="switchTM" checked>
+                                    <label class="form-check-label fs-6 mt-1 text-success fw-medium" for="switchTM"
+                                        id="labelSwitchTM">Ada</label>
+                                </div>
+                            </div>
+
+                            <div id="wadahKegiatanTM">
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Capaian Pembelajaran (CP)</label>
+                                        <textarea class="form-control" id="cp" rows="2"
+                                            onkeyup="kalkulasiVolume()"></textarea>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Tujuan Pembelajaran (TP)</label>
+                                        <textarea class="form-control" id="tp" rows="2"
+                                            onkeyup="kalkulasiVolume()"></textarea>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Kelas</label>
+                                        <select class="form-select" id="kelas" onchange="kalkulasiVolume()">
+                                            <option value="">-- Pilih Kelas --</option>
+                                            <option value="I">I (Satu)</option>
+                                            <option value="II">II (Dua)</option>
+                                            <option value="III">III (Tiga)</option>
+                                            <option value="IV">IV (Empat)</option>
+                                            <option value="V">V (Lima)</option>
+                                            <option value="VI">VI (Enam)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="upload-area mb-4">
+                                    <label class="form-label text-success fw-bold"><i
+                                            class="bi bi-camera me-2"></i>Dokumentasi Tatap Muka (Wajib)</label>
+                                    <input type="file" class="form-control mb-3" id="foto1" accept="image/*" required
+                                        onchange="previewFoto(this, 'preview1')">
+                                    <div class="text-center"><img id="preview1"
+                                            class="img-thumbnail rounded-3 d-none shadow-sm" style="max-height: 200px;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-5">
+                                <button type="button" class="btn btn-nav btn-prev" onclick="goToStep(1)"><i
+                                        class="bi bi-arrow-left me-1"></i> Kembali</button>
+                                <button type="button" class="btn btn-nav btn-next px-4" onclick="goToStep(3)">Lanjut <i
+                                        class="bi bi-arrow-right ms-1"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- ========================================== -->
+                        <!-- STEP 3: KEGIATAN NON TATAP MUKA            -->
+                        <!-- ========================================== -->
+                        <div id="step3" class="step-container">
+                            <h5 class="text-primary fw-bold mb-4 border-bottom pb-2"><i
+                                    class="bi bi-laptop me-2"></i>Kegiatan Non Tatap Muka</h5>
+
+                            <div class="mb-4">
+                                <div id="wadahTeksNTM">
+                                    <div class="baris-ntm-dinamis mb-2">
+                                        <div class="position-relative">
+                                            <div class="input-group shadow-sm rounded-3">
+                                                <span class="input-group-text bg-white border-end-0 text-primary"><i
+                                                        class="bi bi-search"></i></span>
+                                                <input type="text"
+                                                    class="form-control border-start-0 ps-0 input-ntm-val"
+                                                    placeholder="Ketik atau pilih kegiatan NTM 1..." autocomplete="off"
+                                                    onfocus="tampilkanOpsi(this)" onkeyup="saringOpsi(this)">
+                                            </div>
+                                            <ul class="smart-dropdown-list"></ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm px-3 mt-2"
+                                    onclick="tambahNTM()">
+                                    <i class="bi bi-plus-lg me-1"></i> Tambah Kegiatan Lain
+                                </button>
+                            </div>
+
+                            <div class="upload-area mb-4" id="wadahFotoNTM">
+                                <div class="mb-3 pb-3 border-bottom baris-foto-dinamis">
+                                    <label class="form-label text-primary fw-bold">
+                                        <i class="bi bi-camera me-2"></i>
+                                        <span class="label-judul-foto">Dokumentasi Non Tatap Muka 1</span>
+                                    </label>
+                                    <input type="file" class="form-control mb-3 file-foto-ntm" accept="image/*"
+                                        onchange="previewFoto(this, 'previewNtm1')">
+                                    <div class="text-center"><img id="previewNtm1"
+                                            class="img-thumbnail rounded-3 d-none shadow-sm" style="max-height: 150px;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-5">
+                                <button type="button" class="btn btn-nav btn-prev" onclick="goToStep(2)"><i
+                                        class="bi bi-arrow-left me-1"></i> Kembali</button>
+                                <button type="button" class="btn btn-nav btn-next px-4" onclick="goToStep(4)"><i
+                                        class="bi bi-check2-square me-2"></i>Periksa Inputan</button>
+                            </div>
+                        </div>
+
+                        <!-- ========================================== -->
+                        <!-- STEP 4: PERIKSA & KIRIM (SUMMARY)          -->
+                        <!-- ========================================== -->
+                        <div id="step4" class="step-container">
+                            <h5 class="text-dark fw-bold mb-3"><i
+                                    class="bi bi-shield-check me-2 text-success"></i>Periksa Inputan Anda</h5>
+                            <p class="text-muted small mb-4">Pastikan semua data di bawah ini sudah benar sebelum
+                                dikirim ke Database.</p>
+
+                            <!-- Tempat Review Data -->
+                            <div id="summaryContent" class="summary-box mb-4 shadow-sm">
+                                <!-- Diisi otomatis oleh JavaScript -->
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold"><i
+                                        class="bi bi-card-text me-2 text-secondary"></i>Keterangan Tambahan
+                                    (Opsional)</label>
+                                <textarea class="form-control" id="keterangan" rows="2"
+                                    placeholder="Tuliskan catatan tambahan atau kosongkan (default: Terlaksana)"></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-5">
+                                <button type="button" class="btn btn-nav btn-prev" onclick="goToStep(3)"><i
+                                        class="bi bi-pencil me-1"></i> Edit Ulang</button>
+                                <button type="submit" class="btn btn-nav btn-submit btn-lg px-4 fs-5" id="btnSubmit">
+                                    Kirim Data <i class="bi bi-send-fill ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div> <!-- Tutup halamanInput -->
+
+        <!-- WADAH HALAMAN RIWAYAT -->
+        <div id="halamanRiwayat" style="display:none;">
+            <div class="card border-0 bg-transparent shadow-none">
+                <!-- Filter Data -->
+                <div class="card bg-white border-0 shadow-sm mb-4" style="border-radius: 1rem;">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-funnel me-2 text-success"></i>Filter Riwayat</h5>
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <select class="form-select" id="filterBulan">
+                                    <option value="" selected>-- Laporan Terakhir (Default) --</option>
+                                    <option value="Januari">Januari</option>
+                                    <option value="Februari">Februari</option>
+                                    <option value="Maret">Maret</option>
+                                    <option value="April">April</option>
+                                    <option value="Mei">Mei</option>
+                                    <option value="Juni">Juni</option>
+                                    <option value="Juli">Juli</option>
+                                    <option value="Agustus">Agustus</option>
+                                    <option value="September">September</option>
+                                    <option value="Oktober">Oktober</option>
+                                    <option value="November">November</option>
+                                    <option value="Desember">Desember</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <select class="form-select" id="filterTahun">
+                                    <option value="2025/2026">2025/2026</option>
+                                    <option value="2026/2027" selected>2026/2027</option>
+                                    <option value="2027/2028">2027/2028</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-success w-100 h-100" onclick="muatRiwayat()"
+                                    style="border-radius: 0.75rem;" title="Cari Data"><i
+                                        class="bi bi-search me-1"></i>Cari</button>
+                            </div>
+                        </div>
+
+                        <!-- Opsi Format & Tombol Unduh / Cetak Laporan -->
+                        <div class="row g-3 mt-3 pt-3 border-top align-items-center">
+                            <div class="col-md-7">
+                                <div class="d-flex flex-wrap align-items-center gap-3">
+                                    <span class="fw-semibold text-secondary small"><i
+                                            class="bi bi-file-earmark-arrow-down me-1"></i>Format Output:</span>
+                                    <div class="form-check form-check-inline mb-0">
+                                        <input class="form-check-input" type="radio" name="formatCetak" id="formatPdf"
+                                            value="pdf" checked>
+                                        <label class="form-check-label small fw-bold text-danger" for="formatPdf">
+                                            <i class="bi bi-file-earmark-pdf-fill me-1"></i>PDF (.pdf)
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline mb-0">
+                                        <input class="form-check-input" type="radio" name="formatCetak" id="formatDocx"
+                                            value="docx">
+                                        <label class="form-check-label small fw-bold text-primary" for="formatDocx">
+                                            <i class="bi bi-file-earmark-word-fill me-1"></i>Word (.docx)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5 text-md-end">
+                                <button class="btn btn-outline-danger w-100 fw-semibold" id="btnUnduhLaporan"
+                                    onclick="unduhLaporanBulanan()" style="border-radius: 0.75rem;">
+                                    <i class="bi bi-download me-1"></i> Unduh / Cetak Laporan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistik Ringkas -->
+                <div class="row g-3 mb-4" id="riwayatStatistik" style="display:none;">
+                    <div class="col-6">
+                        <div class="stat-card">
+                            <div class="text-muted small fw-medium">Total Hari Laporan</div>
+                            <div class="stat-number" id="statHari">0</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-card">
+                            <div class="text-muted small fw-medium">Total Volume Kegiatan</div>
+                            <div class="stat-number" id="statVolume">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wadah Kartu Timeline -->
+                <div id="wadahDaftarRiwayat">
+                    <!-- Default state: Skeleton Loading -->
+                    <div class="riwayat-card">
+                        <div class="skeleton-box" style="height: 24px; width: 60%; margin-bottom: 15px;"></div>
+                        <div class="skeleton-box" style="height: 15px; width: 100%; margin-bottom: 8px;"></div>
+                        <div class="skeleton-box" style="height: 15px; width: 80%; margin-bottom: 20px;"></div>
+                        <div class="skeleton-box" style="height: 35px; width: 100px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- Tutup halamanRiwayat -->
+    </div>
+
+    <!-- MODAL KUSTOM: PERINGATAN FOTO GANDA -->
+    <div class="modal fade" id="modalFotoGanda" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-danger text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Peringatan
+                        Validasi</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3 text-danger" style="font-size: 3.5rem;">
+                        <i class="bi bi-images"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-3">Foto Terdeteksi Ganda!</h5>
+                    <p class="text-muted mb-1" id="teksFotoGanda1"></p>
+                    <p class="text-muted mb-0" id="teksFotoGanda2"></p>
+                    <div class="mt-4 p-3 bg-light rounded-3 small text-secondary border">
+                        Sistem menolak pengiriman. Silakan kembali dan pastikan setiap kegiatan menggunakan foto
+                        dokumentasi yang berbeda.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 justify-content-center pb-4">
+                    <button type="button" class="btn btn-danger px-4 rounded-pill fw-medium" data-bs-dismiss="modal">
+                        <i class="bi bi-arrow-counterclockwise me-2"></i>Saya Mengerti & Ganti Foto
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GALERI FOTO -->
+    <div class="modal fade" id="modalGaleriFoto" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-images me-2"></i>Dokumentasi Kegiatan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <div class="row g-3" id="wadahGridFoto">
+                        <!-- Akan diisi otomatis oleh JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REALTIME PROGRESS CETAK / UNDUH -->
+    <div class="modal fade" id="modalProgressUnduh" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 1.25rem; overflow: hidden;">
+                <!-- Header Modal -->
+                <div class="modal-header border-0 pb-0" id="headerProgressUnduh">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle p-2 me-3" id="iconBoxProgress"
+                            style="background: rgba(25, 135, 84, 0.1);">
+                            <i class="bi bi-file-earmark-arrow-down-fill fs-3 text-success" id="mainIconProgress"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" id="titleProgressUnduh">Memproses Dokumen Laporan</h5>
+                            <small class="text-muted" id="subTitleProgressUnduh">Mohon tunggu, dokumen sedang
+                                disiapkan...</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-body p-4">
+                    <!-- STATE 1: PROGRESS TRACKER REALTIME -->
+                    <div id="wadahProgressState">
+                        <!-- Format & Bulan Info Badge -->
+                        <div
+                            class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3 mb-3 border">
+                            <span class="small text-muted">Periode: <strong class="text-dark"
+                                    id="infoPeriodeUnduh">-</strong></span>
+                            <span class="badge bg-danger rounded-pill px-3 py-2" id="badgeFormatUnduh">PDF
+                                Document</span>
+                        </div>
+
+                        <!-- Progress Bar & Persentase -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small fw-semibold text-secondary" id="unduhStatusText">Mengambil data agenda
+                                dari Spreadsheet...</span>
+                            <span class="small fw-bold text-success" id="unduhPercentLabel">20%</span>
+                        </div>
+                        <div class="progress mb-3"
+                            style="height: 10px; border-radius: 10px; background-color: #e9ecef;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                id="unduhProgressBar" role="progressbar" style="width: 20%;"></div>
+                        </div>
+
+                        <!-- Steps Checklist Realtime -->
+                        <div class="list-group list-group-flush small" id="listStepsUnduh">
+                            <div class="list-group-item d-flex align-items-center py-2 border-0 bg-light rounded-3 fw-bold text-success"
+                                id="stepUnduh1">
+                                <span class="step-icon me-2"><span
+                                        class="spinner-border spinner-border-sm text-success"></span></span>
+                                <span>Membaca data kegiatan dari Google Spreadsheet</span>
+                            </div>
+                            <div class="list-group-item d-flex align-items-center py-2 border-0 bg-transparent text-muted opacity-50"
+                                id="stepUnduh2">
+                                <span class="step-icon me-2"><i class="bi bi-circle"></i></span>
+                                <span>Mengkloning template master Google Docs</span>
+                            </div>
+                            <div class="list-group-item d-flex align-items-center py-2 border-0 bg-transparent text-muted opacity-50"
+                                id="stepUnduh3">
+                                <span class="step-icon me-2"><i class="bi bi-circle"></i></span>
+                                <span>Menyusun baris tabel kegiatan & memproses foto</span>
+                            </div>
+                            <div class="list-group-item d-flex align-items-center py-2 border-0 bg-transparent text-muted opacity-50"
+                                id="stepUnduh4">
+                                <span class="step-icon me-2"><i class="bi bi-circle"></i></span>
+                                <span>Mengompilasi dan mengonversi format dokumen</span>
+                            </div>
+                            <div class="list-group-item d-flex align-items-center py-2 border-0 bg-transparent text-muted opacity-50"
+                                id="stepUnduh5">
+                                <span class="step-icon me-2"><i class="bi bi-circle"></i></span>
+                                <span>Menyiapkan tautan berkas resmi</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STATE 2: SUKSES -->
+                    <div id="wadahSuksesState" class="d-none text-center py-2">
+                        <div class="mb-3 text-success" style="font-size: 3.5rem;">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-1">Dokumen Berhasil Dibuat!</h5>
+                        <p class="text-muted small mb-4" id="teksSuksesUnduh">Dokumen laporan Anda sudah siap untuk
+                            dibuka atau diunduh.</p>
+
+                        <div class="p-3 bg-light rounded-3 text-start small mb-4 border">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Nama File:</span>
+                                <strong class="text-dark text-break" id="namaFileSukses">-</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Format:</span>
+                                <span class="badge bg-success" id="formatSukses">PDF</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Jumlah Kegiatan:</span>
+                                <strong class="text-dark" id="totalKegiatanSukses">0 Kegiatan</strong>
+                            </div>
+                        </div>
+
+                        <!-- Tombol Direct Download/Open (Anti Popup Blocker & Sandbox Safe) -->
+                        <a href="#" id="btnBukaDokumen" target="_blank" rel="noopener noreferrer"
+                            class="btn btn-success btn-lg w-100 fw-bold mb-2 shadow-sm" style="border-radius: 0.75rem;">
+                            <i class="bi bi-box-arrow-up-right me-2"></i> Buka / Unduh Dokumen Sekarang
+                        </a>
+                        <button type="button" class="btn btn-outline-secondary w-100 btn-sm mb-2"
+                            onclick="salinTautanDokumen()" id="btnSalinLink" style="border-radius: 0.75rem;">
+                            <i class="bi bi-clipboard me-1"></i> Salin Tautan Berkas
+                        </button>
+                        <button type="button" class="btn btn-link text-muted text-decoration-none small w-100 mt-2"
+                            data-bs-dismiss="modal">
+                            Tutup
+                        </button>
+                    </div>
+
+                    <!-- STATE 3: ERROR -->
+                    <div id="wadahErrorState" class="d-none text-center py-2">
+                        <div class="mb-3 text-danger" style="font-size: 3.5rem;">
+                            <i class="bi bi-exclamation-octagon-fill"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-1">Gagal Memproses Dokumen</h5>
+                        <p class="text-muted small mb-4" id="teksErrorUnduh">Terjadi kendala saat menghubungkan ke
+                            Google Drive/Sheets.</p>
+                        <button type="button" class="btn btn-danger px-4 rounded-pill fw-medium"
+                            data-bs-dismiss="modal">
+                            Tutup & Coba Lagi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL KONFIRMASI HAPUS AGENDA -->
+    <div class="modal fade" id="modalHapusData" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 1.25rem;">
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3 text-danger" style="font-size: 3.5rem;">
+                        <i class="bi bi-trash3-fill"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Hapus Catatan Agenda Ini?</h5>
+                    <p class="text-muted small mb-3">Tindakan ini akan menghapus data laporan kegiatan dari Google
+                        Spreadsheet secara permanen.</p>
+
+                    <div class="p-3 bg-light rounded-3 text-start small mb-4 border">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Tanggal:</span>
+                            <strong class="text-dark" id="hapusInfoTanggal">-</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Kegiatan:</span>
+                            <strong class="text-dark text-truncate ms-2" style="max-width: 250px;"
+                                id="hapusInfoKegiatan">-</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Volume:</span>
+                            <span class="badge bg-warning text-dark" id="hapusInfoVolume">-</span>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="hapusTargetId" value="">
+
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-light w-50 py-2 rounded-pill fw-medium border"
+                            data-bs-dismiss="modal" id="btnBatalHapus">
+                            Batal
+                        </button>
+                        <button type="button" class="btn btn-danger w-50 py-2 rounded-pill fw-bold shadow-sm"
+                            id="btnKonfirmasiHapus" onclick="eksekusiHapusAgenda()">
+                            <i class="bi bi-trash3 me-1"></i> Ya, Hapus
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT AGENDA LENGKAP -->
+    <div class="modal fade" id="modalEditData" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 1.25rem;">
+                <!-- Header Modal Edit -->
+                <div class="modal-header text-white px-4 py-3"
+                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle p-2 me-3 bg-white bg-opacity-20 text-white">
+                            <i class="bi bi-pencil-square fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-white mb-0"><i class="bi bi-journal-text me-2"></i>Edit
+                                Agenda Harian Guru</h5>
+                            <small class="text-white opacity-75" id="editLabelId">ID: -</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <form id="formEditAgenda" onsubmit="event.preventDefault(); simpanEditAgenda();">
+                        <input type="hidden" id="editId" value="">
+
+                        <!-- 1. TANGGAL, BULAN & TAHUN AJARAN -->
+                        <div class="card border p-3 mb-3 rounded-3 bg-white shadow-sm">
+                            <h5 class="text-success fw-bold mb-3 border-bottom pb-2">
+                                <i class="bi bi-calendar-event me-2"></i>Data Waktu Pelaksanaan
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted">Tanggal</label>
+                                    <input type="date" class="form-control" id="editTanggal" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted">Bulan</label>
+                                    <select class="form-select" id="editBulan" required>
+                                        <option value="Januari">Januari</option>
+                                        <option value="Februari">Februari</option>
+                                        <option value="Maret">Maret</option>
+                                        <option value="April">April</option>
+                                        <option value="Mei">Mei</option>
+                                        <option value="Juni">Juni</option>
+                                        <option value="Juli">Juli</option>
+                                        <option value="Agustus">Agustus</option>
+                                        <option value="September">September</option>
+                                        <option value="Oktober">Oktober</option>
+                                        <option value="November">November</option>
+                                        <option value="Desember">Desember</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted">Tahun Ajaran</label>
+                                    <select class="form-select" id="editTahunAjaran" required>
+                                        <option value="2025/2026">2025/2026</option>
+                                        <option value="2026/2027">2026/2027</option>
+                                        <option value="2027/2028">2027/2028</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Alert Smart Verifikasi Tanggal vs Bulan di Edit -->
+                            <div id="editPeringatanBulan" class="alert alert-warning border-0 shadow-sm d-none mt-3"
+                                style="border-radius: 0.75rem;">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-exclamation-triangle-fill fs-5 text-warning me-2"></i>
+                                    <div>
+                                        <strong class="d-block text-dark">Perhatian Kesesuaian Waktu!</strong>
+                                        <span id="editTeksPeringatanBulan" class="small text-muted">Bulan yang dipilih
+                                            tidak sesuai dengan tanggal pada kalender.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. KEGIATAN TATAP MUKA (PBM) -->
+                        <div class="card border p-3 mb-3 rounded-3 bg-white shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                                <h5 class="text-success fw-bold mb-0">
+                                    <i class="bi bi-book-half me-2"></i>Kegiatan Tatap Muka
+                                </h5>
+                                <div class="form-check form-switch fs-5 mb-0">
+                                    <input class="form-check-input shadow-none" type="checkbox" role="switch"
+                                        id="editSwitchTM" onchange="toggleEditTM()">
+                                    <label class="form-check-label fs-6 mt-1 text-success fw-medium" for="editSwitchTM"
+                                        id="editLabelSwitchTM">Ada</label>
+                                </div>
+                            </div>
+
+                            <div id="wadahEditTM">
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Capaian Pembelajaran (CP)</label>
+                                        <textarea class="form-control" id="editCP" rows="2"
+                                            placeholder="Capaian Pembelajaran..."
+                                            onkeyup="kalkulasiVolumeEdit()"></textarea>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Tujuan Pembelajaran (TP)</label>
+                                        <textarea class="form-control" id="editTP" rows="2"
+                                            placeholder="Tujuan Pembelajaran..."
+                                            onkeyup="kalkulasiVolumeEdit()"></textarea>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Kelas</label>
+                                        <select class="form-select" id="editKelas" onchange="kalkulasiVolumeEdit()">
+                                            <option value="">-- Pilih Kelas --</option>
+                                            <option value="I">I (Satu)</option>
+                                            <option value="II">II (Dua)</option>
+                                            <option value="III">III (Tiga)</option>
+                                            <option value="IV">IV (Empat)</option>
+                                            <option value="V">V (Lima)</option>
+                                            <option value="VI">VI (Enam)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="upload-area mb-2">
+                                    <label class="form-label text-success fw-bold">
+                                        <i class="bi bi-camera me-2"></i>Dokumentasi Tatap Muka
+                                    </label>
+                                    <div id="wadahFotoEditTM">
+                                        <!-- Diisi otomatis oleh JS -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. KEGIATAN NON TATAP MUKA (NTM) -->
+                        <div class="card border p-3 mb-3 rounded-3 bg-white shadow-sm">
+                            <h5 class="text-primary fw-bold mb-3 border-bottom pb-2">
+                                <i class="bi bi-laptop me-2"></i>Kegiatan Non Tatap Muka
+                            </h5>
+
+                            <div class="mb-4">
+                                <div id="wadahTeksNtmEdit">
+                                    <!-- Diisi secara dinamis oleh JS dengan Smart Autocomplete Input -->
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm px-3 mt-2"
+                                    onclick="tambahNtmEdit()">
+                                    <i class="bi bi-plus-lg me-1"></i> Tambah Kegiatan Lain
+                                </button>
+                            </div>
+
+                            <div class="upload-area mb-2" id="wadahFotoNtmEdit">
+                                <!-- Diisi secara dinamis oleh JS dengan per-NTM photo slot -->
+                            </div>
+                        </div>
+
+                        <!-- 4. VOLUME & KETERANGAN -->
+                        <div class="card border p-3 mb-3 rounded-3 bg-white shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                                <h5 class="text-dark fw-bold mb-0">
+                                    <i class="bi bi-bar-chart-fill me-2 text-warning"></i>Volume & Keterangan
+                                </h5>
+                                <span class="badge bg-warning text-dark px-3 py-2 fs-6 rounded-pill fw-bold">
+                                    <i class="bi bi-bar-chart-fill me-1"></i> Volume: <span
+                                        id="editVolumeDisplay">0</span>
+                                </span>
+                            </div>
+
+                            <input type="hidden" id="editVolume" value="0">
+
+                            <div class="mb-2">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-card-text me-2 text-secondary"></i>Keterangan Tambahan (Opsional)
+                                </label>
+                                <textarea class="form-control" id="editKeterangan" rows="2"
+                                    placeholder="Tuliskan catatan tambahan atau kosongkan (default: Terlaksana)"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Footer Modal Edit -->
+                <div class="modal-footer border-top bg-light px-4 py-3">
+                    <button type="button" class="btn btn-light px-4 rounded-pill border fw-medium"
+                        data-bs-dismiss="modal" id="btnBatalEdit">
+                        Batal
+                    </button>
+                    <button type="button" class="btn btn-success px-4 rounded-pill fw-bold shadow-sm" id="btnSimpanEdit"
+                        onclick="simpanEditAgenda()">
+                        <i class="bi bi-check2-circle me-1"></i> Simpan Perubahan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Memuat Script Bootstrap untuk Modal -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // --- 0. MOCK GOOGLE SCRIPT RUN UNTUK UJI COBA LOKAL / OFFLINE ---
+        let mockDatabaseLaporan = [
+            {
+                id: "AGR-123456",
+                tanggal: "Senin, 02 Juni 2025",
+                bulan: "Juni",
+                tahunAjaran: "2025/2026",
+                cp: "Menganalisis sistem tata surya dan orbit planet",
+                tp: "Siswa mampu memahami rotasi bumi dan dampaknya",
+                kelas: "IV",
+                ntm: "Menyusun LKPD dan Modul Ajar\nMengoreksi tugas siswa",
+                volume: "4",
+                keterangan: "Terlaksana",
+                fotos: ["1AIySnLDdFXzwmjuUZpP4oIKhDXAO6wBd0Y1ojbx56FE"],
+                kumpulanFotoId: ["1AIySnLDdFXzwmjuUZpP4oIKhDXAO6wBd0Y1ojbx56FE", "", "", "", "", ""],
+                adaTM: true
+            }
+        ];
+
+        function ekstrakWaktuTanggalClient(val) {
+            if (!val) return 0;
+            if (val instanceof Date) return isNaN(val.getTime()) ? 0 : val.getTime();
+            const str = String(val).trim();
+            if (!str) return 0;
+            const daftarBulan = [
+                { nama: ["januari", "january", "jan"], idx: 0 },
+                { nama: ["februari", "february", "feb"], idx: 1 },
+                { nama: ["maret", "march", "mar"], idx: 2 },
+                { nama: ["april", "apr"], idx: 3 },
+                { nama: ["mei", "may"], idx: 4 },
+                { nama: ["juni", "june", "jun"], idx: 5 },
+                { nama: ["juli", "july", "jul"], idx: 6 },
+                { nama: ["agustus", "august", "agu", "aug"], idx: 7 },
+                { nama: ["september", "sep", "sept"], idx: 8 },
+                { nama: ["oktober", "october", "okt", "oct"], idx: 9 },
+                { nama: ["november", "nov"], idx: 10 },
+                { nama: ["desember", "december", "des", "dec"], idx: 11 }
+            ];
+            const matchIndo = str.match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
+            if (matchIndo) {
+                const hari = parseInt(matchIndo[1], 10);
+                const teksBulan = matchIndo[2].toLowerCase();
+                const tahun = parseInt(matchIndo[3], 10);
+                for (let b = 0; b < daftarBulan.length; b++) {
+                    if (daftarBulan[b].nama.some(n => teksBulan.startsWith(n) || n.startsWith(teksBulan))) {
+                        return new Date(tahun, daftarBulan[b].idx, hari).getTime();
+                    }
+                }
+            }
+            const matchIso = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+            if (matchIso) {
+                return new Date(parseInt(matchIso[1], 10), parseInt(matchIso[2], 10) - 1, parseInt(matchIso[3], 10)).getTime();
+            }
+            const matchDmy = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+            if (matchDmy) {
+                return new Date(parseInt(matchDmy[3], 10), parseInt(matchDmy[2], 10) - 1, parseInt(matchDmy[1], 10)).getTime();
+            }
+            const parsed = Date.parse(str);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        if (typeof google === 'undefined' || !google.script || !google.script.run) {
+            window.google = {
+                script: {
+                    run: {
+                        _success: null,
+                        _failure: null,
+                        withSuccessHandler: function (cb) {
+                            const instance = Object.create(this);
+                            instance._success = cb;
+                            return instance;
+                        },
+                        withFailureHandler: function (cb) {
+                            const instance = Object.create(this);
+                            instance._failure = cb;
+                            return instance;
+                        },
+                        simpanDataKeSheets: function (data) {
+                            setTimeout(() => {
+                                const newId = "AGR-" + Date.now().toString().slice(-6);
+                                let tglTeks = data.tanggal || "Senin, 02 Juni 2025";
+                                if (data.tanggal && data.tanggal.includes('-')) {
+                                    const bgn = data.tanggal.split('-');
+                                    const tObj = new Date(parseInt(bgn[0]), parseInt(bgn[1]) - 1, parseInt(bgn[2]));
+                                    const hArr = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+                                    const mArr = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                                    tglTeks = `${hArr[tObj.getDay()]}, ${bgn[2]} ${mArr[tObj.getMonth()]} ${bgn[0]}`;
+                                }
+                                mockDatabaseLaporan.push({
+                                    id: newId,
+                                    tanggal: tglTeks,
+                                    bulan: data.bulan || "Juni",
+                                    tahunAjaran: data.tahunAjaran || "2025/2026",
+                                    cp: data.cp || "",
+                                    tp: data.tp || "",
+                                    kelas: data.kelas || "",
+                                    ntm: data.nonTatapMuka || "",
+                                    volume: data.volume || "0",
+                                    keterangan: data.keterangan || "Terlaksana",
+                                    fotos: [],
+                                    kumpulanFotoId: ["", "", "", "", "", ""],
+                                    adaTM: !!(data.cp || data.tp || data.kelas)
+                                });
+                                // Urutkan database lokal berdasarkan tanggal kronologis
+                                mockDatabaseLaporan.sort((a, b) => ekstrakWaktuTanggalClient(a.tanggal) - ekstrakWaktuTanggalClient(b.tanggal));
+                                if (this._success) this._success("Data berhasil disimpan ke Spreadsheet!");
+                            }, 1000);
+                        },
+                        getRiwayatLaporan: function (bulan, tahun) {
+                            setTimeout(() => {
+                                if (this._success) {
+                                    if (!bulan || bulan === "") {
+                                        const latestSingle = mockDatabaseLaporan.length > 0 ? [mockDatabaseLaporan[mockDatabaseLaporan.length - 1]] : [];
+                                        this._success(latestSingle);
+                                        return;
+                                    }
+                                    const filtered = mockDatabaseLaporan.filter(d =>
+                                        (d.bulan.toLowerCase() === bulan.toLowerCase()) &&
+                                        (!tahun || d.tahunAjaran === tahun)
+                                    );
+                                    // Urutkan riwayat terbaru di atas
+                                    filtered.sort((a, b) => ekstrakWaktuTanggalClient(b.tanggal) - ekstrakWaktuTanggalClient(a.tanggal));
+                                    this._success(filtered);
+                                }
+                            }, 600);
+                        },
+                        hapusDataAgenda: function (id) {
+                            setTimeout(() => {
+                                mockDatabaseLaporan = mockDatabaseLaporan.filter(d => d.id !== id);
+                                if (this._success) this._success({ sukses: true, pesan: "Data agenda berhasil dihapus!" });
+                            }, 800);
+                        },
+                        updateDataAgenda: function (dataEdit) {
+                            setTimeout(() => {
+                                const idx = mockDatabaseLaporan.findIndex(d => d.id === dataEdit.id);
+                                if (idx !== -1) {
+                                    mockDatabaseLaporan[idx] = {
+                                        ...mockDatabaseLaporan[idx],
+                                        tanggal: dataEdit.tanggal || mockDatabaseLaporan[idx].tanggal,
+                                        bulan: dataEdit.bulan || mockDatabaseLaporan[idx].bulan,
+                                        tahunAjaran: dataEdit.tahunAjaran || mockDatabaseLaporan[idx].tahunAjaran,
+                                        cp: dataEdit.cp !== undefined ? dataEdit.cp : mockDatabaseLaporan[idx].cp,
+                                        tp: dataEdit.tp !== undefined ? dataEdit.tp : mockDatabaseLaporan[idx].tp,
+                                        kelas: dataEdit.kelas !== undefined ? dataEdit.kelas : mockDatabaseLaporan[idx].kelas,
+                                        ntm: dataEdit.nonTatapMuka !== undefined ? dataEdit.nonTatapMuka : mockDatabaseLaporan[idx].ntm,
+                                        volume: dataEdit.volume !== undefined ? dataEdit.volume : mockDatabaseLaporan[idx].volume,
+                                        keterangan: dataEdit.keterangan !== undefined ? dataEdit.keterangan : mockDatabaseLaporan[idx].keterangan,
+                                        adaTM: !!(dataEdit.cp || dataEdit.tp || dataEdit.kelas)
+                                    };
+                                }
+                                if (this._success) this._success({ sukses: true, pesan: "Perubahan data berhasil disimpan!" });
+                            }, 1000);
+                        },
+                        buatLaporanBulanan: function (bulan, tahun, format) {
+                            setTimeout(() => {
+                                if (this._success) {
+                                    this._success({
+                                        sukses: true,
+                                        format: format || "pdf",
+                                        url: "https://docs.google.com",
+                                        namaFile: `Laporan_Agenda_${bulan}_${String(tahun).replace('/', '-')}.${format || 'pdf'}`,
+                                        totalKegiatan: mockDatabaseLaporan.length
+                                    });
+                                }
+                            }, 2500);
+                        }
+                    }
+                }
+            };
+        }
+
+        const NAMA_BULAN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+        // --- 1. INISIALISASI & SMART VERIFIKASI ---
+        window.addEventListener('load', function () {
+            setTimeout(() => {
+                const warningCloseBtn = document.querySelector('.warning-banner-close-icon');
+                if (warningCloseBtn) warningCloseBtn.click();
+            }, 100);
+
+            setTimeout(() => {
+                document.getElementById('splash-screen').classList.add('sembunyi');
+                document.body.classList.add('siap');
+            }, 2000);
+
+            // Inisialisasi Tanggal Default & Sinkronisasi Bulan
+            const tglInput = document.getElementById('tanggal');
+            const blnSelect = document.getElementById('bulan');
+
+            if (!tglInput.value) {
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                tglInput.value = `${yyyy}-${mm}-${dd}`;
+            }
+
+            if (tglInput.value) {
+                const bIdx = parseInt(tglInput.value.split('-')[1], 10) - 1;
+                if (bIdx >= 0 && bIdx < 12) blnSelect.value = NAMA_BULAN[bIdx];
+            }
+
+            // Pasang event listener Smart Verifikasi
+            tglInput.addEventListener('change', verifikasiTanggalDanBulan);
+            blnSelect.addEventListener('change', verifikasiTanggalDanBulan);
+
+            // Muat data riwayat awal secara otomatis
+            setTimeout(() => { muatRiwayat(); }, 300);
+        });
+
+        // Smart Verifikasi Tanggal vs Dropdown Bulan
+        function verifikasiTanggalDanBulan(e) {
+            const tglVal = document.getElementById('tanggal').value;
+            const blnSelect = document.getElementById('bulan');
+            const alertBox = document.getElementById('peringatanBulan');
+            const alertText = document.getElementById('teksPeringatanBulan');
+            const btnNext = document.getElementById('btnNextStep1');
+
+            if (!tglVal) {
+                if (alertBox) alertBox.classList.add('d-none');
+                if (btnNext) btnNext.disabled = false;
+                return true;
+            }
+
+            const bIdx = parseInt(tglVal.split('-')[1], 10) - 1;
+            const bulanKalender = NAMA_BULAN[bIdx];
+
+            // Jika perubahan berasal dari datepicker, auto-sync pilihan bulan
+            if (e && e.target && e.target.id === 'tanggal') {
+                blnSelect.value = bulanKalender;
+                if (alertBox) alertBox.classList.add('d-none');
+                if (btnNext) btnNext.disabled = false;
+                return true;
+            }
+
+            // Jika perubahan berasal dari dropdown bulan atau validasi navigasi
+            if (blnSelect.value !== bulanKalender) {
+                if (alertText) {
+                    alertText.innerHTML = `Bulan yang Anda pilih (<strong>${blnSelect.value}</strong>) tidak sesuai dengan tanggal kalender (<strong>${bulanKalender}</strong>). Mohon sesuaikan agar pencatatan tersimpan konsisten.`;
+                }
+                if (alertBox) alertBox.classList.remove('d-none');
+                if (btnNext) btnNext.disabled = true;
+                return false;
+            } else {
+                if (alertBox) alertBox.classList.add('d-none');
+                if (btnNext) btnNext.disabled = false;
+                return true;
+            }
+        }
+
+        // --- 2. LOGIKA VALIDASI FOTO GANDA ---
+        // Fungsi ini mengecek apakah ada file foto yang sama persis diupload lebih dari 1 kali
+        function cekFotoGanda() {
+            const kumpulanFile = [];
+
+            // A. Ambil Data File Tatap Muka
+            const isTM = document.getElementById('switchTM').checked;
+            if (isTM) {
+                const fotoTM = document.getElementById('foto1');
+                if (fotoTM && fotoTM.files.length > 0) {
+                    kumpulanFile.push({ label: 'Tatap Muka', file: fotoTM.files[0] });
+                }
+            }
+
+            // B. Ambil Data File Non Tatap Muka
+            const inputKegiatanNTM = document.querySelectorAll('.input-ntm-val');
+            const inputFotoNTM = document.querySelectorAll('.file-foto-ntm');
+
+            for (let i = 0; i < inputFotoNTM.length; i++) {
+                if (inputFotoNTM[i] && inputFotoNTM[i].files.length > 0) {
+                    let namaKegiatan = inputKegiatanNTM[i].value.trim();
+                    if (namaKegiatan === "") namaKegiatan = `NTM ke-${i + 1}`;
+                    kumpulanFile.push({ label: `NTM: ${namaKegiatan}`, file: inputFotoNTM[i].files[0] });
+                }
+            }
+
+            // C. Bandingkan Semua File
+            for (let i = 0; i < kumpulanFile.length; i++) {
+                for (let j = i + 1; j < kumpulanFile.length; j++) {
+                    const fileA = kumpulanFile[i].file;
+                    const fileB = kumpulanFile[j].file;
+
+                    // Mengecek kesamaan berdasarkan ukuran (size), nama file, dan waktu modifikasi terakhir
+                    if (fileA.size === fileB.size && fileA.name === fileB.name && fileA.lastModified === fileB.lastModified) {
+                        return {
+                            ganda: true,
+                            label1: kumpulanFile[i].label,
+                            label2: kumpulanFile[j].label
+                        };
+                    }
+                }
+            }
+            return { ganda: false }; // Aman (Lolos)
+        }
+
+        // --- 3. LOGIKA NAVIGASI WIZARD ---
+        let currentStep = 1;
+
+        function goToStep(targetStep) {
+            // Validasi Input HTML
+            if (targetStep > currentStep) {
+                // Cek Smart Verifikasi Tanggal & Bulan jika melangkah dari Step 1
+                if (currentStep === 1) {
+                    if (!verifikasiTanggalDanBulan()) {
+                        alert("Pilihan bulan tidak sesuai dengan tanggal pada kalender. Mohon sesuaikan pilihan tanggal atau bulan.");
+                        return;
+                    }
+                }
+
+                const currentContainer = document.getElementById('step' + currentStep);
+                const inputs = currentContainer.querySelectorAll('input, select, textarea');
+                let isValid = true;
+                inputs.forEach(inp => {
+                    if (inp.required && !inp.checkValidity()) {
+                        inp.reportValidity();
+                        isValid = false;
+                    }
+                });
+                if (!isValid) return;
+
+                // JIKA MENUJU LANGKAH 4 (SUMMARY), JALANKAN VALIDASI FOTO GANDA!
+                if (targetStep === 4) {
+                    const hasilCek = cekFotoGanda();
+                    if (hasilCek.ganda) {
+                        // Setel teks pemberitahuan pada Modal kustom
+                        document.getElementById('teksFotoGanda1').innerHTML = `Foto pada bagian <strong class="text-danger">[${hasilCek.label1}]</strong>`;
+                        document.getElementById('teksFotoGanda2').innerHTML = `sama persis dengan <strong class="text-danger">[${hasilCek.label2}]</strong>.`;
+
+                        // Panggil dan tampilkan Modal Bootstrap
+                        const modalPeringatan = new bootstrap.Modal(document.getElementById('modalFotoGanda'));
+                        modalPeringatan.show();
+
+                        return; // Hentikan navigasi (blokir guru menuju tahap Kirim)
+                    }
+
+                    generateSummary(); // Buat tampilan ringkasan jika lolos
+                }
+            }
+
+            document.querySelectorAll('.step-container').forEach(el => {
+                el.classList.remove('active');
+                setTimeout(() => el.style.display = 'none', 400);
+            });
+
+            const targetEl = document.getElementById('step' + targetStep);
+            setTimeout(() => {
+                targetEl.style.display = 'block';
+                void targetEl.offsetWidth;
+                targetEl.classList.add('active');
+            }, 400);
+
+            currentStep = targetStep;
+
+            const progress = ((currentStep - 1) / 3) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            for (let i = 1; i <= 4; i++) {
+                const ind = document.getElementById('ind' + i);
+                if (i <= currentStep) ind.classList.add('active');
+                else ind.classList.remove('active');
+            }
+
+            document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // --- 4. LOGIKA GENERATE SUMMARY (RINGKASAN & PREVIEW FOTO DENGAN JUDUL) ---
+        function generateSummary() {
+            const isTM = document.getElementById('switchTM').checked;
+            let html = `<div class="border-bottom pb-2 mb-3"><h6 class="text-success fw-bold mb-0"><i class="bi bi-calendar-check me-2"></i>Data Waktu</h6></div>`;
+            html += `<div class="row text-muted small mb-4">
+                  <div class="col-4">Tanggal<br><strong class="text-dark fs-6">${document.getElementById('tanggal').value}</strong></div>
+                  <div class="col-4">Bulan<br><strong class="text-dark fs-6">${document.getElementById('bulan').value}</strong></div>
+                  <div class="col-4">T.A<br><strong class="text-dark fs-6">${document.getElementById('tahunAjaran').value}</strong></div>
+               </div>`;
+
+            // RINGKASAN TATAP MUKA
+            html += `<div class="border-bottom pb-2 mb-3 mt-4"><h6 class="text-success fw-bold mb-0"><i class="bi bi-book-half me-2"></i>Tatap Muka</h6></div>`;
+            if (isTM) {
+                html += `<p class="mb-1 small"><span class="text-muted">Kelas:</span> <strong class="text-dark">${document.getElementById('kelas').value || '-'}</strong></p>`;
+                html += `<p class="mb-1 small"><span class="text-muted">CP:</span> <strong class="text-dark">${document.getElementById('cp').value || '-'}</strong></p>`;
+                html += `<p class="mb-3 small"><span class="text-muted">TP:</span> <strong class="text-dark">${document.getElementById('tp').value || '-'}</strong></p>`;
+
+                const previewTM = document.getElementById('preview1');
+                if (previewTM && !previewTM.classList.contains('d-none')) {
+                    html += `<div class="mb-4">
+                         <span class="text-muted small d-block mb-2"><i class="bi bi-image me-1"></i>Dokumentasi Tatap Muka:</span>
+                         <div class="text-center" style="width: 120px;">
+                           <img src="${previewTM.src}" class="img-thumbnail rounded-3 shadow-sm mb-1" style="height: 100px; width: 120px; object-fit: cover;">
+                           <small class="d-block lh-sm text-muted fw-medium text-wrap text-break" style="font-size: 0.75rem;">Tatap Muka</small>
+                         </div>
+                       </div>`;
+                } else {
+                    html += `<p class="mb-4 text-danger small"><i>Dokumentasi Tatap Muka belum diunggah.</i></p>`;
+                }
+            } else {
+                html += `<p class="mb-4 text-danger small"><i>Dilewati (Tidak ada kegiatan tatap muka).</i></p>`;
+            }
+
+            // RINGKASAN NON TATAP MUKA
+            html += `<div class="border-bottom pb-2 mb-3 mt-4"><h6 class="text-primary fw-bold mb-0"><i class="bi bi-laptop me-2"></i>Non Tatap Muka</h6></div>`;
+            let ntmCount = 0;
+
+            const inputsNTMVal = document.querySelectorAll('.input-ntm-val');
+            const imgPreviewsNTM = document.querySelectorAll('.baris-foto-dinamis img');
+
+            inputsNTMVal.forEach((input) => {
+                if (input.value.trim() !== '') {
+                    html += `<p class="mb-1 small"><i class="bi bi-check2-circle text-primary me-2"></i><strong class="text-dark">${input.value.trim()}</strong></p>`;
+                    ntmCount++;
+                }
+            });
+
+            // Menggabungkan Foto NTM dan Judul Kegiatannya
+            let adaFotoNTM = false;
+            let htmlFotoNTM = `<div class="mt-3"><span class="text-muted small d-block mb-2"><i class="bi bi-images me-1"></i>Dokumentasi NTM:</span><div class="d-flex flex-wrap gap-3">`;
+
+            for (let i = 0; i < imgPreviewsNTM.length; i++) {
+                if (!imgPreviewsNTM[i].classList.contains('d-none')) {
+                    adaFotoNTM = true;
+                    let judulKegiatan = inputsNTMVal[i].value.trim();
+                    if (judulKegiatan === "") judulKegiatan = `Kegiatan NTM ${i + 1}`; // Fallback nama jika kosong
+
+                    htmlFotoNTM += `
+                  <div class="text-center" style="width: 100px;">
+                      <img src="${imgPreviewsNTM[i].src}" class="img-thumbnail rounded-3 shadow-sm mb-1" style="height: 90px; width: 100px; object-fit: cover;">
+                      <small class="d-block lh-sm text-muted fw-medium text-wrap text-break" style="font-size: 0.75rem;">${judulKegiatan}</small>
+                  </div>`;
+                }
+            }
+            htmlFotoNTM += `</div></div>`;
+
+            if (adaFotoNTM) {
+                html += htmlFotoNTM;
+            } else if (ntmCount > 0) {
+                html += `<p class="mt-2 text-warning small"><i>Tidak ada dokumentasi NTM yang diunggah.</i></p>`;
+            }
+
+            if (ntmCount === 0) {
+                html += `<p class="mb-0 text-muted small"><i>Belum ada kegiatan NTM yang diinput.</i></p>`;
+            }
+
+            document.getElementById('summaryContent').innerHTML = html;
+        }
+
+        // --- 5. PREVIEW FOTO ---
+        function previewFoto(input, previewId) {
+            const preview = document.getElementById(previewId);
+            if (input.files && input.files[0]) {
+                const r = new FileReader();
+                r.onload = e => { preview.src = e.target.result; preview.classList.remove('d-none'); }
+                r.readAsDataURL(input.files[0]);
+            } else { preview.classList.add('d-none'); }
+        }
+
+        // --- 6. LOGIKA SWITCH TATAP MUKA (DENGAN AUTO JUMP) ---
+        document.getElementById('switchTM').addEventListener('change', function () {
+            const wadahTM = document.getElementById('wadahKegiatanTM');
+            const labelSwitch = document.getElementById('labelSwitchTM');
+            const foto1 = document.getElementById('foto1');
+
+            if (this.checked) {
+                wadahTM.style.display = 'block';
+                setTimeout(() => { wadahTM.style.opacity = '1'; wadahTM.style.transform = 'scaleY(1)'; }, 10);
+                foto1.required = true;
+                labelSwitch.innerText = 'Ada Kegiatan';
+                labelSwitch.className = 'form-check-label fs-6 mt-1 text-success fw-medium';
+            } else {
+                wadahTM.style.opacity = '0';
+                wadahTM.style.transform = 'scaleY(0.95)';
+                setTimeout(() => { wadahTM.style.display = 'none'; }, 300);
+                foto1.required = false;
+                labelSwitch.innerText = 'Dilewati (Off)';
+                labelSwitch.className = 'form-check-label fs-6 mt-1 text-danger fw-medium';
+
+                if (currentStep === 2) {
+                    setTimeout(() => { goToStep(3); }, 600);
+                }
+            }
+            kalkulasiVolume();
+        });
+
+        // --- 7. DATA SMART AUTOCOMPLETE (DAFTAR KEGIATAN) ---
+        const daftarKegiatanNTM = [
+            "Guru piket", "Buka usbu", "Kunci usbu", "Pembina upacara", "Latihan upacara bendera",
+            "Kegiatan literasi 15 menit di perpustakaan", "Rapat Penyusunan ARKAS",
+            "Senam anak indonesia hebat", "Penyusunan perangkat ajar", "Kegiatan KKG",
+            "Rapat orang tua murid", "Pembagian laporan pendidikan", "Pelatihan dan workshop",
+            "Panitia Penerimaan Peserta Didik Baru", "Kegiatan Ujian Sekolah",
+            "Kegiatan Sumatif Tengah Semester (STS)", "Kegiatan Sumatif Akhir Semester (SAS)",
+            "Kegiatan Sumatif Akhir Tahun (SAT)", "Kegiatan ANBK (Asesmen Nasional Berbasis Komputer)",
+            "Kegiatan TKA (Tes Kemampuan Akademik)", "Kegiatan Hari Natal Sekolah",
+            "Kegiatan Lomba - lomba sekolah", "Asesmen Sumatif Akhir Jenjang (ASAJ)"
+        ];
+
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.position-relative')) {
+                document.querySelectorAll('.smart-dropdown-list').forEach(ul => ul.classList.remove('show'));
+            }
+        });
+
+        function tampilkanOpsi(inputEl) {
+            document.querySelectorAll('.smart-dropdown-list').forEach(ul => ul.classList.remove('show'));
+            saringOpsi(inputEl);
+        }
+
+        function saringOpsi(inputEl) {
+            const wadahUl = inputEl.parentElement.nextElementSibling;
+            const nilaiKetik = inputEl.value.toLowerCase();
+
+            const hasilSaring = daftarKegiatanNTM.filter(item => item.toLowerCase().includes(nilaiKetik));
+            wadahUl.innerHTML = '';
+
+            if (hasilSaring.length > 0) {
+                hasilSaring.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'smart-dropdown-item';
+                    li.innerHTML = `<i class="bi bi-chevron-right"></i> ${item}`;
+                    li.onmousedown = function () {
+                        inputEl.value = item;
+                        wadahUl.classList.remove('show');
+                        evaluasiLabelDanVolume(inputEl);
+                    };
+                    wadahUl.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.className = 'smart-dropdown-item text-muted fst-italic';
+                li.style.cursor = 'default';
+                li.innerHTML = '<i class="bi bi-pencil-square"></i> Disimpan sebagai teks manual.';
+                wadahUl.appendChild(li);
+            }
+
+            wadahUl.classList.add('show');
+            evaluasiLabelDanVolume(inputEl);
+        }
+
+        function evaluasiLabelDanVolume(inputEl) {
+            const barisNtmAll = document.querySelectorAll('.baris-ntm-dinamis');
+            const barisFotoAll = document.querySelectorAll('.baris-foto-dinamis');
+
+            const container = inputEl.closest('.baris-ntm-dinamis');
+            const index = Array.from(barisNtmAll).indexOf(container);
+            const labelFoto = barisFotoAll[index].querySelector('.label-judul-foto');
+
+            const nilai = inputEl.value.trim();
+
+            if (nilai !== "") labelFoto.innerText = `Dokumentasi: ${nilai}`;
+            else labelFoto.innerText = `Dokumentasi Non Tatap Muka ${index + 1}`;
+
+            kalkulasiVolume();
+        }
+
+        // --- 8. LOGIKA TAMBAH & HAPUS KEGIATAN NTM ---
+        let idUnik = 1;
+        let jumlahAktif = 1;
+
+        function tambahNTM() {
+            if (jumlahAktif >= 5) { alert('Maksimal 5 Kegiatan!'); return; }
+            idUnik++; jumlahAktif++;
+
+            const wadahTeks = document.getElementById('wadahTeksNTM');
+            const divTeks = document.createElement('div');
+            divTeks.className = 'baris-ntm-dinamis mb-2';
+            divTeks.innerHTML = `
+        <div class="position-relative">
+          <div class="input-group shadow-sm rounded-3">
+            <span class="input-group-text bg-white border-end-0 text-primary"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control border-start-0 ps-0 input-ntm-val" 
+                   placeholder="Ketik atau pilih dari daftar kegiatan NTM..." 
+                   autocomplete="off" onfocus="tampilkanOpsi(this)" onkeyup="saringOpsi(this)">
+            <button class="btn btn-outline-danger px-3" type="button" onclick="hapusNTM(this)"><i class="bi bi-trash3"></i></button>
+          </div>
+          <ul class="smart-dropdown-list"></ul>
+        </div>
+      `;
+            wadahTeks.appendChild(divTeks);
+
+            const wadahFoto = document.getElementById('wadahFotoNTM');
+            const divFoto = document.createElement('div');
+            divFoto.className = 'mb-3 pb-3 border-bottom baris-foto-dinamis';
+            divFoto.innerHTML = `
+        <label class="form-label text-primary fw-bold">
+          <i class="bi bi-camera me-2"></i><span class="label-judul-foto">Dokumentasi Non Tatap Muka</span>
+        </label>
+        <input type="file" class="form-control mb-3 file-foto-ntm" accept="image/*" onchange="previewFoto(this, 'previewNtm${idUnik}')">
+        <div class="text-center"><img id="previewNtm${idUnik}" class="img-thumbnail rounded-3 d-none shadow-sm" style="max-height: 150px;"></div>
+      `;
+            wadahFoto.appendChild(divFoto);
+
+            perbaruiPlaceholderDanLabel();
+        }
+
+        function hapusNTM(btnHapus) {
+            const containerTeks = btnHapus.closest('.baris-ntm-dinamis');
+            const barisNtmAll = document.querySelectorAll('.baris-ntm-dinamis');
+            const index = Array.from(barisNtmAll).indexOf(containerTeks);
+            const barisFotoAll = document.querySelectorAll('.baris-foto-dinamis');
+
+            containerTeks.remove();
+            if (barisFotoAll[index]) barisFotoAll[index].remove();
+
+            jumlahAktif--;
+            perbaruiPlaceholderDanLabel();
+        }
+
+        function perbaruiPlaceholderDanLabel() {
+            const barisNtmAll = document.querySelectorAll('.baris-ntm-dinamis');
+            barisNtmAll.forEach((container, index) => {
+                const inputEl = container.querySelector('.input-ntm-val');
+                inputEl.placeholder = `Ketik atau pilih kegiatan NTM ${index + 1}...`;
+                evaluasiLabelDanVolume(inputEl);
+            });
+        }
+
+        // --- 9. MENGHITUNG VOLUME MELAYANG ---
+        function kalkulasiVolume() {
+            let volumeTM = 0; let volumeNTM = 0;
+
+            const isTMAda = document.getElementById('switchTM').checked;
+            if (isTMAda && (document.getElementById('cp').value.trim() !== '' || document.getElementById('tp').value.trim() !== '' || document.getElementById('kelas').value.trim() !== '')) {
+                volumeTM = 1;
+            }
+
+            document.querySelectorAll('.input-ntm-val').forEach(input => {
+                if (input.value.trim() !== '') volumeNTM += 1;
+            });
+
+            const total = volumeTM + volumeNTM;
+            document.getElementById('volume').value = total;
+
+            const volDisplay = document.getElementById('volumeDisplay');
+            volDisplay.style.transform = 'scale(1.3)';
+            volDisplay.innerText = total;
+            setTimeout(() => volDisplay.style.transform = 'scale(1)', 200);
+        }
+
+        function bacaFile(file) {
+            return new Promise((res, rej) => {
+                if (!file) return res("");
+                const reader = new FileReader();
+                reader.onload = e => res(e.target.result.split(',')[1]);
+                reader.readAsDataURL(file);
+            });
+        }
+
+
+
+        // --- 10. PENGIRIMAN DATA ---
+        document.getElementById('formAgenda').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            let ntmValid = true;
+            document.querySelectorAll('.input-ntm-val').forEach(input => {
+                if (input.value.trim() === '') ntmValid = false;
+            });
+            if (!ntmValid) {
+                alert("Silakan lengkapi atau hapus kotak Kegiatan Non Tatap Muka yang kosong.");
+                goToStep(3);
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
+
+            try {
+                const isTMAda = document.getElementById('switchTM').checked;
+                const arrayNTM = [];
+                document.querySelectorAll('.input-ntm-val').forEach(input => arrayNTM.push("- " + input.value.trim()));
+                const hasilNTM = arrayNTM.join('\n');
+                let ket = document.getElementById('keterangan').value.trim();
+                if (ket === '') ket = 'Terlaksana';
+
+                const fotoArr = [];
+                const f1 = (isTMAda && document.getElementById('foto1')) ? document.getElementById('foto1').files[0] : null;
+                fotoArr.push({ base64: await bacaFile(f1), nama: f1 ? f1.name : "", tipe: f1 ? f1.type : "" });
+
+                const fileNtmInputs = document.querySelectorAll('.file-foto-ntm');
+                for (let i = 0; i < fileNtmInputs.length; i++) {
+                    const f = fileNtmInputs[i].files[0];
+                    fotoArr.push({ base64: await bacaFile(f), nama: f ? f.name : "", tipe: f ? f.type : "" });
+                }
+
+                while (fotoArr.length < 6) { fotoArr.push({ base64: "", nama: "", tipe: "" }); }
+
+                const dataForm = {
+                    tanggal: document.getElementById('tanggal').value,
+                    bulan: document.getElementById('bulan').value,
+                    tahunAjaran: document.getElementById('tahunAjaran').value,
+                    cp: isTMAda ? document.getElementById('cp').value : '',
+                    tp: isTMAda ? document.getElementById('tp').value : '',
+                    kelas: isTMAda ? document.getElementById('kelas').value : '',
+                    nonTatapMuka: hasilNTM,
+                    volume: document.getElementById('volume').value,
+                    keterangan: ket,
+                    fotoArr: fotoArr
+                };
+
+                google.script.run
+                    .withSuccessHandler(() => {
+                        alert('Laporan berhasil disimpan! 🎉');
+                        window.location.reload();
+                    })
+                    .withFailureHandler(err => {
+                        alert('Error: ' + err.message);
+                        btn.disabled = false;
+                        btn.innerHTML = 'Kirim Data <i class="bi bi-send-fill ms-2"></i>';
+                    })
+                    .simpanDataKeSheets(dataForm);
+
+            } catch (error) {
+                alert("Gagal memproses file foto.");
+                btn.disabled = false;
+                btn.innerHTML = 'Kirim Data <i class="bi bi-send-fill ms-2"></i>';
+            }
+        });
+
+        // --- 11. LOGIKA DASHBOARD RIWAYAT (BARU) ---
+        function pindahTab(target) {
+            if (target === 'input') {
+                document.getElementById('halamanRiwayat').style.display = 'none';
+                document.getElementById('halamanInput').style.display = 'block';
+                document.getElementById('tabInput').classList.add('active');
+                document.getElementById('tabRiwayat').classList.remove('active');
+                document.getElementById('floatVolume').style.display = 'flex';
+            } else {
+                document.getElementById('halamanInput').style.display = 'none';
+                document.getElementById('halamanRiwayat').style.display = 'block';
+                document.getElementById('tabRiwayat').classList.add('active');
+                document.getElementById('tabInput').classList.remove('active');
+                document.getElementById('floatVolume').style.display = 'none';
+
+                // Otomatis muat data riwayat terbaru saat berpindah ke tab Riwayat
+                muatRiwayat();
+            }
+        }
+
+        function renderSkeleton() {
+            document.getElementById('riwayatStatistik').style.display = 'none';
+            let html = '';
+            for (let i = 0; i < 3; i++) {
+                html += '<div class="riwayat-card">' +
+                    '<div class="skeleton-box" style="height: 24px; width: 60%; margin-bottom: 15px;"></div>' +
+                    '<div class="skeleton-box" style="height: 15px; width: 100%; margin-bottom: 8px;"></div>' +
+                    '<div class="skeleton-box" style="height: 15px; width: 80%; margin-bottom: 20px;"></div>' +
+                    '<div class="skeleton-box" style="height: 35px; width: 100px;"></div>' +
+                    '</div>';
+            }
+            document.getElementById('wadahDaftarRiwayat').innerHTML = html;
+        }
+
+        function muatRiwayat() {
+            const bulan = document.getElementById('filterBulan').value;
+            const tahun = document.getElementById('filterTahun').value;
+
+            renderSkeleton();
+
+            google.script.run
+                .withSuccessHandler(function (data) {
+                    tampilkanDataRiwayat(data);
+                })
+                .withFailureHandler(function (err) {
+                    document.getElementById('wadahDaftarRiwayat').innerHTML = '<div class="alert alert-danger text-center"><i class="bi bi-exclamation-triangle-fill me-2"></i>Gagal memuat data: ' + err.message + '</div>';
+                })
+                .getRiwayatLaporan(bulan, tahun);
+        }
+
+        function tampilkanDataRiwayat(data) {
+            const wadah = document.getElementById('wadahDaftarRiwayat');
+            const statCard = document.getElementById('riwayatStatistik');
+
+            if (!data || data.length === 0) {
+                statCard.style.display = 'none';
+                wadah.innerHTML = '<div class="text-center py-5 text-muted">' +
+                    '<i class="bi bi-folder-x fs-1 d-block mb-3 text-secondary opacity-50"></i>' +
+                    '<p>Tidak ada laporan untuk bulan tersebut.</p>' +
+                    '</div>';
+                return;
+            }
+
+            let totalVolume = 0;
+            let html = '';
+
+            const filterBulanVal = document.getElementById('filterBulan').value;
+            if (!filterBulanVal && data.length === 1) {
+                html += '<div class="alert alert-success border-0 shadow-sm mb-3 d-flex align-items-center" style="border-radius: 0.75rem;">' +
+                    '<i class="bi bi-clock-history fs-4 me-3 text-success"></i>' +
+                    '<div><strong class="d-block text-dark">Laporan Agenda Terbaru</strong>' +
+                    '<span class="small text-muted">Menampilkan 1 data laporan paling terakhir yang ada didatabase. Pilih Bulan dan Tahun Ajaran untuk filter lengkap.</span>' +
+                    '</div></div>';
+            }
+
+            data.forEach(item => {
+                totalVolume += parseInt(item.volume) || 0;
+
+                let ntmList = '';
+                if (item.ntm) {
+                    const arrNtm = item.ntm.split('\n');
+                    ntmList = '<ul>';
+                    arrNtm.forEach(n => {
+                        if (n.trim() !== '') ntmList += '<li>' + n.trim() + '</li>';
+                    });
+                    ntmList += '</ul>';
+                } else {
+                    ntmList = '<span class="text-muted fst-italic">-</span>';
+                }
+
+                const fotosData = encodeURIComponent(JSON.stringify(item.fotos || []));
+                const itemData = encodeURIComponent(JSON.stringify(item));
+                const ringkasanKeg = (item.cp || (item.ntm ? item.ntm.replace(/\n/g, ', ') : '') || 'Kegiatan Agenda');
+                const ringkasanKegEncoded = encodeURIComponent(ringkasanKeg);
+                const tanggalEncoded = encodeURIComponent(item.tanggal || '');
+
+                html += '<div class="riwayat-card">' +
+                    '<div class="d-flex justify-content-between align-items-start mb-3">' +
+                    '<div>' +
+                    '<div class="riwayat-date">' + item.tanggal + '</div>' +
+                    '<div class="mt-1">' +
+                    (item.adaTM ? '<span class="riwayat-badge badge-tm"><i class="bi bi-check-circle-fill me-1"></i>Tatap Muka</span>' : '') +
+                    (ntmList !== '<span class="text-muted fst-italic">-</span>' ? '<span class="riwayat-badge badge-ntm"><i class="bi bi-laptop me-1"></i>Non Tatap Muka</span>' : '') +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="text-end">' +
+                    '<span class="badge bg-light text-dark border"><i class="bi bi-bar-chart-fill text-warning me-1"></i> Vol: ' + item.volume + '</span>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="riwayat-content">' +
+                    (item.adaTM ? '<div class="mb-2"><strong>CP:</strong> ' + (item.cp || '-') + '<br><strong>TP:</strong> ' + (item.tp || '-') + ' (Kelas ' + (item.kelas || '-') + ')</div>' : '') +
+                    '<div><strong>Kegiatan Tambahan:</strong><br>' + ntmList + '</div>' +
+                    '</div>' +
+                    '<div class="riwayat-footer d-flex flex-wrap justify-content-between align-items-center gap-2">' +
+                    '<span class="small text-muted"><i class="bi bi-info-circle me-1"></i>Ket: ' + (item.keterangan || 'Terlaksana') + '</span>' +
+                    '<div class="d-flex align-items-center gap-1 flex-wrap">' +
+                    '<button class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="bukaModalFoto(\'' + fotosData + '\')" title="Lihat Dokumentasi">' +
+                    '<i class="bi bi-camera me-1"></i> Foto (' + (item.fotos ? item.fotos.length : 0) + ')' +
+                    '</button>' +
+                    '<button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="bukaModalEditAgenda(\'' + itemData + '\')" title="Edit Catatan Agenda">' +
+                    '<i class="bi bi-pencil-square me-1"></i> Edit' +
+                    '</button>' +
+                    '<button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="bukaModalHapusAgenda(\'' + item.id + '\', \'' + tanggalEncoded + '\', \'' + ringkasanKegEncoded + '\', \'' + item.volume + '\')" title="Hapus Data Agenda">' +
+                    '<i class="bi bi-trash3 me-1"></i> Hapus' +
+                    '</button>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>';
+            });
+
+            document.getElementById('statHari').innerText = data.length;
+            document.getElementById('statVolume').innerText = totalVolume;
+            statCard.style.display = 'flex';
+            wadah.innerHTML = html;
+        }
+
+        function bukaModalFoto(encodedFotos) {
+            const fotos = JSON.parse(decodeURIComponent(encodedFotos));
+            const wadahGrid = document.getElementById('wadahGridFoto');
+
+            if (fotos.length === 0) {
+                wadahGrid.innerHTML = '<div class="col-12 text-center text-muted py-4"><i class="bi bi-image-alt fs-1 d-block mb-2"></i>Tidak ada dokumentasi foto.</div>';
+            } else {
+                let html = '';
+                fotos.forEach(idFoto => {
+                    const urlImg = 'https://drive.google.com/thumbnail?id=' + idFoto + '&sz=w800';
+                    html += '<div class="col-6 col-md-4">' +
+                        '<div class="card border-0 shadow-sm overflow-hidden h-100">' +
+                        '<a href="' + urlImg + '" target="_blank">' +
+                        '<img src="' + urlImg + '" class="w-100" style="height: 150px; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform=\'scale(1.05)\'" onmouseout="this.style.transform=\'scale(1)\'" alt="Dokumentasi">' +
+                        '</a>' +
+                        '</div>' +
+                        '</div>';
+                });
+                wadahGrid.innerHTML = html;
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('modalGaleriFoto'));
+            modal.show();
+        }
+
+        // ==========================================
+        // 🗑️ LOGIKA HAPUS DATA AGENDA
+        // ==========================================
+        function bukaModalHapusAgenda(id, encTgl, encKeg, vol) {
+            document.getElementById('hapusTargetId').value = id;
+            document.getElementById('hapusInfoTanggal').innerText = decodeURIComponent(encTgl) || '-';
+            document.getElementById('hapusInfoKegiatan').innerText = decodeURIComponent(encKeg) || '-';
+            document.getElementById('hapusInfoVolume').innerText = (vol || '0') + ' Jam';
+
+            const btnKonf = document.getElementById('btnKonfirmasiHapus');
+            btnKonf.disabled = false;
+            btnKonf.innerHTML = '<i class="bi bi-trash3 me-1"></i> Ya, Hapus';
+            document.getElementById('btnBatalHapus').disabled = false;
+
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalHapusData'));
+            modal.show();
+        }
+
+        function eksekusiHapusAgenda() {
+            const id = document.getElementById('hapusTargetId').value;
+            if (!id) return;
+
+            const btnKonf = document.getElementById('btnKonfirmasiHapus');
+            const btnBatal = document.getElementById('btnBatalHapus');
+            btnKonf.disabled = true;
+            btnBatal.disabled = true;
+            btnKonf.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghapus...';
+
+            google.script.run
+                .withSuccessHandler(function (res) {
+                    btnKonf.disabled = false;
+                    btnBatal.disabled = false;
+                    btnKonf.innerHTML = '<i class="bi bi-trash3 me-1"></i> Ya, Hapus';
+
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalHapusData'));
+                    if (modal) modal.hide();
+
+                    if (res && res.sukses) {
+                        alert(res.pesan || "Data agenda berhasil dihapus!");
+                        muatRiwayat();
+                    } else {
+                        alert((res && res.pesan) || "Gagal menghapus data.");
+                    }
+                })
+                .withFailureHandler(function (err) {
+                    btnKonf.disabled = false;
+                    btnBatal.disabled = false;
+                    btnKonf.innerHTML = '<i class="bi bi-trash3 me-1"></i> Ya, Hapus';
+                    alert("Error saat menghapus: " + (err.message || err));
+                })
+                .hapusDataAgenda(id);
+        }
+
+        // ==========================================
+        // ✏️ LOGIKA EDIT DATA AGENDA (DENGAN TAMPILAN DAN SMART FITUR SAMAKAN INPUT BARU)
+        // ==========================================
+        let editFotoSlots = [null, null, null, null, null, null]; // Slot 0: TM, Slot 1..5: NTM 1..5
+
+        function formatTanggalKeInputDate(tglStr) {
+            if (!tglStr) return '';
+            if (/^\d{4}-\d{2}-\d{2}$/.test(tglStr)) return tglStr;
+            const bulanList = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const bagian = tglStr.replace(/^.*,\s*/, '').trim().split(/\s+/);
+            if (bagian.length >= 3) {
+                const dd = String(bagian[0]).padStart(2, '0');
+                const bIdx = bulanList.findIndex(b => b.toLowerCase() === bagian[1].toLowerCase());
+                const mm = bIdx !== -1 ? String(bIdx + 1).padStart(2, '0') : '01';
+                const yyyy = bagian[2];
+                return `${yyyy}-${mm}-${dd}`;
+            }
+            return '';
+        }
+
+        // Smart Verifikasi Tanggal vs Dropdown Bulan pada Modal Edit
+        function verifikasiTanggalDanBulanEdit(e) {
+            const tglVal = document.getElementById('editTanggal').value;
+            const blnSelect = document.getElementById('editBulan');
+            const alertBox = document.getElementById('editPeringatanBulan');
+            const alertText = document.getElementById('editTeksPeringatanBulan');
+            const btnSimpan = document.getElementById('btnSimpanEdit');
+
+            if (!tglVal) {
+                if (alertBox) alertBox.classList.add('d-none');
+                if (btnSimpan) btnSimpan.disabled = false;
+                return true;
+            }
+
+            const bIdx = parseInt(tglVal.split('-')[1], 10) - 1;
+            const bulanKalender = NAMA_BULAN[bIdx];
+
+            if (e && e.target && e.target.id === 'editTanggal') {
+                blnSelect.value = bulanKalender;
+                if (alertBox) alertBox.classList.add('d-none');
+                if (btnSimpan) btnSimpan.disabled = false;
+                return true;
+            }
+
+            if (blnSelect.value !== bulanKalender) {
+                if (alertText) {
+                    alertText.innerHTML = `Bulan yang Anda pilih (<strong>${blnSelect.value}</strong>) tidak sesuai dengan tanggal kalender (<strong>${bulanKalender}</strong>). Mohon sesuaikan pilihan tanggal atau bulan.`;
+                }
+                if (alertBox) alertBox.classList.remove('d-none');
+                if (btnSimpan) btnSimpan.disabled = true;
+                return false;
+            } else {
+                if (alertBox) alertBox.classList.add('d-none');
+                if (btnSimpan) btnSimpan.disabled = false;
+                return true;
+            }
+        }
+
+        function bukaModalEditAgenda(encodedItem) {
+            const item = JSON.parse(decodeURIComponent(encodedItem));
+
+            document.getElementById('editId').value = item.id;
+            document.getElementById('editLabelId').innerText = 'ID: ' + item.id;
+
+            // Tanggal & Bulan & Tahun Ajaran
+            const tglFormatted = formatTanggalKeInputDate(item.tanggal);
+            document.getElementById('editTanggal').value = tglFormatted;
+
+            let blnVal = item.bulan || 'Januari';
+            if (tglFormatted) {
+                const bIdx = parseInt(tglFormatted.split('-')[1], 10) - 1;
+                if (bIdx >= 0 && bIdx < 12) blnVal = NAMA_BULAN[bIdx];
+            }
+            document.getElementById('editBulan').value = blnVal;
+            document.getElementById('editTahunAjaran').value = item.tahunAjaran || '2025/2026';
+
+            // Event listener verifikasi tanggal & bulan di Modal Edit
+            const editTglEl = document.getElementById('editTanggal');
+            const editBlnEl = document.getElementById('editBulan');
+            editTglEl.onchange = verifikasiTanggalDanBulanEdit;
+            editBlnEl.onchange = verifikasiTanggalDanBulanEdit;
+            verifikasiTanggalDanBulanEdit();
+
+            // Inisialisasi Slot Foto 0..5
+            editFotoSlots = [null, null, null, null, null, null];
+            const rawFotos = item.kumpulanFotoId || item.fotos || [];
+            for (let i = 0; i < 6; i++) {
+                if (rawFotos[i] && String(rawFotos[i]).trim() !== '') {
+                    editFotoSlots[i] = { state: 'keep', existingId: String(rawFotos[i]).trim() };
+                }
+            }
+
+            // Tatap Muka
+            const switchTM = document.getElementById('editSwitchTM');
+            switchTM.checked = !!item.adaTM;
+            document.getElementById('editCP').value = item.cp || '';
+            document.getElementById('editTP').value = item.tp || '';
+            document.getElementById('editKelas').value = item.kelas || '';
+            toggleEditTM();
+
+            // Non Tatap Muka (NTM)
+            const wadahTeksNtm = document.getElementById('wadahTeksNtmEdit');
+            const wadahFotoNtm = document.getElementById('wadahFotoNtmEdit');
+            wadahTeksNtm.innerHTML = '';
+            wadahFotoNtm.innerHTML = '';
+
+            let arrNtm = [];
+            if (item.ntm) {
+                arrNtm = item.ntm.split('\n').map(n => n.replace(/^-\s*/, '').trim()).filter(n => n !== '');
+            }
+
+            if (arrNtm.length === 0) {
+                tambahNtmEdit('');
+            } else {
+                arrNtm.forEach(n => tambahNtmEdit(n));
+            }
+
+            // Volume & Keterangan
+            document.getElementById('editKeterangan').value = item.keterangan || 'Terlaksana';
+            kalkulasiVolumeEdit();
+
+            // Reset Tombol Simpan
+            const btnSimpan = document.getElementById('btnSimpanEdit');
+            btnSimpan.disabled = false;
+            btnSimpan.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Simpan Perubahan';
+            document.getElementById('btnBatalEdit').disabled = false;
+
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditData'));
+            modal.show();
+        }
+
+        function toggleEditTM() {
+            const switchTM = document.getElementById('editSwitchTM');
+            const wadahTM = document.getElementById('wadahEditTM');
+            const labelTM = document.getElementById('editLabelSwitchTM');
+            if (switchTM.checked) {
+                wadahTM.style.display = 'block';
+                labelTM.innerText = 'Ada Kegiatan';
+                labelTM.className = 'form-check-label fs-6 mt-1 text-success fw-medium';
+            } else {
+                wadahTM.style.display = 'none';
+                labelTM.innerText = 'Dilewati (Off)';
+                labelTM.className = 'form-check-label fs-6 mt-1 text-danger fw-medium';
+            }
+            renderFotoEditTM();
+            kalkulasiVolumeEdit();
+        }
+
+        function renderFotoEditTM() {
+            const wadah = document.getElementById('wadahFotoEditTM');
+            if (!wadah) return;
+            const slot = editFotoSlots[0];
+
+            if (slot && slot.state === 'keep') {
+                wadah.innerHTML = `
+                    <div class="d-flex align-items-center gap-3 p-2 bg-light rounded-3 border">
+                        <img src="https://drive.google.com/thumbnail?id=${slot.existingId}&sz=w400" class="img-thumbnail rounded-3" style="height: 100px; width: 120px; object-fit: cover;">
+                        <div>
+                            <span class="badge bg-success mb-1"><i class="bi bi-check-circle me-1"></i>Foto Tersimpan</span>
+                            <p class="small text-muted mb-2">Foto dokumentasi tatap muka saat ini.</p>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="hapusFotoEditSlot(0)">
+                                <i class="bi bi-trash3 me-1"></i>Hapus / Ganti Foto
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (slot && slot.state === 'new') {
+                wadah.innerHTML = `
+                    <div class="d-flex align-items-center gap-3 p-2 bg-light rounded-3 border border-success">
+                        <img src="${slot.dataUrl}" class="img-thumbnail rounded-3" style="height: 100px; width: 120px; object-fit: cover;">
+                        <div>
+                            <span class="badge bg-primary mb-1"><i class="bi bi-plus-circle me-1"></i>FOTO BARU</span>
+                            <p class="small text-muted mb-2">${slot.nama}</p>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="hapusFotoEditSlot(0)">
+                                <i class="bi bi-trash3 me-1"></i>Batal Foto Baru
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                wadah.innerHTML = `
+                    <input type="file" class="form-control mb-2" id="editFoto1" accept="image/*" onchange="previewFotoEditTM(this)">
+                    <div class="text-center"><img id="previewEditTM" class="img-thumbnail rounded-3 d-none shadow-sm" style="max-height: 150px;"></div>
+                `;
+            }
+        }
+
+        async function previewFotoEditTM(input) {
+            const preview = document.getElementById('previewEditTM');
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const base64Str = await bacaFile(file);
+                const dataUrl = 'data:' + file.type + ';base64,' + base64Str;
+                editFotoSlots[0] = {
+                    state: 'new',
+                    base64: base64Str,
+                    nama: file.name,
+                    tipe: file.type,
+                    dataUrl: dataUrl
+                };
+                if (preview) { preview.src = dataUrl; preview.classList.remove('d-none'); }
+            } else {
+                if (preview) preview.classList.add('d-none');
+            }
+        }
+
+        function hapusFotoEditSlot(slotIdx) {
+            editFotoSlots[slotIdx] = { state: 'delete' };
+            if (slotIdx === 0) {
+                renderFotoEditTM();
+            } else {
+                renderFotoEditNTM(slotIdx - 1);
+            }
+        }
+
+        // Smart Autocomplete Dropdown untuk Modal Edit
+        function tampilkanOpsiEdit(inputEl) {
+            document.querySelectorAll('.smart-dropdown-list').forEach(ul => ul.classList.remove('show'));
+            saringOpsiEdit(inputEl);
+        }
+
+        function saringOpsiEdit(inputEl) {
+            const wadahUl = inputEl.parentElement.nextElementSibling;
+            const nilaiKetik = inputEl.value.toLowerCase();
+
+            const hasilSaring = daftarKegiatanNTM.filter(item => item.toLowerCase().includes(nilaiKetik));
+            wadahUl.innerHTML = '';
+
+            if (hasilSaring.length > 0) {
+                hasilSaring.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'smart-dropdown-item';
+                    li.innerHTML = `<i class="bi bi-chevron-right"></i> ${item}`;
+                    li.onmousedown = function () {
+                        inputEl.value = item;
+                        wadahUl.classList.remove('show');
+                        evaluasiLabelDanVolumeEdit(inputEl);
+                    };
+                    wadahUl.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.className = 'smart-dropdown-item text-muted fst-italic';
+                li.style.cursor = 'default';
+                li.innerHTML = '<i class="bi bi-pencil-square"></i> Disimpan sebagai teks manual.';
+                wadahUl.appendChild(li);
+            }
+
+            wadahUl.classList.add('show');
+            evaluasiLabelDanVolumeEdit(inputEl);
+        }
+
+        function evaluasiLabelDanVolumeEdit(inputEl) {
+            const barisNtmAll = document.querySelectorAll('.baris-ntm-edit-dinamis');
+            const barisFotoAll = document.querySelectorAll('.baris-foto-edit-dinamis');
+
+            const container = inputEl.closest('.baris-ntm-edit-dinamis');
+            const index = Array.from(barisNtmAll).indexOf(container);
+            if (index !== -1 && barisFotoAll[index]) {
+                const labelFoto = barisFotoAll[index].querySelector('.label-judul-foto-edit');
+                const nilai = inputEl.value.trim();
+                if (labelFoto) {
+                    if (nilai !== "") labelFoto.innerText = `Dokumentasi: ${nilai}`;
+                    else labelFoto.innerText = `Dokumentasi Non Tatap Muka ${index + 1}`;
+                }
+            }
+
+            kalkulasiVolumeEdit();
+        }
+
+        function tambahNtmEdit(nilai = '') {
+            const wadahTeks = document.getElementById('wadahTeksNtmEdit');
+            const wadahFoto = document.getElementById('wadahFotoNtmEdit');
+
+            const currentCount = wadahTeks.children.length;
+            if (currentCount >= 5) {
+                alert('Maksimal 5 Kegiatan Non Tatap Muka!');
+                return;
+            }
+
+            // Row Teks NTM Edit
+            const divTeks = document.createElement('div');
+            divTeks.className = 'baris-ntm-edit-dinamis mb-2';
+            divTeks.innerHTML = `
+                <div class="position-relative">
+                    <div class="input-group shadow-sm rounded-3">
+                        <span class="input-group-text bg-white border-end-0 text-primary"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0 input-ntm-edit-val" 
+                               placeholder="Ketik atau pilih kegiatan NTM..." 
+                               value="${nilai.replace(/"/g, '&quot;')}"
+                               autocomplete="off" onfocus="tampilkanOpsiEdit(this)" onkeyup="saringOpsiEdit(this)">
+                        <button class="btn btn-outline-danger px-3" type="button" onclick="hapusNtmEdit(this)"><i class="bi bi-trash3"></i></button>
+                    </div>
+                    <ul class="smart-dropdown-list"></ul>
+                </div>
+            `;
+            wadahTeks.appendChild(divTeks);
+
+            // Row Foto NTM Edit
+            const divFoto = document.createElement('div');
+            divFoto.className = 'mb-3 pb-3 border-bottom baris-foto-edit-dinamis';
+            divFoto.innerHTML = `
+                <label class="form-label text-primary fw-bold">
+                    <i class="bi bi-camera me-2"></i><span class="label-judul-foto-edit">Dokumentasi Non Tatap Muka</span>
+                </label>
+                <div class="wadah-slot-foto-ntm-edit"></div>
+            `;
+            wadahFoto.appendChild(divFoto);
+
+            const ntmIndex = currentCount;
+            renderFotoEditNTM(ntmIndex);
+            perbaruiPlaceholderDanLabelEdit();
+        }
+
+        function hapusNtmEdit(btnHapus) {
+            const containerTeks = btnHapus.closest('.baris-ntm-edit-dinamis');
+            const barisNtmAll = document.querySelectorAll('.baris-ntm-edit-dinamis');
+            const index = Array.from(barisNtmAll).indexOf(containerTeks);
+            const barisFotoAll = document.querySelectorAll('.baris-foto-edit-dinamis');
+
+            if (index !== -1) {
+                // Shift photo slots 1..5
+                for (let i = index + 1; i < 5; i++) {
+                    editFotoSlots[i] = editFotoSlots[i + 1];
+                }
+                editFotoSlots[5] = { state: 'delete' };
+
+                containerTeks.remove();
+                if (barisFotoAll[index]) barisFotoAll[index].remove();
+
+                perbaruiPlaceholderDanLabelEdit();
+                const newBarisNtmAll = document.querySelectorAll('.baris-ntm-edit-dinamis');
+                newBarisNtmAll.forEach((_, idx) => renderFotoEditNTM(idx));
+                kalkulasiVolumeEdit();
+            }
+        }
+
+        function renderFotoEditNTM(ntmIndex) {
+            const barisFotoAll = document.querySelectorAll('.baris-foto-edit-dinamis');
+            if (!barisFotoAll[ntmIndex]) return;
+            const wadah = barisFotoAll[ntmIndex].querySelector('.wadah-slot-foto-ntm-edit');
+            if (!wadah) return;
+
+            const slotIdx = ntmIndex + 1; // Slot 1 to 5
+            const slot = editFotoSlots[slotIdx];
+
+            if (slot && slot.state === 'keep') {
+                wadah.innerHTML = `
+                    <div class="d-flex align-items-center gap-3 p-2 bg-light rounded-3 border">
+                        <img src="https://drive.google.com/thumbnail?id=${slot.existingId}&sz=w400" class="img-thumbnail rounded-3" style="height: 90px; width: 100px; object-fit: cover;">
+                        <div>
+                            <span class="badge bg-success mb-1"><i class="bi bi-check-circle me-1"></i>Foto Tersimpan</span>
+                            <p class="small text-muted mb-2">Dokumentasi NTM tersimpan di Google Drive.</p>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="hapusFotoEditSlot(${slotIdx})">
+                                <i class="bi bi-trash3 me-1"></i>Hapus / Ganti Foto
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (slot && slot.state === 'new') {
+                wadah.innerHTML = `
+                    <div class="d-flex align-items-center gap-3 p-2 bg-light rounded-3 border border-success">
+                        <img src="${slot.dataUrl}" class="img-thumbnail rounded-3" style="height: 90px; width: 100px; object-fit: cover;">
+                        <div>
+                            <span class="badge bg-primary mb-1"><i class="bi bi-plus-circle me-1"></i>FOTO BARU</span>
+                            <p class="small text-muted mb-2">${slot.nama}</p>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="hapusFotoEditSlot(${slotIdx})">
+                                <i class="bi bi-trash3 me-1"></i>Batal Foto Baru
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                wadah.innerHTML = `
+                    <input type="file" class="form-control mb-2 file-foto-ntm-edit" accept="image/*" onchange="previewFotoEditNTM(this, ${ntmIndex})">
+                    <div class="text-center"><img id="previewEditNtm${ntmIndex}" class="img-thumbnail rounded-3 d-none shadow-sm" style="max-height: 150px;"></div>
+                `;
+            }
+        }
+
+        async function previewFotoEditNTM(input, ntmIndex) {
+            const preview = document.getElementById('previewEditNtm' + ntmIndex);
+            const slotIdx = ntmIndex + 1;
+
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const base64Str = await bacaFile(file);
+                const dataUrl = 'data:' + file.type + ';base64,' + base64Str;
+
+                editFotoSlots[slotIdx] = {
+                    state: 'new',
+                    base64: base64Str,
+                    nama: file.name,
+                    tipe: file.type,
+                    dataUrl: dataUrl
+                };
+                if (preview) { preview.src = dataUrl; preview.classList.remove('d-none'); }
+            } else {
+                if (preview) preview.classList.add('d-none');
+            }
+        }
+
+        function perbaruiPlaceholderDanLabelEdit() {
+            const barisNtmAll = document.querySelectorAll('.baris-ntm-edit-dinamis');
+            barisNtmAll.forEach((container, index) => {
+                const inputEl = container.querySelector('.input-ntm-edit-val');
+                if (inputEl) {
+                    inputEl.placeholder = `Ketik atau pilih kegiatan NTM ${index + 1}...`;
+                    evaluasiLabelDanVolumeEdit(inputEl);
+                }
+            });
+        }
+
+        function kalkulasiVolumeEdit() {
+            let volumeTM = 0; let volumeNTM = 0;
+
+            const isTMAda = document.getElementById('editSwitchTM').checked;
+            const cpVal = document.getElementById('editCP').value.trim();
+            const tpVal = document.getElementById('editTP').value.trim();
+            const kelasVal = document.getElementById('editKelas').value.trim();
+
+            if (isTMAda && (cpVal !== '' || tpVal !== '' || kelasVal !== '')) {
+                volumeTM = 1;
+            }
+
+            document.querySelectorAll('.input-ntm-edit-val').forEach(input => {
+                if (input.value.trim() !== '') volumeNTM += 1;
+            });
+
+            const total = volumeTM + volumeNTM;
+            document.getElementById('editVolume').value = total;
+
+            const volDisplay = document.getElementById('editVolumeDisplay');
+            if (volDisplay) {
+                volDisplay.innerText = total;
+            }
+        }
+
+        function cekFotoGandaEdit() {
+            const kumpulanFile = [];
+
+            // A. Foto Tatap Muka (Slot 0)
+            const isTM = document.getElementById('editSwitchTM').checked;
+            if (isTM && editFotoSlots[0] && editFotoSlots[0].state === 'new') {
+                kumpulanFile.push({ label: 'Tatap Muka', file: editFotoSlots[0] });
+            }
+
+            // B. Foto NTM (Slots 1..5)
+            const inputKegiatanNTM = document.querySelectorAll('.input-ntm-edit-val');
+            for (let i = 0; i < inputKegiatanNTM.length; i++) {
+                const slotIdx = i + 1;
+                if (editFotoSlots[slotIdx] && editFotoSlots[slotIdx].state === 'new') {
+                    let namaKegiatan = inputKegiatanNTM[i].value.trim();
+                    if (namaKegiatan === "") namaKegiatan = `NTM ke-${i + 1}`;
+                    kumpulanFile.push({ label: `NTM: ${namaKegiatan}`, file: editFotoSlots[slotIdx] });
+                }
+            }
+
+            // C. Cek Duplikat
+            for (let i = 0; i < kumpulanFile.length; i++) {
+                for (let j = i + 1; j < kumpulanFile.length; j++) {
+                    const fA = kumpulanFile[i].file;
+                    const fB = kumpulanFile[j].file;
+                    if (fA.nama === fB.nama && fA.base64 === fB.base64) {
+                        return {
+                            ganda: true,
+                            label1: kumpulanFile[i].label,
+                            label2: kumpulanFile[j].label
+                        };
+                    }
+                }
+            }
+            return { ganda: false };
+        }
+
+        function simpanEditAgenda() {
+            const id = document.getElementById('editId').value;
+            const tanggal = document.getElementById('editTanggal').value;
+            const bulan = document.getElementById('editBulan').value;
+            const tahunAjaran = document.getElementById('editTahunAjaran').value;
+            const switchTM = document.getElementById('editSwitchTM').checked;
+            const cp = switchTM ? document.getElementById('editCP').value.trim() : '';
+            const tp = switchTM ? document.getElementById('editTP').value.trim() : '';
+            const kelas = switchTM ? document.getElementById('editKelas').value : '';
+
+            if (!tanggal) {
+                alert("Tanggal kegiatan wajib diisi.");
+                return;
+            }
+
+            // Validasi kesesuaian Tanggal vs Bulan
+            if (!verifikasiTanggalDanBulanEdit()) {
+                alert("Pilihan bulan tidak sesuai dengan tanggal pada kalender. Mohon sesuaikan pilihan tanggal atau bulan.");
+                return;
+            }
+
+            // Kumpulkan NTM
+            let ntmValid = true;
+            const ntmArr = [];
+            document.querySelectorAll('.input-ntm-edit-val').forEach(inp => {
+                if (inp.value.trim() !== '') {
+                    ntmArr.push("- " + inp.value.trim());
+                } else {
+                    ntmValid = false;
+                }
+            });
+
+            if (!ntmValid) {
+                alert("Silakan lengkapi atau hapus kotak Kegiatan Non Tatap Muka yang kosong.");
+                return;
+            }
+
+            const nonTatapMuka = ntmArr.join('\n');
+
+            // Cek Foto Ganda pada Edit
+            const hasilCekFoto = cekFotoGandaEdit();
+            if (hasilCekFoto.ganda) {
+                document.getElementById('teksFotoGanda1').innerHTML = `Foto pada bagian <strong class="text-danger">[${hasilCekFoto.label1}]</strong>`;
+                document.getElementById('teksFotoGanda2').innerHTML = `sama persis dengan <strong class="text-danger">[${hasilCekFoto.label2}]</strong>.`;
+
+                const modalPeringatan = new bootstrap.Modal(document.getElementById('modalFotoGanda'));
+                modalPeringatan.show();
+                return;
+            }
+
+            const volume = document.getElementById('editVolume').value || '0';
+            let keterangan = document.getElementById('editKeterangan').value.trim();
+            if (!keterangan) keterangan = 'Terlaksana';
+
+            // Susun array 6 slot foto
+            const fotoArr = [];
+            for (let i = 0; i < 6; i++) {
+                const slot = editFotoSlots[i];
+                if (slot && slot.state === 'new') {
+                    fotoArr.push({ base64: slot.base64, nama: slot.nama, tipe: slot.tipe });
+                } else if (slot && slot.state === 'keep') {
+                    fotoArr.push({ existingId: slot.existingId });
+                } else {
+                    fotoArr.push({ hapus: true });
+                }
+            }
+
+            const dataEdit = {
+                id: id,
+                tanggal: tanggal,
+                bulan: bulan,
+                tahunAjaran: tahunAjaran,
+                cp: cp,
+                tp: tp,
+                kelas: kelas,
+                nonTatapMuka: nonTatapMuka,
+                volume: volume,
+                keterangan: keterangan,
+                fotoArr: fotoArr
+            };
+
+            const btnSimpan = document.getElementById('btnSimpanEdit');
+            const btnBatal = document.getElementById('btnBatalEdit');
+            btnSimpan.disabled = true;
+            btnBatal.disabled = true;
+            btnSimpan.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
+
+            google.script.run
+                .withSuccessHandler(function (res) {
+                    btnSimpan.disabled = false;
+                    btnBatal.disabled = false;
+                    btnSimpan.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Simpan Perubahan';
+
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalEditData'));
+                    if (modal) modal.hide();
+
+                    if (res && res.sukses) {
+                        alert(res.pesan || "Perubahan data berhasil disimpan!");
+                        muatRiwayat();
+                    } else {
+                        alert((res && res.pesan) || "Gagal memperbarui data agenda.");
+                    }
+                })
+                .withFailureHandler(function (err) {
+                    btnSimpan.disabled = false;
+                    btnBatal.disabled = false;
+                    btnSimpan.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Simpan Perubahan';
+                    alert("Error saat menyimpan perubahan: " + (err.message || err));
+                })
+                .updateDataAgenda(dataEdit);
+        }
+
+        // --- 12. LOGIKA UNDUH / CETAK LAPORAN (INDIKATOR PROGRESS REALTIME) ---
+        let timerProgressUnduh = null;
+        let currentUrlDokumen = '';
+
+        function setProgressUnduhStep(stepNum, percent, statusText) {
+            const progressBar = document.getElementById('unduhProgressBar');
+            const percentLabel = document.getElementById('unduhPercentLabel');
+            const statusLabel = document.getElementById('unduhStatusText');
+
+            if (progressBar) progressBar.style.width = percent + '%';
+            if (percentLabel) percentLabel.innerText = percent + '%';
+            if (statusLabel && statusText) statusLabel.innerText = statusText;
+
+            for (let i = 1; i <= 5; i++) {
+                const el = document.getElementById('stepUnduh' + i);
+                if (!el) continue;
+                const iconSpan = el.querySelector('.step-icon');
+                if (i < stepNum) {
+                    el.className = 'list-group-item d-flex align-items-center py-2 border-0 bg-transparent text-success';
+                    if (iconSpan) iconSpan.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+                } else if (i === stepNum) {
+                    el.className = 'list-group-item d-flex align-items-center py-2 border-0 bg-light rounded-3 fw-bold text-success';
+                    if (iconSpan) iconSpan.innerHTML = '<span class="spinner-border spinner-border-sm text-success"></span>';
+                } else {
+                    el.className = 'list-group-item d-flex align-items-center py-2 border-0 bg-transparent text-muted opacity-50';
+                    if (iconSpan) iconSpan.innerHTML = '<i class="bi bi-circle"></i>';
+                }
+            }
+        }
+
+        function salinTautanDokumen() {
+            if (!currentUrlDokumen) return;
+            const btn = document.getElementById('btnSalinLink');
+            const originalHtml = btn.innerHTML;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentUrlDokumen).then(() => {
+                    btn.innerHTML = '<i class="bi bi-check2 me-1 text-success"></i> Tautan Berhasil Disalin!';
+                    setTimeout(() => { btn.innerHTML = originalHtml; }, 2500);
+                }).catch(() => {
+                    prompt("Salin tautan dokumen berikut:", currentUrlDokumen);
+                });
+            } else {
+                prompt("Salin tautan dokumen berikut:", currentUrlDokumen);
+            }
+        }
+
+        function unduhLaporanBulanan() {
+            const bulan = document.getElementById('filterBulan').value;
+            const tahun = document.getElementById('filterTahun').value;
+            const radioFormat = document.querySelector('input[name="formatCetak"]:checked');
+            const format = radioFormat ? radioFormat.value : 'pdf';
+
+            // Inisialisasi Tampilan Modal
+            const modalEl = document.getElementById('modalProgressUnduh');
+            const modal = new bootstrap.Modal(modalEl);
+
+            document.getElementById('wadahProgressState').classList.remove('d-none');
+            document.getElementById('wadahSuksesState').classList.add('d-none');
+            document.getElementById('wadahErrorState').classList.add('d-none');
+
+            document.getElementById('infoPeriodeUnduh').innerText = `${bulan} (${tahun})`;
+            const badgeFormat = document.getElementById('badgeFormatUnduh');
+            const mainIcon = document.getElementById('mainIconProgress');
+            const iconBox = document.getElementById('iconBoxProgress');
+
+            if (format === 'docx') {
+                badgeFormat.className = 'badge bg-primary rounded-pill px-3 py-2';
+                badgeFormat.innerHTML = '<i class="bi bi-file-earmark-word-fill me-1"></i>Word (DOCX)';
+                mainIcon.className = 'bi bi-file-earmark-word-fill fs-3 text-primary';
+                iconBox.style.background = 'rgba(13, 110, 253, 0.1)';
+            } else {
+                badgeFormat.className = 'badge bg-danger rounded-pill px-3 py-2';
+                badgeFormat.innerHTML = '<i class="bi bi-file-earmark-pdf-fill me-1"></i>PDF Document';
+                mainIcon.className = 'bi bi-file-earmark-pdf-fill fs-3 text-danger';
+                iconBox.style.background = 'rgba(220, 53, 69, 0.1)';
+            }
+
+            setProgressUnduhStep(1, 15, 'Membaca data kegiatan dari Google Spreadsheet...');
+            modal.show();
+
+            if (timerProgressUnduh) clearInterval(timerProgressUnduh);
+
+            // Simulasi Step Tracker selama proses server Apps Script berjalan
+            let stepCount = 1;
+            timerProgressUnduh = setInterval(() => {
+                stepCount++;
+                if (stepCount === 2) {
+                    setProgressUnduhStep(2, 40, 'Mengkloning template master Google Docs...');
+                } else if (stepCount === 3) {
+                    setProgressUnduhStep(3, 70, 'Menyusun tabel kegiatan & memproses foto...');
+                } else if (stepCount === 4) {
+                    setProgressUnduhStep(4, 90, `Mengompilasi dan mengonversi berkas ${format.toUpperCase()}...`);
+                }
+            }, 1800);
+
+            google.script.run
+                .withSuccessHandler(function (res) {
+                    if (timerProgressUnduh) clearInterval(timerProgressUnduh);
+
+                    if (res && res.sukses) {
+                        setProgressUnduhStep(5, 100, 'Dokumen berhasil dibuat!');
+                        currentUrlDokumen = res.url;
+
+                        setTimeout(() => {
+                            document.getElementById('wadahProgressState').classList.add('d-none');
+                            document.getElementById('wadahSuksesState').classList.remove('d-none');
+
+                            document.getElementById('namaFileSukses').innerText = res.namaFile || `Laporan_Agenda_${bulan}.${format}`;
+                            document.getElementById('formatSukses').innerText = format.toUpperCase();
+                            document.getElementById('formatSukses').className = (format === 'docx' ? 'badge bg-primary' : 'badge bg-danger');
+                            document.getElementById('totalKegiatanSukses').innerText = (res.totalKegiatan || '0') + ' Kegiatan Terlapor';
+
+                            const btnBuka = document.getElementById('btnBukaDokumen');
+                            btnBuka.href = res.url;
+                            btnBuka.className = (format === 'docx' ? 'btn btn-primary btn-lg w-100 fw-bold mb-2 shadow-sm' : 'btn btn-success btn-lg w-100 fw-bold mb-2 shadow-sm');
+                            btnBuka.innerHTML = (format === 'docx' ? '<i class="bi bi-file-earmark-word-fill me-2"></i> Unduh File Word (.docx)' : '<i class="bi bi-file-earmark-pdf-fill me-2"></i> Buka / Cetak PDF');
+
+                            // Coba buka tab secara otomatis (jika diizinkan browser)
+                            try {
+                                window.open(res.url, '_blank');
+                            } catch (e) {
+                                console.log("Popup otomatis dicegah browser, tombol langsung siap di modal.");
+                            }
+                        }, 500);
+                    } else {
+                        document.getElementById('wadahProgressState').classList.add('d-none');
+                        document.getElementById('wadahErrorState').classList.remove('d-none');
+                        document.getElementById('teksErrorUnduh').innerText = (res && res.pesan) || `Tidak ditemukan data agenda pada bulan ${bulan} (${tahun}).`;
+                    }
+                })
+                .withFailureHandler(function (err) {
+                    if (timerProgressUnduh) clearInterval(timerProgressUnduh);
+                    document.getElementById('wadahProgressState').classList.add('d-none');
+                    document.getElementById('wadahErrorState').classList.remove('d-none');
+                    document.getElementById('teksErrorUnduh').innerText = 'Gagal memproses dokumen: ' + (err.message || err);
+                })
+                .buatLaporanBulanan(bulan, tahun, format);
+        }
+    </script>
+</body>
+
+</html>
