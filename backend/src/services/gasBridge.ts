@@ -131,6 +131,54 @@ export class GasBridgeService {
   }
 
   /**
+   * 4. Hapus Baris di SpreadsheetDB & Hapus File Foto di Google Drive
+   */
+  async hapusLhk(params: {
+    spreadsheetId?: string;
+    lhkId: string;
+    fotoIds?: string[];
+  }): Promise<GasResponse> {
+    if (!this.isConfigured()) {
+      return {
+        sukses: true,
+        pesan: 'Mode Simulasi: Data agenda simulasi dihapus.'
+      };
+    }
+
+    return await this.callGas('hapus_lhk', params);
+  }
+
+  /**
+   * 5. Update Baris di SpreadsheetDB & Ganti Foto di Google Drive (Hapus Foto Lama)
+   */
+  async updateLhk(params: {
+    id: string;
+    spreadsheetId: string;
+    folderDokumentasiId: string;
+    tanggal: string;
+    tanggalTeks?: string;
+    bulan: string;
+    tahunAjaran: string;
+    cp?: string;
+    tp?: string;
+    kelas?: string;
+    nonTatapMuka?: string;
+    volume: number | string;
+    keterangan?: string;
+    fotoArr: Array<{ base64?: string; tipe?: string; nama?: string; oldId?: string; existingId?: string } | null>;
+  }): Promise<GasResponse> {
+    if (!this.isConfigured()) {
+      return {
+        sukses: true,
+        pesan: 'Mode Simulasi: Data agenda dan foto diperbarui.',
+        fotoIds: params.fotoArr.map((f, i) => f?.existingId || `SIMULASI_UPDATED_IMG_${Date.now()}_${i}`)
+      };
+    }
+
+    return await this.callGas('update_lhk', params);
+  }
+
+  /**
    * Helper internal untuk memanggil Apps Script doPost
    */
   private async callGas(action: string, data: any): Promise<GasResponse> {

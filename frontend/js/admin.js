@@ -52,8 +52,19 @@ const AdminManager = {
         <tr>
           <td class="text-center">${idx + 1}</td>
           <td>
-            <div class="fw-bold text-dark">${u.nama_lengkap}</div>
-            <small class="text-muted">Username: <strong>${u.username}</strong> ${u.nip ? `• NIP. ${u.nip}` : ''}</small>
+            <div class="d-flex align-items-center gap-2">
+              ${u.foto_profil ? `
+                <img src="${u.foto_profil}" class="rounded-circle border object-fit-cover flex-shrink-0" width="42" height="42" alt="Foto">
+              ` : `
+                <div class="rounded-circle bg-success-subtle text-success border border-success-subtle d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 42px; height: 42px; font-size: 0.95rem;">
+                  ${(u.nama_lengkap || 'G').substring(0, 1).toUpperCase()}
+                </div>
+              `}
+              <div>
+                <div class="fw-bold text-dark">${u.nama_lengkap}</div>
+                <small class="text-muted">${u.nip ? `NIP. ${u.nip}` : 'NIP. -'} • <strong>${u.nama_sekolah || 'SD Inpres Leling'}</strong></small>
+              </div>
+            </div>
           </td>
           <td>
             <span class="badge bg-light text-primary border">${u.mapel || 'Guru Mapel'}</span>
@@ -80,7 +91,7 @@ const AdminManager = {
             <span class="badge ${u.is_active ? 'bg-success' : 'bg-danger'}">${u.is_active ? 'Aktif' : 'Nonaktif'}</span>
           </td>
           <td class="text-end text-nowrap">
-            <button class="btn btn-sm btn-outline-primary me-1" onclick="AdminManager.openEditUserModal('${u.id}')" title="Edit Akun & Drive">
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="AdminManager.openEditUserModal('${u.id}')" title="Edit Profil & Drive Guru">
               <i class="bi bi-pencil"></i>
             </button>
             <button class="btn btn-sm btn-outline-warning text-dark me-1" onclick="AdminManager.resetPassword('${u.id}', '${u.nama_lengkap}')" title="Reset Kata Sandi">
@@ -104,10 +115,17 @@ const AdminManager = {
 
         mobHtml += `
           <div class="card-cms p-3 mb-3">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-              <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+              ${u.foto_profil ? `
+                <img src="${u.foto_profil}" class="rounded-circle border object-fit-cover flex-shrink-0" width="46" height="46" alt="Foto">
+              ` : `
+                <div class="rounded-circle bg-success-subtle text-success border border-success-subtle d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 46px; height: 46px; font-size: 1.1rem;">
+                  ${(u.nama_lengkap || 'G').substring(0, 1).toUpperCase()}
+                </div>
+              `}
+              <div class="flex-grow-1">
                 <h6 class="fw-bold mb-0 text-dark">${u.nama_lengkap}</h6>
-                <small class="text-muted">NIP. ${u.nip || '-'} • User: ${u.username}</small>
+                <small class="text-muted d-block">${u.nip ? `NIP. ${u.nip}` : 'NIP. -'} • ${u.nama_sekolah || 'SD Inpres Leling'}</small>
               </div>
               <span class="badge ${u.is_active ? 'bg-success' : 'bg-danger'}">${u.is_active ? 'Aktif' : 'Nonaktif'}</span>
             </div>
@@ -168,6 +186,7 @@ const AdminManager = {
     try {
       const nama = document.getElementById('adminInputNama').value;
       const nip = document.getElementById('adminInputNip').value;
+      const sekolah = document.getElementById('adminInputSekolah')?.value || 'SD Inpres Leling';
       const username = document.getElementById('adminInputUsername').value;
       const password = document.getElementById('adminInputPassword').value;
       const mapel = document.getElementById('adminInputMapel').value;
@@ -185,6 +204,7 @@ const AdminManager = {
       const payload = {
         nama_lengkap: nama,
         nip,
+        nama_sekolah: sekolah,
         username,
         password,
         mapel,
@@ -213,16 +233,55 @@ const AdminManager = {
     }
   },
 
+  handleFotoSelected: async function (inputEl) {
+    const file = inputEl.files[0];
+    if (!file) return;
+
+    const preview = document.getElementById('editUserFotoPreview');
+    const hiddenFoto = document.getElementById('editUserFotoData');
+    const infoFoto = document.getElementById('editUserFotoInfo');
+
+    if (infoFoto) infoFoto.innerHTML = '<span class="spinner-border spinner-border-sm text-success me-1"></span>Mengompresi foto profil...';
+
+    try {
+      // Kompresi foto menjadi avatar berkualitas tinggi maksimal dimensi 400px (~25KB)
+      const res = await ImageCompressor.compress(file, 400, 0.82);
+      if (preview) preview.src = res.dataUrl;
+      if (hiddenFoto) hiddenFoto.value = res.dataUrl;
+      if (infoFoto) infoFoto.innerHTML = `<span class="badge bg-success text-white"><i class="bi bi-check-circle me-1"></i>Foto baru dipilih (${res.compressedKb} KB)</span>`;
+    } catch (err) {
+      alert('Gagal memproses foto: ' + err.message);
+      inputEl.value = '';
+      if (infoFoto) infoFoto.innerText = 'Format didukung: JPG, JPEG, PNG, WEBP, HEIC';
+    }
+  },
+
+  hapusFotoProfil: function () {
+    const preview = document.getElementById('editUserFotoPreview');
+    const hiddenFoto = document.getElementById('editUserFotoData');
+    const fileInput = document.getElementById('editUserFotoInput');
+    const infoFoto = document.getElementById('editUserFotoInfo');
+
+    if (fileInput) fileInput.value = '';
+    if (hiddenFoto) hiddenFoto.value = '__DELETE__';
+    if (preview) preview.src = 'https://placehold.co/100x100?text=Tanpa+Foto';
+    if (infoFoto) infoFoto.innerHTML = '<span class="badge bg-secondary-subtle text-muted border">Foto profil akan dihapus saat disimpan</span>';
+  },
+
   openEditUserModal: function (id) {
     const user = AdminManager.teachers.find(u => u.id === id);
     if (!user) return;
 
     document.getElementById('editUserId').value = user.id;
-    document.getElementById('editUserNama').value = user.nama_lengkap;
+    document.getElementById('editUserNama').value = user.nama_lengkap || '';
     document.getElementById('editUserNip').value = user.nip || '';
+    document.getElementById('editUserSekolah').value = user.nama_sekolah || 'SD Inpres Leling';
     document.getElementById('editUserMapel').value = user.mapel || '';
     document.getElementById('editUserPangkat').value = user.pangkat_golongan || '';
+    document.getElementById('editUserJabatan').value = user.jabatan || 'Guru Mata Pelajaran';
     document.getElementById('editUserKelas').value = (user.classes || []).join(', ');
+
+    // Google Drive Aset IDs
     document.getElementById('editUserFolderGuru').value = user.folder_guru_id || '';
     document.getElementById('editUserFolderDokumentasi').value = user.folder_dokumentasi_id || '';
     document.getElementById('editUserFolderDokLaporan').value = user.folder_dok_laporan_id || '';
@@ -230,6 +289,25 @@ const AdminManager = {
     document.getElementById('editUserFolderDb').value = user.folder_db_id || '';
     document.getElementById('editUserSheetId').value = user.spreadsheet_id || '';
     document.getElementById('editUserTemplateDocId').value = user.template_doc_id || '';
+
+    // Foto Profil
+    const preview = document.getElementById('editUserFotoPreview');
+    const hiddenFoto = document.getElementById('editUserFotoData');
+    const fileInput = document.getElementById('editUserFotoInput');
+    const infoFoto = document.getElementById('editUserFotoInfo');
+
+    if (fileInput) fileInput.value = '';
+
+    if (user.foto_profil && user.foto_profil.trim() !== '') {
+      if (preview) preview.src = user.foto_profil;
+      if (hiddenFoto) hiddenFoto.value = user.foto_profil;
+      if (infoFoto) infoFoto.innerHTML = '<span class="badge bg-success-subtle text-success border border-success"><i class="bi bi-image me-1"></i>Foto profil tersimpan</span>';
+    } else {
+      const initial = (user.nama_lengkap || 'G').substring(0, 2).toUpperCase();
+      if (preview) preview.src = `https://placehold.co/100x100?text=${encodeURIComponent(initial)}`;
+      if (hiddenFoto) hiddenFoto.value = '';
+      if (infoFoto) infoFoto.innerText = 'Dukungan: JPG, JPEG, PNG, WEBP, HEIC';
+    }
 
     const modalEl = document.getElementById('modalEditGuru');
     if (modalEl) {
@@ -243,18 +321,28 @@ const AdminManager = {
     const btn = document.getElementById('btnSimpanEditGuru');
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan Perubahan...';
     }
 
     try {
       const classesRaw = document.getElementById('editUserKelas').value;
       const classes = classesRaw ? classesRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const hiddenFoto = document.getElementById('editUserFotoData')?.value;
+
+      let fotoVal = undefined;
+      if (hiddenFoto === '__DELETE__') {
+        fotoVal = '';
+      } else if (hiddenFoto && (hiddenFoto.startsWith('data:image') || hiddenFoto.startsWith('http'))) {
+        fotoVal = hiddenFoto;
+      }
 
       const payload = {
         nama_lengkap: document.getElementById('editUserNama').value,
         nip: document.getElementById('editUserNip').value,
+        nama_sekolah: document.getElementById('editUserSekolah').value,
         mapel: document.getElementById('editUserMapel').value,
         pangkat_golongan: document.getElementById('editUserPangkat').value,
+        jabatan: document.getElementById('editUserJabatan').value,
         folder_guru_id: document.getElementById('editUserFolderGuru').value,
         folder_dokumentasi_id: document.getElementById('editUserFolderDokumentasi').value,
         folder_dok_laporan_id: document.getElementById('editUserFolderDokLaporan').value,
@@ -265,9 +353,13 @@ const AdminManager = {
         classes
       };
 
+      if (fotoVal !== undefined) {
+        payload.foto_profil = fotoVal;
+      }
+
       const res = await Api.updateAdminUser(id, payload);
       if (res && res.sukses) {
-        alert('Data guru berhasil diperbarui!');
+        alert('Data dan profil guru berhasil diperbarui! 🎉');
         const modalEl = document.getElementById('modalEditGuru');
         const bsModal = bootstrap.Modal.getInstance(modalEl);
         if (bsModal) bsModal.hide();
@@ -280,7 +372,7 @@ const AdminManager = {
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.innerHTML = 'Simpan Perubahan';
+        btn.innerHTML = 'Simpan Perubahan Profil';
       }
     }
   },
@@ -329,63 +421,185 @@ const AdminManager = {
   // ========================================================
   // 2. MONITORING & REKAPITULASI SEKOLAH
   // ========================================================
-  loadRekap: async function () {
-    const bulan = document.getElementById('filterRekapBulan')?.value || 'Juni';
-    const tahun = document.getElementById('filterRekapTahun')?.value || '2026/2027';
+  formatTanggalSingkat: function (tglStr) {
+    if (!tglStr) return '-';
+    try {
+      const parts = tglStr.split('-');
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        const hArr = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        const bArr = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        return `${hArr[d.getDay()]}, ${parts[2]} ${bArr[d.getMonth()]} ${parts[0]}`;
+      }
+    } catch (_) {}
+    return tglStr;
+  },
 
-    const container = document.getElementById('adminRekapTableBody');
-    if (container) {
-      container.innerHTML = '<tr><td colspan="6" class="text-center py-4"><span class="spinner-border spinner-border-sm text-success me-2"></span>Menghitung rekapitulasi sekolah...</td></tr>';
+  loadRekap: async function () {
+    const selectBulan = document.getElementById('filterRekapBulan');
+    const selectTahun = document.getElementById('filterRekapTahun');
+
+    // Otomatis pilih bulan sekarang jika baru pertama dibuka
+    if (selectBulan && !selectBulan.dataset.initialized) {
+      const namaBulanArr = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+      const curMonth = namaBulanArr[new Date().getMonth()];
+      selectBulan.value = curMonth;
+      selectBulan.dataset.initialized = 'true';
+    }
+
+    const bulan = selectBulan?.value || '';
+    const tahun = selectTahun?.value || '2026/2027';
+
+    const tableContainer = document.getElementById('adminRekapTableBody');
+    const mobileContainer = document.getElementById('adminRekapMobileCards');
+
+    if (tableContainer) {
+      tableContainer.innerHTML = '<tr><td colspan="6" class="text-center py-4"><span class="spinner-border spinner-border-sm text-success me-2"></span>Menghitung rekapitulasi sekolah...</td></tr>';
+    }
+    if (mobileContainer) {
+      mobileContainer.innerHTML = '<div class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm text-success me-2"></span>Menghitung rekapitulasi...</div>';
     }
 
     try {
       const res = await Api.getAdminRekap(bulan, tahun);
       if (res && res.sukses) {
-        AdminManager.renderRekap(res.rekap || []);
+        AdminManager.renderRekap(res.rekap || [], bulan, tahun);
+      } else {
+        throw new Error(res.pesan || 'Gagal mengambil data rekapitulasi.');
       }
     } catch (err) {
-      if (container) {
-        container.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Gagal memuat rekap: ${err.message}</td></tr>`;
+      if (tableContainer) {
+        tableContainer.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4"><i class="bi bi-exclamation-triangle me-1"></i>Gagal memuat rekap: ${err.message}</td></tr>`;
+      }
+      if (mobileContainer) {
+        mobileContainer.innerHTML = `<div class="alert alert-danger text-center small"><i class="bi bi-exclamation-triangle me-1"></i>Gagal memuat rekap: ${err.message}</div>`;
       }
     }
   },
 
-  renderRekap: function (rekap) {
-    const container = document.getElementById('adminRekapTableBody');
-    if (!container) return;
+  renderRekap: function (rekap, bulan, tahun) {
+    const tableContainer = document.getElementById('adminRekapTableBody');
+    const mobileContainer = document.getElementById('adminRekapMobileCards');
+
+    // 1. Hitung Akumulasi Statistik
+    let totalGuru = rekap.length;
+    let guruMengisi = 0;
+    let grandTotalHari = 0;
+    let grandTotalVol = 0;
+
+    rekap.forEach(r => {
+      if ((r.total_hari || 0) > 0) guruMengisi++;
+      grandTotalHari += (r.total_hari || 0);
+      grandTotalVol += (r.total_volume || 0);
+    });
+
+    const persen = totalGuru > 0 ? Math.round((guruMengisi / totalGuru) * 100) : 0;
+
+    // Update Kartu Statistik di Bagian Atas
+    if (document.getElementById('rekapStatTotalGuru')) document.getElementById('rekapStatTotalGuru').innerText = totalGuru;
+    if (document.getElementById('rekapStatGuruMengisi')) document.getElementById('rekapStatGuruMengisi').innerText = `${guruMengisi} Guru`;
+    if (document.getElementById('rekapStatPersen')) document.getElementById('rekapStatPersen').innerText = `${persen}% berpartisipasi`;
+    if (document.getElementById('rekapStatTotalHari')) document.getElementById('rekapStatTotalHari').innerText = `${grandTotalHari} Hari`;
+    if (document.getElementById('rekapStatTotalVolume')) document.getElementById('rekapStatTotalVolume').innerText = `${grandTotalVol} Kegiatan`;
 
     if (!rekap || rekap.length === 0) {
-      container.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Belum ada data guru.</td></tr>';
+      const emptyMsg = `<tr><td colspan="6" class="text-center py-4 text-muted">Belum ada akun guru aktif yang terdaftar.</td></tr>`;
+      if (tableContainer) tableContainer.innerHTML = emptyMsg;
+      if (mobileContainer) mobileContainer.innerHTML = '<div class="text-center py-4 text-muted">Belum ada akun guru aktif.</div>';
       return;
     }
 
-    let html = '';
-    rekap.forEach((r, idx) => {
-      const isFilled = r.total_hari > 0;
-      html += `
-        <tr>
-          <td class="text-center">${idx + 1}</td>
-          <td>
-            <strong>${r.nama_lengkap}</strong>
-            <div class="small text-muted">NIP. ${r.nip || '-'} • ${r.mapel || 'Guru'}</div>
-          </td>
-          <td class="text-center">
-            <span class="badge ${isFilled ? 'bg-success' : 'bg-secondary'}">${r.total_hari || 0} Hari</span>
-          </td>
-          <td class="text-center fw-bold text-success">${r.total_volume || 0} Jam</td>
-          <td class="small text-muted">${r.tanggal_terakhir || '-'}</td>
-          <td class="text-end">
-            ${r.spreadsheet_id ? `
-              <a href="https://docs.google.com/spreadsheets/d/${r.spreadsheet_id}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill py-0 px-2" title="Buka Spreadsheet">
-                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Sheet
-              </a>
-            ` : '-'}
-          </td>
-        </tr>
-      `;
-    });
+    // 2. Render Tabel Desktop
+    if (tableContainer) {
+      let dskHtml = '';
+      rekap.forEach((r, idx) => {
+        const isFilled = (r.total_hari || 0) > 0;
+        const tglFormatted = AdminManager.formatTanggalSingkat(r.tanggal_terakhir);
 
-    container.innerHTML = html;
+        dskHtml += `
+          <tr>
+            <td class="text-center">${idx + 1}</td>
+            <td>
+              <strong class="text-dark">${r.nama_lengkap}</strong>
+              <div class="small text-muted">
+                ${r.nip ? `NIP. ${r.nip}` : 'NIP. -'} • <span class="badge bg-light text-secondary border">${r.mapel || 'Guru'}</span>
+              </div>
+            </td>
+            <td class="text-center">
+              <span class="badge ${isFilled ? 'bg-success px-2 py-1' : 'bg-secondary-subtle text-muted border'}">
+                <i class="bi ${isFilled ? 'bi-check-circle-fill' : 'bi-dash-circle'} me-1"></i>${r.total_hari || 0} Hari
+              </span>
+            </td>
+            <td class="text-center">
+              <span class="fw-bold ${isFilled ? 'text-success' : 'text-muted'}">${r.total_volume || 0} Kegiatan</span>
+            </td>
+            <td>
+              ${isFilled ? `
+                <div class="small fw-semibold text-dark"><i class="bi bi-clock-history me-1 text-success"></i>${tglFormatted}</div>
+              ` : '<span class="text-muted small">-</span>'}
+            </td>
+            <td class="text-end">
+              ${r.spreadsheet_id ? `
+                <a href="https://docs.google.com/spreadsheets/d/${r.spreadsheet_id}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill py-1 px-3" title="Buka Google Spreadsheet Guru">
+                  <i class="bi bi-file-earmark-spreadsheet me-1"></i> Buka Sheet
+                </a>
+              ` : '<span class="text-muted small">Belum ada Sheet</span>'}
+            </td>
+          </tr>
+        `;
+      });
+      tableContainer.innerHTML = dskHtml;
+    }
+
+    // 3. Render Kartu Mobile
+    if (mobileContainer) {
+      let mobHtml = '';
+      rekap.forEach((r, idx) => {
+        const isFilled = (r.total_hari || 0) > 0;
+        const tglFormatted = AdminManager.formatTanggalSingkat(r.tanggal_terakhir);
+
+        mobHtml += `
+          <div class="card-cms p-3 mb-2 shadow-sm border-start border-4 ${isFilled ? 'border-success' : 'border-secondary'}">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <strong class="text-dark fs-6 d-block">${r.nama_lengkap}</strong>
+                <small class="text-muted">${r.nip ? `NIP. ${r.nip}` : 'NIP. -'} • ${r.mapel || 'Guru'}</small>
+              </div>
+              <span class="badge ${isFilled ? 'bg-success' : 'bg-secondary'} rounded-pill px-2 py-1">
+                ${isFilled ? 'Aktif Mengisi' : 'Belum Mengisi'}
+              </span>
+            </div>
+
+            <div class="row g-2 py-2 border-top border-bottom my-2 bg-light rounded text-center">
+              <div class="col-4 border-end">
+                <small class="text-muted d-block" style="font-size: 0.72rem;">Hari Terisi</small>
+                <strong class="${isFilled ? 'text-success' : 'text-muted'} fs-6">${r.total_hari || 0}</strong> <small class="text-muted">Hari</small>
+              </div>
+              <div class="col-4 border-end">
+                <small class="text-muted d-block" style="font-size: 0.72rem;">Total Volume</small>
+                <strong class="${isFilled ? 'text-success' : 'text-muted'} fs-6">${r.total_volume || 0}</strong> <small class="text-muted">Keg.</small>
+              </div>
+              <div class="col-4">
+                <small class="text-muted d-block" style="font-size: 0.72rem;">Terakhir Isi</small>
+                <small class="fw-semibold text-dark d-block text-truncate">${tglFormatted}</small>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 pt-1">
+              ${r.spreadsheet_id ? `
+                <a href="https://docs.google.com/spreadsheets/d/${r.spreadsheet_id}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-semibold w-100 text-center">
+                  <i class="bi bi-file-earmark-spreadsheet me-1"></i> Buka Google Spreadsheet Guru
+                </a>
+              ` : '<span class="text-muted small">Folder/Sheet belum diatur</span>'}
+            </div>
+          </div>
+        `;
+      });
+      mobileContainer.innerHTML = mobHtml;
+    }
   },
 
   // ========================================================

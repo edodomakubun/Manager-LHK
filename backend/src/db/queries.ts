@@ -32,8 +32,8 @@ export class DatabaseQueries {
       INSERT INTO users (
         id, username, password_hash, role, nama_lengkap, nip, pangkat_golongan, jabatan, mapel, nama_sekolah,
         folder_guru_id, folder_dokumentasi_id, folder_dok_laporan_id, folder_template_id, folder_db_id,
-        spreadsheet_id, template_doc_id, is_active
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        spreadsheet_id, template_doc_id, foto_profil, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       user.id,
       user.username,
@@ -52,6 +52,7 @@ export class DatabaseQueries {
       user.folder_db_id || '',
       user.spreadsheet_id || '',
       user.template_doc_id || '',
+      user.foto_profil || '',
       user.is_active !== undefined ? user.is_active : 1
     ).run();
   }
@@ -63,7 +64,7 @@ export class DatabaseQueries {
     const allowed = [
       'nama_lengkap', 'nip', 'pangkat_golongan', 'jabatan', 'mapel', 'nama_sekolah',
       'folder_guru_id', 'folder_dokumentasi_id', 'folder_dok_laporan_id', 'folder_template_id', 'folder_db_id',
-      'spreadsheet_id', 'template_doc_id', 'is_active', 'password_hash'
+      'spreadsheet_id', 'template_doc_id', 'foto_profil', 'is_active', 'password_hash'
     ];
 
     for (const key of allowed) {
@@ -133,6 +134,7 @@ export class DatabaseQueries {
     userId?: string;
     bulan?: string;
     tahunAjaran?: string;
+    kelas?: string;
     limit?: number;
     offset?: number;
   }): Promise<LhkRecord[]> {
@@ -150,6 +152,10 @@ export class DatabaseQueries {
     if (params.tahunAjaran && params.tahunAjaran !== 'semua') {
       query += ' AND tahun_ajaran = ?';
       bindings.push(params.tahunAjaran);
+    }
+    if (params.kelas && params.kelas !== 'semua') {
+      query += ' AND kelas = ?';
+      bindings.push(params.kelas);
     }
 
     query += ' ORDER BY tanggal DESC, id DESC';
@@ -273,22 +279,39 @@ export class DatabaseQueries {
     await this.db.prepare('INSERT INTO system_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').bind(key, value).run();
   }
 
-  async getAdminRekap(bulan: string, tahunAjaran: string): Promise<any[]> {
-    const query = `
+  async getAdminRekap(bulan?: string, tahunAjaran?: string): Promise<any[]> {
+    let query = `
       SELECT 
         u.id, u.nama_lengkap, u.nip, u.mapel, u.spreadsheet_id, u.folder_guru_id,
         COUNT(l.id) as total_hari,
         COALESCE(SUM(l.volume), 0) as total_volume,
         MAX(l.tanggal) as tanggal_terakhir
       FROM users u
-      LEFT JOIN lhk_records l ON u.id = l.user_id 
-        AND LOWER(l.bulan) = LOWER(?) 
-        AND l.tahun_ajaran = ?
+      LEFT JOIN lhk_records l ON u.id = l.user_id
+    `;
+    const bindings: any[] = [];
+    const conditions: string[] = [];
+
+    if (bulan && bulan.trim() !== '' && bulan.toLowerCase() !== 'semua') {
+      conditions.push('LOWER(l.bulan) = LOWER(?)');
+      bindings.push(bulan.trim());
+    }
+    if (tahunAjaran && tahunAjaran.trim() !== '' && tahunAjaran.toLowerCase() !== 'semua') {
+      conditions.push('l.tahun_ajaran = ?');
+      bindings.push(tahunAjaran.trim());
+    }
+
+    if (conditions.length > 0) {
+      query += ` AND ${conditions.join(' AND ')}`;
+    }
+
+    query += `
       WHERE u.role = 'guru' AND u.is_active = 1
       GROUP BY u.id
       ORDER BY u.nama_lengkap ASC
     `;
-    const res = await this.db.prepare(query).bind(bulan, tahunAjaran).all();
+
+    const res = await this.db.prepare(query).bind(...bindings).all();
     return res.results;
   }
 

@@ -47,7 +47,18 @@ const Auth = {
       el.innerText = user.role === 'admin' ? 'Administrator' : (user.mapel || 'Guru Mata Pelajaran');
     });
     elNip.forEach(el => el.innerText = user.nip ? `NIP. ${user.nip}` : 'NIP. -');
-    elSchool.forEach(el => el.innerText = user.nama_sekolah || 'SMA / SMK Negeri');
+    elSchool.forEach(el => el.innerText = user.nama_sekolah || 'SD Inpres Leling');
+
+    // Update Avatar Foto jika ada
+    const elAvatars = document.querySelectorAll('.user-avatar-circle');
+    elAvatars.forEach(el => {
+      if (user.foto_profil && user.foto_profil.trim() !== '') {
+        el.innerHTML = `<img src="${user.foto_profil}" class="w-100 h-100 rounded-circle object-fit-cover shadow-sm" alt="Avatar">`;
+        el.style.background = 'transparent';
+      } else {
+        el.innerHTML = '<i class="bi bi-person-fill"></i>';
+      }
+    });
 
     // Tampilkan / Sembunyikan Menu Admin
     const adminNavs = document.querySelectorAll('.admin-only');

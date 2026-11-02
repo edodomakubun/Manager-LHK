@@ -33,6 +33,7 @@ adminRoutes.get('/users', async (c) => {
         jabatan: u.jabatan,
         mapel: u.mapel,
         nama_sekolah: u.nama_sekolah,
+        foto_profil: u.foto_profil,
         folder_guru_id: u.folder_guru_id,
         folder_dokumentasi_id: u.folder_dokumentasi_id,
         folder_dok_laporan_id: u.folder_dok_laporan_id,
@@ -176,6 +177,7 @@ adminRoutes.put('/users/:id', async (c) => {
     jabatan: body.jabatan,
     mapel: body.mapel,
     nama_sekolah: body.nama_sekolah,
+    foto_profil: body.foto_profil !== undefined ? body.foto_profil : existing.foto_profil,
     folder_guru_id: body.folder_guru_id,
     folder_dokumentasi_id: body.folder_dokumentasi_id,
     folder_dok_laporan_id: body.folder_dok_laporan_id,
@@ -281,13 +283,13 @@ adminRoutes.post('/users/:id/provision-drive', async (c) => {
  * GET /api/admin/rekap - Rekapitulasi Sekolah Bulan Berjalan
  */
 adminRoutes.get('/rekap', async (c) => {
-  const bulan = c.req.query('bulan') || 'Juni';
+  const bulan = c.req.query('bulan');
   const tahunAjaran = c.req.query('tahunAjaran') || '2026/2027';
 
   const db = new DatabaseQueries(c.env.DB);
   const rekap = await db.getAdminRekap(bulan, tahunAjaran);
 
-  return c.json({ sukses: true, bulan, tahunAjaran, rekap });
+  return c.json({ sukses: true, bulan: bulan || 'semua', tahunAjaran, rekap });
 });
 
 /**

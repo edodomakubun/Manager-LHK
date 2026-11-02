@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
     folder_db_id TEXT,                         -- ID Sub-folder: SpreadsheetDB
     spreadsheet_id TEXT,                       -- ID File Google Spreadsheet Guru (di folder SpreadsheetDB)
     template_doc_id TEXT,                      -- ID File Template Google Docs Guru (di folder Template)
+    foto_profil TEXT,                          -- URL / Base64 / ID Foto Profil Guru
     is_active INTEGER NOT NULL DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP

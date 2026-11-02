@@ -9,6 +9,8 @@ const Wizard = {
   totalSteps: 4,
   ntmCount: 1,
   fotoSlots: [null, null, null, null, null, null], // 0: TM, 1..5: NTM
+  editingId: null,
+  editingRecord: null,
 
   // Saran default kegiatan Non Tatap Muka
   ntmSuggestions: [
@@ -25,10 +27,12 @@ const Wizard = {
   ],
 
   init: async function () {
-    Wizard.resetForm();
-    Wizard.populateCurrentDate();
-    await Wizard.loadTeacherClasses();
-    Wizard.goToStep(1);
+    if (!Wizard.editingId) {
+      Wizard.resetForm();
+      Wizard.populateCurrentDate();
+      await Wizard.loadTeacherClasses();
+      Wizard.goToStep(1);
+    }
   },
 
   populateCurrentDate: function () {
@@ -324,17 +328,32 @@ const Wizard = {
     const infoSpan = document.getElementById(`infoKompresi${slotIndex}`);
 
     if (!file) {
+      // Jika pengguna membatalkan dialog file, pertahankan foto yang tersimpan jika ada
+      if (Wizard.fotoSlots[slotIndex] && Wizard.fotoSlots[slotIndex].existingId) {
+        return;
+      }
       Wizard.fotoSlots[slotIndex] = null;
       if (previewImg) previewImg.classList.add('d-none');
       if (infoSpan) infoSpan.innerText = '';
       return;
     }
 
-    if (infoSpan) infoSpan.innerHTML = '<span class="spinner-border spinner-border-sm text-success me-1"></span>Mengompresi foto di HP...';
+    // Ambil info foto lama jika slot ini sebelumnya memiliki foto dari database/Drive
+    const existingOldId = (Wizard.fotoSlots[slotIndex] && (Wizard.fotoSlots[slotIndex].existingId || Wizard.fotoSlots[slotIndex].oldId))
+      ? (Wizard.fotoSlots[slotIndex].existingId || Wizard.fotoSlots[slotIndex].oldId)
+      : null;
+
+    if (infoSpan) infoSpan.innerHTML = '<span class="spinner-border spinner-border-sm text-success me-1"></span>Mengompresi foto...';
 
     try {
       const res = await ImageCompressor.compress(file);
-      Wizard.fotoSlots[slotIndex] = res;
+      Wizard.fotoSlots[slotIndex] = {
+        base64: res.base64,
+        tipe: res.tipe,
+        nama: res.nama,
+        hash: res.hash,
+        oldId: existingOldId // Tandai ID foto lama untuk dihapus dari Google Drive!
+      };
 
       if (previewImg) {
         previewImg.src = res.dataUrl;
@@ -342,30 +361,35 @@ const Wizard = {
       }
 
       if (infoSpan) {
-        infoSpan.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i>Terkonversi: <strong>${res.compressedKb} KB</strong> (Asli: ${res.originalKb} KB)`;
+        if (existingOldId) {
+          infoSpan.innerHTML = `<span class="badge bg-warning text-dark"><i class="bi bi-arrow-repeat me-1"></i>Foto Baru Pengganti</span> <small class="text-muted d-block">Foto lama di Drive akan dihapus (${res.compressedKb} KB)</small>`;
+        } else {
+          infoSpan.innerHTML = `<span class="badge bg-success"><i class="bi bi-check2 me-1"></i>Foto Terkompresi</span> (${res.compressedKb} KB)`;
+        }
       }
+
+      Wizard.updateVolumeCalculation();
     } catch (err) {
       alert('Gagal mengompresi gambar: ' + err.message);
-      if (infoSpan) infoSpan.innerText = 'Gagal memproses file.';
+      inputEl.value = '';
     }
   },
 
   // --- KALKULASI VOLUME REALTIME ---
   updateVolumeCalculation: function () {
     let vol = 0;
-    const isTM = document.getElementById('checkTM').checked;
-    const cp = document.getElementById('inputCP')?.value || '';
-    const tp = document.getElementById('inputTP')?.value || '';
+    const checkTM = document.getElementById('checkTM');
+    const isTM = checkTM ? checkTM.checked : true;
 
-    // Jika tatap muka ada, beri volume 2-4 jam
-    if (isTM && (cp || tp)) {
-      vol += 4;
+    // 1. Kegiatan Pembelajaran Tatap Muka (dihitung 1 kegiatan jika ada tatap muka)
+    if (isTM) {
+      vol += 1;
     }
 
-    // Tambah volume per kegiatan NTM
+    // 2. Kegiatan Non Tatap Muka (dihitung per kegiatan NTM yang diisi, bukan CP/TP)
     const ntmInputs = document.querySelectorAll('.input-ntm-val');
     ntmInputs.forEach(inp => {
-      if (inp.value && inp.value.trim()) {
+      if (inp.value && inp.value.trim() !== '') {
         vol += 1;
       }
     });
@@ -397,7 +421,8 @@ const Wizard = {
       }
     });
 
-    let fotoCount = Wizard.fotoSlots.filter(f => f && f.base64).length;
+    const fotoCount = Wizard.fotoSlots.filter(f => f && (f.base64 || f.existingId)).length;
+    const isEdit = !!Wizard.editingId;
 
     container.innerHTML = `
       <div class="row g-3">
@@ -407,7 +432,7 @@ const Wizard = {
         </div>
         <div class="col-6">
           <small class="text-muted d-block">Total Volume</small>
-          <span class="badge bg-success fs-6">${vol} Jam</span>
+          <span class="badge bg-success fs-6">${vol} Kegiatan</span>
         </div>
         ${isTM ? `
         <div class="col-12 border-top pt-2">
@@ -420,19 +445,21 @@ const Wizard = {
           <div>${ntmList.length > 0 ? ntmList.join('<br>') : '<span class="text-muted">Tidak ada kegiatan NTM</span>'}</div>
         </div>
         <div class="col-12 border-top pt-2">
-          <small class="text-muted d-block"><i class="bi bi-camera me-1"></i>Dokumentasi Terlampir</small>
-          <strong>${fotoCount} Foto Terkompresi Siap Dikirim ke Google Drive</strong>
+          <small class="text-muted d-block"><i class="bi bi-camera me-1"></i>Dokumentasi Foto</small>
+          <strong>${fotoCount} Foto ${isEdit ? 'Tersimpan / Terpilih' : 'Terkompresi Siap Dikirim ke Google Drive'}</strong>
         </div>
       </div>
     `;
   },
 
-  // --- SUBMIT FINAL KE BACKEND ---
+  // --- SUBMIT FINAL KE BACKEND (SIMPAN BARU ATAU UPDATE EDIT) ---
   submitLhk: async function () {
     const btn = document.getElementById('btnSubmitLhk');
+    const isEdit = !!Wizard.editingId;
+
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan ke Cloudflare & Google Drive...';
+      btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${isEdit ? 'Memperbarui di Web & Google Drive...' : 'Menyimpan ke Cloudflare & Google Drive...'}`;
     }
 
     try {
@@ -453,11 +480,20 @@ const Wizard = {
 
       const fotoPayload = Wizard.fotoSlots.map(f => {
         if (!f) return null;
-        return {
-          base64: f.base64,
-          tipe: f.tipe,
-          nama: f.nama
-        };
+        if (f.base64) {
+          return {
+            base64: f.base64,
+            tipe: f.tipe,
+            nama: f.nama,
+            oldId: f.oldId || undefined
+          };
+        }
+        if (f.existingId) {
+          return {
+            existingId: f.existingId
+          };
+        }
+        return null;
       });
 
       const payload = {
@@ -473,22 +509,200 @@ const Wizard = {
         fotoArr: fotoPayload
       };
 
-      const res = await Api.saveLhk(payload);
-      if (res && res.sukses) {
-        alert('Alhamdulillah! Laporan agenda harian berhasil disimpan ke Database & Google Drive! 🎉');
-        Wizard.resetForm();
-        CmsRouter.navigate('riwayat');
+      if (isEdit) {
+        const res = await Api.updateLhk(Wizard.editingId, payload);
+        if (res && res.sukses) {
+          alert('Alhamdulillah! Perubahan agenda dan foto berhasil diperbarui di Database & Google Drive! 🎉');
+          Wizard.cancelEdit();
+          CmsRouter.navigate('riwayat');
+        } else {
+          throw new Error(res.pesan || 'Gagal memperbarui agenda.');
+        }
       } else {
-        throw new Error(res.pesan || 'Gagal menyimpan laporan.');
+        const res = await Api.saveLhk(payload);
+        if (res && res.sukses) {
+          alert('Alhamdulillah! Laporan agenda harian berhasil disimpan ke Database & Google Drive! 🎉');
+          Wizard.resetForm();
+          CmsRouter.navigate('riwayat');
+        } else {
+          throw new Error(res.pesan || 'Gagal menyimpan laporan.');
+        }
       }
     } catch (err) {
-      alert('Error saat menyimpan laporan: ' + err.message);
+      alert('Error saat memproses agenda: ' + err.message);
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.innerHTML = 'Kirim Data <i class="bi bi-send-fill ms-2"></i>';
+        btn.innerHTML = isEdit 
+          ? 'Simpan Perubahan Agenda <i class="bi bi-check2-circle ms-2"></i>'
+          : 'Kirim Data <i class="bi bi-send-fill ms-2"></i>';
       }
     }
+  },
+
+  // --- MEMUAT DATA UNTUK MODE EDIT (IDENTIK DENGAN TAMPILAN INPUT) ---
+  loadForEdit: async function (id) {
+    let record = null;
+    if (window.Riwayat && Array.isArray(window.Riwayat.activeRecords)) {
+      record = window.Riwayat.activeRecords.find(r => r.id === id);
+    }
+
+    if (!record) {
+      try {
+        const res = await Api.getLhkDetail(id);
+        if (res && res.sukses) record = res.record;
+      } catch (e) {
+        console.warn('Gagal memuat detail agenda:', e);
+      }
+    }
+
+    if (!record) {
+      alert('Data agenda tidak ditemukan.');
+      return;
+    }
+
+    // Buka tampilan Input
+    CmsRouter.navigate('input');
+
+    Wizard.editingId = id;
+    Wizard.editingRecord = record;
+
+    // Update Tampilan Header Wizard
+    const title = document.getElementById('wizardHeaderTitle');
+    if (title) title.innerHTML = '<i class="bi bi-pencil-square me-2 text-warning"></i>Edit Data Agenda LHK';
+
+    const badge = document.getElementById('wizardModeBadge');
+    if (badge) {
+      badge.className = 'badge bg-warning text-dark px-3 py-2 rounded-pill fw-semibold';
+      badge.innerText = 'Mode Edit Agenda';
+    }
+
+    const banner = document.getElementById('bannerEditMode');
+    const labelTgl = document.getElementById('labelEditTanggal');
+    if (banner) {
+      banner.classList.remove('d-none');
+      banner.classList.add('d-flex');
+    }
+    if (labelTgl) labelTgl.innerText = record.tanggal_teks || record.tanggal;
+
+    const btnSubmit = document.getElementById('btnSubmitLhk');
+    if (btnSubmit) btnSubmit.innerHTML = 'Simpan Perubahan Agenda <i class="bi bi-check2-circle ms-2"></i>';
+
+    // 1. Reset slot foto
+    Wizard.fotoSlots = [null, null, null, null, null, null];
+
+    // 2. Set Step 1: Waktu
+    const inputTgl = document.getElementById('inputTanggal');
+    const inputBln = document.getElementById('inputBulan');
+    const inputThn = document.getElementById('inputTahunAjaran');
+    if (inputTgl) inputTgl.value = record.tanggal;
+    if (inputBln) inputBln.value = record.bulan;
+    if (inputThn) inputThn.value = record.tahun_ajaran;
+
+    // 3. Set Step 2: Tatap Muka
+    await Wizard.loadTeacherClasses();
+    const hasTM = !!(record.cp || record.tp || record.kelas);
+    const checkTM = document.getElementById('checkTM');
+    if (checkTM) checkTM.checked = hasTM;
+    Wizard.toggleTatapMuka();
+
+    const inputKls = document.getElementById('inputKelas');
+    if (inputKls) {
+      inputKls.value = record.kelas || '';
+      await Wizard.onKelasChanged();
+    }
+    const inputCP = document.getElementById('inputCP');
+    const inputTP = document.getElementById('inputTP');
+    if (inputCP) inputCP.value = record.cp || '';
+    if (inputTP) inputTP.value = record.tp || '';
+
+    // Foto Tatap Muka
+    const tmFotoId = record.foto_tm_id;
+    const preview0 = document.getElementById('previewFoto0');
+    const info0 = document.getElementById('infoKompresi0');
+    if (tmFotoId && String(tmFotoId).trim() !== '') {
+      Wizard.fotoSlots[0] = { existingId: tmFotoId, isExisting: true };
+      if (preview0) {
+        preview0.src = 'https://drive.google.com/thumbnail?id=' + tmFotoId + '&sz=w400';
+        preview0.classList.remove('d-none');
+      }
+      if (info0) {
+        info0.innerHTML = '<span class="badge bg-success-subtle text-success border border-success"><i class="bi bi-image me-1"></i>Foto Tersimpan di Drive</span> <small class="text-muted d-block">Pilih file baru jika ingin mengganti</small>';
+      }
+    } else {
+      if (preview0) preview0.classList.add('d-none');
+      if (info0) info0.innerText = '';
+    }
+
+    // 4. Set Step 3: Non Tatap Muka
+    const containerNTM = document.getElementById('wadahBarisNTM');
+    const containerFotoNTM = document.getElementById('wadahFotoNTM');
+    if (containerNTM) containerNTM.innerHTML = '';
+    if (containerFotoNTM) containerFotoNTM.innerHTML = '';
+
+    const ntmLines = record.non_tatap_muka ? record.non_tatap_muka.split('\n').map(s => s.trim()).filter(Boolean) : [];
+    const fotoNtmIds = [record.foto_ntm1_id, record.foto_ntm2_id, record.foto_ntm3_id, record.foto_ntm4_id, record.foto_ntm5_id];
+    Wizard.ntmCount = 0;
+
+    const barisCount = Math.max(ntmLines.length, 1);
+    for (let i = 1; i <= barisCount; i++) {
+      Wizard.tambahNTM();
+      const inputEl = document.querySelector(`#barisNtm${i} .input-ntm-val`);
+      if (inputEl && ntmLines[i - 1]) {
+        inputEl.value = ntmLines[i - 1];
+      }
+
+      const fId = fotoNtmIds[i - 1];
+      const prevEl = document.getElementById(`previewFoto${i}`);
+      const infoEl = document.getElementById(`infoKompresi${i}`);
+
+      if (fId && String(fId).trim() !== '') {
+        Wizard.fotoSlots[i] = { existingId: fId, isExisting: true };
+        if (prevEl) {
+          prevEl.src = 'https://drive.google.com/thumbnail?id=' + fId + '&sz=w400';
+          prevEl.classList.remove('d-none');
+        }
+        if (infoEl) {
+          infoEl.innerHTML = '<span class="badge bg-success-subtle text-success border border-success"><i class="bi bi-image me-1"></i>Foto Tersimpan di Drive</span> <small class="text-muted d-block">Pilih file baru jika ingin mengganti</small>';
+        }
+      }
+    }
+
+    // 5. Set Step 4: Keterangan
+    const inputKet = document.getElementById('inputKeterangan');
+    if (inputKet) inputKet.value = record.keterangan || 'Terlaksana';
+
+    Wizard.updateVolumeCalculation();
+    Wizard.goToStep(1);
+    window.scrollTo({ top: 100, behavior: 'smooth' });
+  },
+
+  // --- BATALKAN MODE EDIT ---
+  cancelEdit: function () {
+    Wizard.editingId = null;
+    Wizard.editingRecord = null;
+
+    const banner = document.getElementById('bannerEditMode');
+    if (banner) {
+      banner.classList.add('d-none');
+      banner.classList.remove('d-flex');
+    }
+
+    const title = document.getElementById('wizardHeaderTitle');
+    if (title) title.innerHTML = '<i class="bi bi-pencil-square me-2 text-success"></i>Formulir Agenda Harian Guru';
+
+    const badge = document.getElementById('wizardModeBadge');
+    if (badge) {
+      badge.className = 'badge bg-success-subtle text-success px-3 py-2 rounded-pill';
+      badge.innerText = 'Wizard 4 Langkah';
+    }
+
+    const btn = document.getElementById('btnSubmitLhk');
+    if (btn) btn.innerHTML = 'Kirim Data <i class="bi bi-send-fill ms-2"></i>';
+
+    Wizard.resetForm();
+    Wizard.populateCurrentDate();
+    Wizard.goToStep(1);
   },
 
   resetForm: function () {

@@ -28,7 +28,7 @@ const TIMEZONE = 'Asia/Jayapura';
  * agar Google memunculkan jendela perizinan akses Google Drive, Docs & Sheets.
  */
 function testOtorisasiIzin() {
-  Logger.log("Menguji izin Google Drive...");
+  Logger.log("Menguji izin Google Drive, Docs & Sheets...");
   const root = DriveApp.getRootFolder();
   Logger.log("Akses Drive OK! Root Folder: " + root.getName());
   
@@ -38,6 +38,29 @@ function testOtorisasiIzin() {
     Logger.log("Folder MASTER_LHK_SEKOLAH terdeteksi: " + masterFolder.getName());
   } catch (e) {
     Logger.log("Peringatan Folder Master: " + e.message);
+  }
+
+  // Uji DocumentApp
+  try {
+    const tempDoc = DocumentApp.create("Test Izin LHK");
+    const docId = tempDoc.getId();
+    tempDoc.getBody().appendParagraph("Uji izin Docs berhasil");
+    tempDoc.saveAndClose();
+    DriveApp.getFileById(docId).setTrashed(true);
+    Logger.log("Akses DocumentApp (Google Docs) OK!");
+  } catch (eDoc) {
+    Logger.log("Peringatan DocumentApp: " + eDoc.message);
+  }
+
+  // Uji SpreadsheetApp
+  try {
+    const tempSheet = SpreadsheetApp.create("Test Izin Sheet");
+    const sheetId = tempSheet.getId();
+    tempSheet.getActiveSheet().appendRow(["Test", "OK"]);
+    DriveApp.getFileById(sheetId).setTrashed(true);
+    Logger.log("Akses SpreadsheetApp (Google Sheets) OK!");
+  } catch (eSheet) {
+    Logger.log("Peringatan SpreadsheetApp: " + eSheet.message);
   }
   
   Logger.log("=== SEMUA IZIN BERHASIL DIBERIKAN! ===");
@@ -82,6 +105,12 @@ function doPost(e) {
 
       case 'buat_laporan_bulanan':
         return responseJson(handleBuatLaporanBulanan(payload.data));
+
+      case 'hapus_lhk':
+        return responseJson(handleHapusLhk(payload.data));
+
+      case 'update_lhk':
+        return responseJson(handleUpdateLhk(payload.data));
 
       default:
         return responseJson({ sukses: false, pesan: "Aksi tidak dikenali: " + action });
@@ -314,8 +343,8 @@ function handleBuatLaporanBulanan(data) {
     const dataLaporan = data.records || []; // Array baris laporan dari D1
     const guru = data.guru || {};
 
-    if (!templateDocId || !folderDokLaporanId) {
-      return { sukses: false, pesan: "ID Template Doc atau Folder Dok_Laporan belum diset." };
+    if (!folderDokLaporanId) {
+      return { sukses: false, pesan: "Folder Dok_Laporan belum diset." };
     }
 
     if (!dataLaporan || dataLaporan.length === 0) {
@@ -331,13 +360,50 @@ function handleBuatLaporanBulanan(data) {
       return tA - tB;
     });
 
-    // Kloning template Google Docs
+    // Nama Dokumen Hasil Cetak
     const thnSlug = String(tahunAjaranTarget).replace(/[\/\\]/g, '-');
     const namaDocBaru = "Laporan Agenda - " + (guru.nama_lengkap || "Guru") + " - " + bulanTarget + " " + thnSlug;
 
-    const fileTemplate = DriveApp.getFileById(templateDocId);
-    const fileBaru = fileTemplate.makeCopy(namaDocBaru, folderOutput);
-    const docBaru = DocumentApp.openById(fileBaru.getId());
+    // Buka / Kloning Template Google Docs dengan pengaman
+    let docBaru = null;
+    let fileBaru = null;
+
+    if (templateDocId) {
+      try {
+        const fileTemplate = DriveApp.getFileById(templateDocId);
+        fileBaru = fileTemplate.makeCopy(namaDocBaru, folderOutput);
+        docBaru = DocumentApp.openById(fileBaru.getId());
+      } catch (eCopy) {
+        Logger.log("Peringatan copy template: " + eCopy.message + ". Membuat dokumen baru otomatis...");
+      }
+    }
+
+    // Jika template belum ada / gagal diakses, buat dokumen baru secara dinamis
+    if (!docBaru) {
+      docBaru = DocumentApp.create(namaDocBaru);
+      fileBaru = DriveApp.getFileById(docBaru.getId());
+      try {
+        fileBaru.moveTo(folderOutput);
+      } catch (_) {
+        folderOutput.addFile(fileBaru);
+        DriveApp.getRootFolder().removeFile(fileBaru);
+      }
+
+      // Format Header Dokumen
+      const b = docBaru.getBody();
+      const pJudul = b.appendParagraph("LAPORAN HARIAN KERJA (LHK) GURU");
+      pJudul.setHeading(DocumentApp.ParagraphHeading.HEADING_1).setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+      
+      const pSub = b.appendParagraph("Periode: " + bulanTarget + " " + tahunAjaranTarget);
+      pSub.setAlignment(DocumentApp.HorizontalAlignment.CENTER).setSpacingAfter(14);
+
+      b.appendParagraph("Nama Guru     : " + (guru.nama_lengkap || "-"));
+      b.appendParagraph("NIP           : " + (guru.nip || "-"));
+      b.appendParagraph("Mata Pelajaran: " + (guru.mapel || "-"));
+      b.appendParagraph("Pangkat/Gol.  : " + (guru.pangkat_golongan || "-"));
+      b.appendParagraph("--------------------------------------------------------------------------------").setSpacingAfter(10);
+    }
+
     const body = docBaru.getBody();
 
     // Tentukan tanggal cetak (mengambil tanggal agenda terakhir)
@@ -358,13 +424,24 @@ function handleBuatLaporanBulanan(data) {
     const tables = body.getTables();
     let table = null;
     for (let t = 0; t < tables.length; t++) {
-      if (tables[t].getRow(0).getNumCells() >= 6) {
+      if (tables[t].getNumRows() >= 2 && tables[t].getRow(0).getNumCells() >= 5) {
         table = tables[t];
         break;
       }
     }
 
-    if (!table) throw new Error("Tabel Agenda tidak ditemukan pada template Google Docs!");
+    // Jika tabel belum ada di template, buatkan tabel agenda baru yang rapi
+    if (!table) {
+      body.appendParagraph("").setSpacingAfter(4);
+      table = body.appendTable([
+        ["No", "Hari, Tanggal", "Materi / CP & TP", "Kegiatan Non Tatap Muka", "Foto Dokumentasi", "Vol", "Keterangan"],
+        ["<<No>>", "<<Tanggal>>", "<<CP>>\n<<TP>>\n<<Kelas>>", "<<Non_Tatap_Muka>>", "", "<<Volume>>", "<<Keterangan>>"]
+      ]);
+      const headerRow = table.getRow(0);
+      for (let c = 0; c < 7; c++) {
+        headerRow.getCell(c).setBackgroundColor("#0f766e").editAsText().setForegroundColor("#ffffff").setBold(true);
+      }
+    }
 
     const barisTemplate = table.getRow(1);
 
@@ -385,58 +462,75 @@ function handleBuatLaporanBulanan(data) {
       barisBaru.replaceText("<<Keterangan>>", row.keterangan ? String(row.keterangan) : "Terlaksana");
 
       // Sisipkan foto ke sel foto (kolom indeks 4)
-      const selFoto = barisBaru.getCell(4);
-      selFoto.setText("");
+      if (barisBaru.getNumCells() > 4) {
+        const selFoto = barisBaru.getCell(4);
+        selFoto.setText("");
 
-      const fotoIds = [row.foto_tm_id, row.foto_ntm1_id, row.foto_ntm2_id, row.foto_ntm3_id, row.foto_ntm4_id, row.foto_ntm5_id];
-      const fotoAktif = fotoIds.filter(id => id && String(id).trim() !== "");
+        const fotoIds = [row.foto_tm_id, row.foto_ntm1_id, row.foto_ntm2_id, row.foto_ntm3_id, row.foto_ntm4_id, row.foto_ntm5_id];
+        const fotoAktif = fotoIds.filter(id => id && String(id).trim() !== "");
 
-      let adaGambar = false;
-      for (let f = 0; f < fotoAktif.length; f++) {
-        const idFoto = fotoAktif[f];
-        try {
-          const blob = DriveApp.getFileById(idFoto).getBlob();
-          if (adaGambar) selFoto.getChild(0).asParagraph().appendText(" ");
-          const img = selFoto.getChild(0).asParagraph().appendInlineImage(blob);
-          const rasio = img.getHeight() / img.getWidth();
-          const lebarBaru = (fotoAktif.length > 3) ? 85 : 140;
-          img.setWidth(lebarBaru);
-          img.setHeight(lebarBaru * rasio);
-          adaGambar = true;
-        } catch (imgErr) {
-          Logger.log("Gagal memuat foto ID: " + idFoto + " (" + imgErr.message + ")");
+        let adaGambar = false;
+        for (let f = 0; f < fotoAktif.length; f++) {
+          const idFoto = fotoAktif[f];
+          try {
+            const blob = DriveApp.getFileById(idFoto).getBlob();
+            if (adaGambar) selFoto.getChild(0).asParagraph().appendText(" ");
+            const img = selFoto.getChild(0).asParagraph().appendInlineImage(blob);
+            const rasio = img.getHeight() / img.getWidth();
+            const lebarBaru = (fotoAktif.length > 3) ? 85 : 140;
+            img.setWidth(lebarBaru);
+            img.setHeight(lebarBaru * rasio);
+            adaGambar = true;
+          } catch (imgErr) {
+            Logger.log("Peringatan muat foto: " + imgErr.message);
+          }
         }
-      }
 
-      if (!adaGambar) selFoto.setText("-");
+        if (!adaGambar) selFoto.setText("-");
+      }
     }
 
     // Hapus baris template (indeks 1)
-    table.removeRow(1);
+    if (table.getNumRows() > 2) {
+      table.removeRow(1);
+    }
     docBaru.saveAndClose();
 
-    // Ekspor sesuai format
-    if (formatFile === 'docx') {
+    // Ekspor sesuai format (PDF atau Word DOCX)
+    try {
       fileBaru.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch (_) {}
+
+    const viewUrl = fileBaru.getUrl();
+
+    if (formatFile === 'docx') {
       const downloadDocxUrl = "https://docs.google.com/document/d/" + fileBaru.getId() + "/export?format=docx";
       return {
         sukses: true,
         format: "docx",
         url: downloadDocxUrl,
-        viewUrl: fileBaru.getUrl(),
+        viewUrl: viewUrl,
+        downloadUrl: downloadDocxUrl,
         namaFile: namaDocBaru + ".docx",
         totalKegiatan: dataLaporan.length
       };
     } else {
       const namaFilePdf = "PDF_" + namaDocBaru + ".pdf";
       const filePdf = folderOutput.createFile(docBaru.getAs('application/pdf')).setName(namaFilePdf);
-      filePdf.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      try {
+        filePdf.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      } catch (_) {}
+
+      const pdfId = filePdf.getId();
+      const pdfViewUrl = "https://drive.google.com/file/d/" + pdfId + "/view";
+      const pdfDirectDownload = "https://drive.google.com/uc?export=download&id=" + pdfId;
+
       return {
         sukses: true,
         format: "pdf",
-        url: filePdf.getUrl(),
-        viewUrl: filePdf.getUrl(),
-        downloadUrl: filePdf.getDownloadUrl(),
+        url: pdfViewUrl,
+        viewUrl: pdfViewUrl,
+        downloadUrl: pdfDirectDownload,
         namaFile: namaFilePdf,
         totalKegiatan: dataLaporan.length
       };
@@ -448,7 +542,175 @@ function handleBuatLaporanBulanan(data) {
 }
 
 // ==============================================================================
-// 4. HELPER PENGURUTAN TANGGAL & SPREADSHEET
+// 4. HAPUS BARIS DI 'SPREADSHEETDB' & HAPUS FOTO DI GOOGLE DRIVE
+// ==============================================================================
+function handleHapusLhk(data) {
+  try {
+    const spreadsheetId = data.spreadsheetId;
+    const lhkId = data.lhkId;
+    const fotoIds = data.fotoIds || [];
+    let barisDihapus = 0;
+    let fotoDihapus = 0;
+
+    // 1. Hapus Baris di Google Spreadsheet milik guru (dicocokkan berdasarkan ID Laporan di Kolom 1)
+    if (spreadsheetId && lhkId) {
+      try {
+        const ss = SpreadsheetApp.openById(spreadsheetId);
+        const sheet = ss.getSheets()[0];
+        const lastRow = sheet.getLastRow();
+
+        if (lastRow >= 2) {
+          const values = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+          // Loop dari baris paling bawah ke atas agar indeks baris tidak bergeser
+          for (let i = values.length - 1; i >= 0; i--) {
+            const rowLhkId = String(values[i][0]).trim();
+            if (rowLhkId === String(lhkId).trim()) {
+              sheet.deleteRow(i + 2); // Indeks 0 = Baris ke-2
+              barisDihapus++;
+            }
+          }
+        }
+      } catch (errSheet) {
+        Logger.log("Peringatan hapus baris sheet: " + errSheet.message);
+      }
+    }
+
+    // 2. Hapus Berkas Foto di Google Drive (Dipindahkan ke Trash)
+    if (Array.isArray(fotoIds) && fotoIds.length > 0) {
+      for (let f = 0; f < fotoIds.length; f++) {
+        const idFoto = fotoIds[f];
+        if (idFoto && String(idFoto).trim() !== "") {
+          try {
+            const file = DriveApp.getFileById(idFoto);
+            file.setTrashed(true);
+            fotoDihapus++;
+          } catch (errFoto) {
+            Logger.log("Peringatan hapus foto " + idFoto + ": " + errFoto.message);
+          }
+        }
+      }
+    }
+
+    return {
+      sukses: true,
+      pesan: "Data baris di SpreadsheetDB dan berkas foto di Drive berhasil dihapus!",
+      barisDihapus: barisDihapus,
+      fotoDihapus: fotoDihapus
+    };
+  } catch (err) {
+    return { sukses: false, pesan: "Gagal memproses penghapusan Drive/Sheet: " + err.message };
+  }
+}
+
+// ==============================================================================
+// 5. UPDATE BARIS DI 'SPREADSHEETDB' & GANTI FOTO DI GOOGLE DRIVE
+// ==============================================================================
+function handleUpdateLhk(data) {
+  try {
+    const spreadsheetId = data.spreadsheetId;
+    const folderDokumentasiId = data.folderDokumentasiId;
+    const lhkId = data.id;
+    const fotoArr = data.fotoArr || [];
+    const finalFotoIds = ["", "", "", "", "", ""];
+
+    // 1. Proses Penggantian Foto (Upload foto baru & Hapus foto lama di Google Drive)
+    for (let i = 0; i < 6; i++) {
+      const slot = fotoArr[i];
+      if (!slot) continue;
+
+      // Jika ada file foto baru yang diunggah
+      if (slot.base64) {
+        // Hapus foto lama jika diganti
+        if (slot.oldId) {
+          try {
+            DriveApp.getFileById(slot.oldId).setTrashed(true);
+            Logger.log("Foto lama berhasil dihapus dari Drive: " + slot.oldId);
+          } catch (eDelOld) {
+            Logger.log("Peringatan hapus foto lama: " + eDelOld.message);
+          }
+        }
+
+        // Unggah foto baru ke folder Dokumentasi
+        if (folderDokumentasiId) {
+          try {
+            const folder = DriveApp.getFolderById(folderDokumentasiId);
+            const blob = Utilities.newBlob(Utilities.base64Decode(slot.base64), slot.tipe || "image/jpeg", slot.nama || `foto_${i+1}.jpg`);
+            const file = folder.createFile(blob);
+            try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(_) {}
+            finalFotoIds[i] = file.getId();
+          } catch (eUp) {
+            Logger.log("Peringatan upload foto baru: " + eUp.message);
+          }
+        }
+      } else if (slot.existingId) {
+        // Pertahankan ID foto yang sudah ada
+        finalFotoIds[i] = slot.existingId;
+      }
+    }
+
+    // 2. Update Baris di Google Spreadsheet milik guru (di folder SpreadsheetDB)
+    if (spreadsheetId && lhkId) {
+      try {
+        const ss = SpreadsheetApp.openById(spreadsheetId);
+        const sheet = ss.getSheets()[0];
+        const lastRow = sheet.getLastRow();
+
+        if (lastRow >= 2) {
+          const values = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+          let rowIndex = -1;
+          for (let r = 0; r < values.length; r++) {
+            if (String(values[r][0]).trim() === String(lhkId).trim()) {
+              rowIndex = r + 2; // Indeks baris di sheet (1-based)
+              break;
+            }
+          }
+
+          if (rowIndex !== -1) {
+            // Format tanggal Indonesia
+            let tglFormat = data.tanggalTeks || data.tanggal;
+            if (!tglFormat && data.tanggal) {
+              const bagianTgl = data.tanggal.split('-');
+              const tglObj = new Date(parseInt(bagianTgl[0]), parseInt(bagianTgl[1]) - 1, parseInt(bagianTgl[2]));
+              const hArr = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+              const mArr = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+              tglFormat = `${hArr[tglObj.getDay()]}, ${bagianTgl[2]} ${mArr[tglObj.getMonth()]} ${bagianTgl[0]}`;
+            }
+
+            const barisUpdate = [
+              lhkId,
+              tglFormat,
+              data.bulan,
+              data.tahunAjaran,
+              data.cp || "",
+              data.tp || "",
+              data.kelas || "",
+              data.nonTatapMuka || "",
+              finalFotoIds[0], finalFotoIds[1], finalFotoIds[2], finalFotoIds[3], finalFotoIds[4], finalFotoIds[5],
+              data.volume || "0",
+              data.keterangan || "Terlaksana"
+            ];
+
+            sheet.getRange(rowIndex, 1, 1, 16).setValues([barisUpdate]);
+            rapikanDanUrutkanSpreadsheet(sheet);
+          }
+        }
+      } catch (errSheet) {
+        Logger.log("Peringatan update sheet: " + errSheet.message);
+      }
+    }
+
+    return {
+      sukses: true,
+      pesan: "Data agenda dan foto di Google Drive & SpreadsheetDB berhasil diperbarui!",
+      fotoIds: finalFotoIds
+    };
+  } catch (err) {
+    return { sukses: false, pesan: "Gagal update agenda di Drive: " + err.message };
+  }
+}
+
+// ==============================================================================
+// 6. HELPER PENGURUTAN TANGGAL & SPREADSHEET
 // ==============================================================================
 function ekstrakWaktuTanggal(val) {
   if (!val) return 0;

@@ -15,9 +15,35 @@ const ImageCompressor = {
    * @param {number} quality - Kualitas kompresi JPEG 0.1 - 1.0 (default 0.78)
    */
   compress: function (file, maxDimension = 1600, quality = 0.78) {
-    return new Promise((resolve, reject) => {
-      if (!file || !file.type.startsWith('image/')) {
-        return reject(new Error('File yang dipilih bukan gambar yang valid.'));
+    return new Promise(async (resolve, reject) => {
+      if (!file) {
+        return reject(new Error('File tidak ditemukan.'));
+      }
+
+      const fileName = file.name || '';
+      const isHeic = /\.(heic|heif)$/i.test(fileName) || file.type === 'image/heic' || file.type === 'image/heif';
+      const isImage = (file.type && file.type.startsWith('image/')) || 
+                      isHeic || 
+                      /\.(jpg|jpeg|png|webp|heic|heif|bmp|gif)$/i.test(fileName);
+
+      if (!isImage) {
+        return reject(new Error('File yang dipilih bukan gambar yang valid (dukungan: JPG, JPEG, PNG, WEBP, HEIC).'));
+      }
+
+      let fileToProcess = file;
+
+      // Konversi HEIC ke JPEG Blob jika menggunakan library heic2any
+      if (isHeic && typeof window.heic2any === 'function') {
+        try {
+          const convertedBlob = await window.heic2any({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.85
+          });
+          fileToProcess = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        } catch (heicErr) {
+          console.warn('Konversi heic2any dialihkan ke pembacaan native:', heicErr);
+        }
       }
 
       const reader = new FileReader();
@@ -39,14 +65,14 @@ const ImageCompressor = {
               }
             }
 
-            // Gambar ke canvas
+            // Gambar ke canvas (otomatis mendukung WebP, PNG, JPEG)
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
 
-            // Ekspor hasil kompresi sebagai DataURL JPEG
+            // Ekspor hasil kompresi seragam sebagai DataURL JPEG yang sangat ringan
             const dataUrl = canvas.toDataURL('image/jpeg', quality);
             const base64Data = dataUrl.split(',')[1];
 
@@ -60,7 +86,7 @@ const ImageCompressor = {
               base64: base64Data,
               dataUrl: dataUrl,
               hash: hash,
-              nama: file.name.replace(/\.[^/.]+$/, "") + ".jpg",
+              nama: fileName.replace(/\.[^/.]+$/, "") + ".jpg",
               tipe: 'image/jpeg',
               originalKb: originalKb,
               compressedKb: compressedKb
@@ -69,11 +95,11 @@ const ImageCompressor = {
             reject(err);
           }
         };
-        img.onerror = () => reject(new Error('Gagal memuat elemen gambar.'));
+        img.onerror = () => reject(new Error('Gagal memuat gambar. Pastikan format gambar valid.'));
         img.src = e.target.result;
       };
       reader.onerror = () => reject(new Error('Gagal membaca file gambar.'));
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(fileToProcess);
     });
   },
 

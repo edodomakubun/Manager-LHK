@@ -19,14 +19,23 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/mobile-first.css">
   <link rel="stylesheet" href="css/cms-desktop.css">
+
+  <!-- Progressive Web App (PWA) Meta & Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Manager LHK">
+  <meta name="application-name" content="Manager LHK">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon.png">
 </head>
 
 <body>
 
-  <!-- ======================================================== -->
-  <!-- 0. HALAMAN LOGIN PENUH (DEDICATED FULL-PAGE LOGIN)       -->
-  <!-- Ditampilkan jika belum terautentikasi                    -->
-  <!-- ======================================================== -->
+  <!-- Login Page -->
   <div id="pageLogin" class="login-page-container">
     <div class="login-card">
       <div class="login-header">
@@ -40,12 +49,14 @@
       <div class="login-body">
         <div id="loginErrorAlert" class="alert alert-danger d-none py-2 small mb-3"></div>
 
-        <form onsubmit="event.preventDefault(); Auth.login(document.getElementById('loginUsername').value, document.getElementById('loginPassword').value);">
+        <form
+          onsubmit="event.preventDefault(); Auth.login(document.getElementById('loginUsername').value, document.getElementById('loginPassword').value);">
           <div class="mb-3">
             <label class="form-label">Username / NIP Guru</label>
             <div class="input-group">
               <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-person"></i></span>
-              <input type="text" class="form-control border-start-0 ps-0" id="loginUsername" placeholder="Masukkan username atau NIP" required autocomplete="username">
+              <input type="text" class="form-control border-start-0 ps-0" id="loginUsername"
+                placeholder="Masukkan username atau NIP" required autocomplete="username">
             </div>
           </div>
 
@@ -53,22 +64,10 @@
             <label class="form-label">Kata Sandi</label>
             <div class="input-group">
               <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-lock"></i></span>
-              <input type="password" class="form-control border-start-0 border-end-0 ps-0" id="loginPassword" placeholder="Masukkan kata sandi" required autocomplete="current-password">
+              <input type="password" class="form-control border-start-0 border-end-0 ps-0" id="loginPassword"
+                placeholder="Masukkan kata sandi" required autocomplete="current-password">
               <button class="btn btn-light border border-start-0" type="button" onclick="Auth.togglePassword()">
                 <i class="bi bi-eye text-muted" id="loginPasswordEye"></i>
-              </button>
-            </div>
-          </div>
-
-          <!-- Quick Fill Demo Buttons untuk Uji Coba Cepat -->
-          <div class="p-2 mb-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
-            <small class="text-muted fw-semibold">Uji Coba Akun:</small>
-            <div class="d-flex gap-1">
-              <button type="button" class="btn btn-sm btn-outline-success py-0 px-2 rounded-pill" onclick="Auth.fillDemo('guru')">
-                <i class="bi bi-person me-1"></i> Guru
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill" onclick="Auth.fillDemo('admin')">
-                <i class="bi bi-shield-lock me-1"></i> Admin
               </button>
             </div>
           </div>
@@ -79,20 +78,30 @@
         </form>
 
         <div class="text-center text-muted small border-top pt-3">
-          <i class="bi bi-info-circle me-1 text-success"></i> Akun baru didaftarkan langsung oleh <strong>Admin / Operator Sekolah</strong>.
+          <i class="bi bi-info-circle me-1 text-success"></i> Akun baru didaftarkan langsung oleh <strong>Admin /
+            Operator Sekolah</strong>.
+        </div>
+
+        <div class="text-center pt-2 d-flex flex-column gap-2 align-items-center">
+          <div class="pwa-install-trigger w-100">
+            <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 btn-install-pwa w-100"
+              style="font-size: 0.8rem;">
+              <i class="bi bi-phone-fill me-1"></i> Pasang Aplikasi ke Layar Utama HP / Laptop
+            </button>
+          </div>
+          <a href="/panduan.html" target="_blank" class="btn btn-sm btn-link text-decoration-none text-success fw-medium"
+            style="font-size: 0.82rem;">
+            <i class="bi bi-journal-bookmark-fill me-1"></i> Buku Panduan Penggunaan Aplikasi
+          </a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ======================================================== -->
-  <!-- WRAPPER APLIKASI UTAMA (HANYA MUNCUL SETELAH LOGIN)      -->
-  <!-- ======================================================== -->
+  <!-- Main App Shell -->
   <div id="appContainer" class="d-none">
 
-    <!-- ======================================================== -->
-    <!-- 1. DESKTOP PERMANENT SIDEBAR (LAYAR >= 992px)            -->
-    <!-- ======================================================== -->
+    <!-- Sidebar Desktop -->
     <aside class="cms-desktop-sidebar">
       <div class="sidebar-header d-flex align-items-center gap-2">
         <div class="topbar-brand-icon">
@@ -100,14 +109,15 @@
         </div>
         <div>
           <div class="fw-bold fs-5 text-dark" style="line-height: 1.2;">E-Agenda LHK</div>
-          <small class="text-muted">CMS Guru Multi-User</small>
+          <small class="text-muted">CMS Laporan Harian Kinerja</small>
         </div>
       </div>
 
       <!-- Profil Pengguna di Sidebar -->
       <div class="sidebar-profile">
         <div class="d-flex align-items-center gap-2 mb-2">
-          <div class="user-avatar-circle" style="width: 40px; height: 40px; font-size: 1.1rem; background: var(--primary-color);">
+          <div class="user-avatar-circle"
+            style="width: 40px; height: 40px; font-size: 1.1rem; background: var(--primary-color);">
             <i class="bi bi-person-fill"></i>
           </div>
           <div class="overflow-hidden">
@@ -125,7 +135,8 @@
       <ul class="sidebar-nav-list">
         <div class="sidebar-section-title">Menu Guru</div>
         <li class="sidebar-nav-item">
-          <a href="javascript:void(0)" class="sidebar-nav-link active" data-view="dashboard" onclick="CmsRouter.navigate('dashboard')">
+          <a href="javascript:void(0)" class="sidebar-nav-link active" data-view="dashboard"
+            onclick="CmsRouter.navigate('dashboard')">
             <i class="bi bi-grid-1x2-fill"></i> <span>Dashboard</span>
           </a>
         </li>
@@ -135,7 +146,8 @@
           </a>
         </li>
         <li class="sidebar-nav-item">
-          <a href="javascript:void(0)" class="sidebar-nav-link" data-view="riwayat" onclick="CmsRouter.navigate('riwayat')">
+          <a href="javascript:void(0)" class="sidebar-nav-link" data-view="riwayat"
+            onclick="CmsRouter.navigate('riwayat')">
             <i class="bi bi-clock-history"></i> <span>Riwayat Agenda</span>
           </a>
         </li>
@@ -150,8 +162,19 @@
           </a>
         </li>
         <li class="sidebar-nav-item">
-          <a href="javascript:void(0)" class="sidebar-nav-link" data-view="profil" onclick="CmsRouter.navigate('profil')">
+          <a href="javascript:void(0)" class="sidebar-nav-link" data-view="profil"
+            onclick="CmsRouter.navigate('profil')">
             <i class="bi bi-person-bounding-box"></i> <span>Profil Saya</span>
+          </a>
+        </li>
+        <li class="sidebar-nav-item pwa-install-trigger">
+          <a href="javascript:void(0)" class="sidebar-nav-link text-success fw-semibold btn-install-pwa">
+            <i class="bi bi-phone-fill text-success"></i> <span>Pasang Aplikasi</span>
+          </a>
+        </li>
+        <li class="sidebar-nav-item">
+          <a href="/panduan.html" target="_blank" class="sidebar-nav-link text-primary fw-semibold">
+            <i class="bi bi-journal-bookmark-fill text-primary"></i> <span>Panduan Aplikasi</span>
           </a>
         </li>
 
@@ -159,17 +182,20 @@
         <div class="admin-only d-none">
           <div class="sidebar-section-title">Administrasi Sekolah</div>
           <li class="sidebar-nav-item">
-            <a href="javascript:void(0)" class="sidebar-nav-link" data-view="admin-users" onclick="CmsRouter.navigate('admin-users')">
+            <a href="javascript:void(0)" class="sidebar-nav-link" data-view="admin-users"
+              onclick="CmsRouter.navigate('admin-users')">
               <i class="bi bi-people-fill"></i> <span>Kelola Akun Guru</span>
             </a>
           </li>
           <li class="sidebar-nav-item">
-            <a href="javascript:void(0)" class="sidebar-nav-link" data-view="admin-rekap" onclick="CmsRouter.navigate('admin-rekap')">
+            <a href="javascript:void(0)" class="sidebar-nav-link" data-view="admin-rekap"
+              onclick="CmsRouter.navigate('admin-rekap')">
               <i class="bi bi-bar-chart-line-fill"></i> <span>Monitoring Rekap</span>
             </a>
           </li>
           <li class="sidebar-nav-item">
-            <a href="javascript:void(0)" class="sidebar-nav-link" data-view="admin-settings" onclick="CmsRouter.navigate('admin-settings')">
+            <a href="javascript:void(0)" class="sidebar-nav-link" data-view="admin-settings"
+              onclick="CmsRouter.navigate('admin-settings')">
               <i class="bi bi-sliders"></i> <span>Pengaturan Sistem</span>
             </a>
           </li>
@@ -184,13 +210,12 @@
       </div>
     </aside>
 
-    <!-- ======================================================== -->
-    <!-- 2. TOPBAR (HEADER ATAS)                                  -->
-    <!-- ======================================================== -->
+    <!-- Topbar Header -->
     <header class="cms-topbar">
       <div class="d-flex align-items-center gap-2">
         <!-- Tombol Hamburger Drawer (Mobile Only) -->
-        <button class="btn btn-light btn-drawer-toggle p-2 rounded-circle border" type="button" data-bs-toggle="offcanvas" data-bs-target="#drawerMenu">
+        <button class="btn btn-light btn-drawer-toggle p-2 rounded-circle border" type="button"
+          data-bs-toggle="offcanvas" data-bs-target="#drawerMenu">
           <i class="bi bi-list fs-5"></i>
         </button>
         <div class="topbar-brand">
@@ -200,14 +225,17 @@
 
       <div class="topbar-actions">
         <!-- Badge Tahun Ajaran Aktif -->
-        <span class="badge bg-light text-success border d-none d-sm-inline-flex align-items-center px-3 py-2 rounded-pill fw-semibold">
+        <span
+          class="badge bg-light text-success border d-none d-sm-inline-flex align-items-center px-3 py-2 rounded-pill fw-semibold">
           <i class="bi bi-calendar3 me-1"></i> 2026/2027
         </span>
 
         <!-- Dropdown Profil -->
         <div class="dropdown">
-          <button class="btn btn-light rounded-pill p-1 pe-2 border d-flex align-items-center gap-2" data-bs-toggle="dropdown">
-            <div class="user-avatar-circle" style="width: 32px; height: 32px; font-size: 0.95rem; background: var(--primary-color);">
+          <button class="btn btn-light rounded-pill p-1 pe-2 border d-flex align-items-center gap-2"
+            data-bs-toggle="dropdown">
+            <div class="user-avatar-circle"
+              style="width: 32px; height: 32px; font-size: 0.95rem; background: var(--primary-color);">
               <i class="bi bi-person-fill"></i>
             </div>
             <span class="small fw-semibold user-display-name d-none d-md-inline">Guru</span>
@@ -218,25 +246,30 @@
               <div class="fw-bold user-display-name">Memuat...</div>
               <small class="text-muted user-display-nip">NIP. -</small>
             </li>
-            <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="CmsRouter.navigate('profil')"><i class="bi bi-person me-2"></i> Profil & Ganti Password</a></li>
-            <li class="admin-only d-none"><a class="dropdown-item py-2" href="javascript:void(0)" onclick="CmsRouter.navigate('admin-settings')"><i class="bi bi-sliders me-2"></i> Pengaturan Sistem</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item py-2 text-danger" href="javascript:void(0)" onclick="Auth.logout()"><i class="bi bi-box-arrow-left me-2"></i> Keluar</a></li>
+            <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="CmsRouter.navigate('profil')"><i
+                  class="bi bi-person me-2"></i> Profil & Ganti Password</a></li>
+            <li class="admin-only d-none"><a class="dropdown-item py-2" href="javascript:void(0)"
+                onclick="CmsRouter.navigate('admin-settings')"><i class="bi bi-sliders me-2"></i> Pengaturan Sistem</a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            <li><a class="dropdown-item py-2 text-danger" href="javascript:void(0)" onclick="Auth.logout()"><i
+                  class="bi bi-box-arrow-left me-2"></i> Keluar</a></li>
           </ul>
         </div>
       </div>
     </header>
 
-    <!-- ======================================================== -->
-    <!-- 3. MOBILE OFFCANVAS DRAWER (LACI GESER HP)               -->
-    <!-- ======================================================== -->
+    <!-- Drawer Menu Mobile -->
     <div class="offcanvas offcanvas-start offcanvas-cms" tabindex="-1" id="drawerMenu">
       <div class="offcanvas-user-header">
         <div class="d-flex align-items-center justify-content-between mb-3">
           <div class="user-avatar-circle">
             <i class="bi bi-person-fill"></i>
           </div>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+            aria-label="Close"></button>
         </div>
         <h5 class="fw-bold mb-0 user-display-name">Memuat...</h5>
         <div class="small opacity-75 user-display-role">Guru Mata Pelajaran</div>
@@ -263,6 +296,18 @@
           <i class="bi bi-person-bounding-box"></i> <span>Profil & Kata Sandi</span>
         </a>
 
+        <!-- Pasang Aplikasi PWA Mobile -->
+        <div class="pwa-install-trigger my-2">
+          <a href="javascript:void(0)"
+            class="drawer-menu-link text-success fw-bold btn-install-pwa bg-success-subtle border border-success-subtle">
+            <i class="bi bi-phone-fill text-success"></i> <span>Pasang Aplikasi ke Layar Utama</span>
+          </a>
+        </div>
+
+        <a href="/panduan.html" target="_blank" class="drawer-menu-link text-primary fw-semibold">
+          <i class="bi bi-journal-bookmark-fill text-primary"></i> <span>Buku Panduan Aplikasi</span>
+        </a>
+
         <!-- Menu Khusus Admin di Drawer HP -->
         <div class="admin-only d-none">
           <hr class="my-3">
@@ -286,32 +331,30 @@
       </div>
     </div>
 
-    <!-- ======================================================== -->
-    <!-- 4. FLOATING VOLUME INDICATOR (KHUSUS HALAMAN INPUT)       -->
-    <!-- ======================================================== -->
+    <!-- Floating Volume -->
     <div class="floating-volume" id="floatVolume" style="display: none;">
       <i class="bi bi-bar-chart-fill"></i> Volume
       <div class="vol-num" id="volumeDisplay">0</div>
     </div>
 
-    <!-- ======================================================== -->
-    <!-- 5. AREA KERJA UTAMA (CMS VIEWS CONTAINER)                -->
-    <!-- ======================================================== -->
+    <!-- Main Content Views -->
     <main class="cms-main-content">
 
-      <!-- ---------------------------------------------------- -->
-      <!-- VIEW A: DASHBOARD BERANDA                            -->
-      <!-- ---------------------------------------------------- -->
+      <!-- View: Dashboard -->
       <div id="view-dashboard" class="cms-view">
         <!-- Hero Banner -->
         <div class="hero-gradient mb-4">
-          <h4 class="fw-bold mb-1">Selamat Datang, <span class="user-display-name">Guru</span>! 👋</h4>
-          <p class="mb-3 opacity-90 small">Kelola laporan harian kerja (LHK) Anda secara praktis, terorganisir, dan terhubung langsung ke Google Drive & Spreadsheet.</p>
+          <div class="small fw-semibold opacity-90 mb-1">Selamat Datang 👋</div>
+          <h3 class="fw-bold mb-2 user-display-name">Guru</h3>
+          <p class="mb-3 opacity-90 small">Kelola laporan harian kerja (LHK) Anda secara praktis, terorganisir, jadi
+            Guru Hebat!</p>
           <div class="d-flex flex-wrap gap-2">
-            <button class="btn btn-light btn-sm fw-bold rounded-pill px-3 py-2 text-success shadow-sm" onclick="CmsRouter.navigate('input')">
+            <button class="btn btn-light btn-sm fw-bold rounded-pill px-3 py-2 text-success shadow-sm"
+              onclick="CmsRouter.navigate('input')">
               <i class="bi bi-pencil-square me-1"></i> Tulis Agenda Hari Ini
             </button>
-            <button class="btn btn-outline-light btn-sm fw-semibold rounded-pill px-3 py-2" onclick="CmsRouter.navigate('arsip')">
+            <button class="btn btn-outline-light btn-sm fw-semibold rounded-pill px-3 py-2"
+              onclick="CmsRouter.navigate('arsip')">
               <i class="bi bi-file-earmark-pdf me-1"></i> Cetak Laporan Bulanan
             </button>
           </div>
@@ -323,7 +366,8 @@
             <div class="card-cms p-3 h-100">
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <span class="small text-muted fw-semibold">Agenda Bulan Ini</span>
-                <div class="rounded-circle p-2 bg-success-subtle text-success"><i class="bi bi-calendar-check"></i></div>
+                <div class="rounded-circle p-2 bg-success-subtle text-success"><i class="bi bi-calendar-check"></i>
+                </div>
               </div>
               <div class="fs-4 fw-bold text-dark" id="dashMetricHari">0</div>
               <small class="text-muted" id="dashPeriodeBulan">Periode Aktif</small>
@@ -335,7 +379,7 @@
                 <span class="small text-muted fw-semibold">Total Volume</span>
                 <div class="rounded-circle p-2 bg-primary-subtle text-primary"><i class="bi bi-speedometer2"></i></div>
               </div>
-              <div class="fs-4 fw-bold text-dark" id="dashMetricVolume">0 Jam</div>
+              <div class="fs-4 fw-bold text-dark" id="dashMetricVolume">0 Kegiatan</div>
               <small class="text-muted">Kinerja Terlaksana</small>
             </div>
           </div>
@@ -366,7 +410,8 @@
         <div class="card-cms">
           <div class="card-cms-header">
             <h6 class="fw-bold mb-0"><i class="bi bi-journal-text me-2 text-success"></i>Agenda Terbaru Bulan Ini</h6>
-            <button class="btn btn-sm btn-link text-success text-decoration-none p-0 fw-semibold" onclick="CmsRouter.navigate('riwayat')">
+            <button class="btn btn-sm btn-link text-success text-decoration-none p-0 fw-semibold"
+              onclick="CmsRouter.navigate('riwayat')">
               Lihat Semua <i class="bi bi-arrow-right"></i>
             </button>
           </div>
@@ -378,18 +423,32 @@
         </div>
       </div>
 
-      <!-- ---------------------------------------------------- -->
-      <!-- VIEW B: INPUT AGENDA LHK (WIZARD 4 LANGKAH)         -->
-      <!-- ---------------------------------------------------- -->
+      <!-- View: Input LHK (Wizard) -->
       <div id="view-input" class="cms-view d-none">
         <div class="card-cms" style="max-width: 820px; margin: 0 auto;">
           <!-- Header Wizard -->
           <div class="card-cms-header">
             <div>
-              <h5 class="fw-bold mb-0"><i class="bi bi-pencil-square me-2 text-success"></i>Formulir Agenda Harian Guru</h5>
+              <h5 class="fw-bold mb-0" id="wizardHeaderTitle"><i
+                  class="bi bi-pencil-square me-2 text-success"></i>Formulir Agenda Harian Guru</h5>
               <small class="text-muted user-display-name">M. Kormasela, S.Pd.</small>
             </div>
-            <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill">Wizard 4 Langkah</span>
+            <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill" id="wizardModeBadge">Wizard 4
+              Langkah</span>
+          </div>
+
+          <!-- Banner Mode Edit (Hanya Muncul saat Edit) -->
+          <div id="bannerEditMode"
+            class="mx-4 mt-3 mb-0 alert alert-warning py-2 px-3 small d-none justify-content-between align-items-center">
+            <div>
+              <i class="bi bi-pencil-fill me-2 text-warning-emphasis"></i>
+              <strong>Mode Edit Agenda:</strong> Mengubah agenda tanggal <span id="labelEditTanggal"
+                class="fw-bold text-dark"></span>.
+            </div>
+            <button type="button" class="btn btn-outline-dark btn-sm py-0 px-2 fw-semibold"
+              onclick="Wizard.cancelEdit()">
+              <i class="bi bi-x-circle me-1"></i> Batal Edit
+            </button>
           </div>
 
           <!-- Progress Bar & Step Indicator -->
@@ -411,7 +470,8 @@
 
               <!-- STEP 1: WAKTU PELAKSANAAN -->
               <div id="stepContainer1" class="step-container active">
-                <h6 class="fw-bold text-success mb-3 pb-2 border-bottom"><i class="bi bi-calendar-event me-2"></i>1. Waktu Pelaksanaan</h6>
+                <h6 class="fw-bold text-success mb-3 pb-2 border-bottom"><i class="bi bi-calendar-event me-2"></i>1.
+                  Waktu Pelaksanaan</h6>
                 <div class="row g-3 mb-4">
                   <div class="col-md-4">
                     <label class="form-label">Tanggal Kegiatan</label>
@@ -452,10 +512,13 @@
 
               <!-- STEP 2: TATAP MUKA -->
               <div id="stepContainer2" class="step-container">
-                <h6 class="fw-bold text-success mb-3 pb-2 border-bottom"><i class="bi bi-person-video3 me-2"></i>2. Pembelajaran Tatap Muka</h6>
+                <h6 class="fw-bold text-success mb-3 pb-2 border-bottom"><i class="bi bi-person-video3 me-2"></i>2.
+                  Pembelajaran Tatap Muka</h6>
                 <div class="form-check form-switch mb-3">
-                  <input class="form-check-input" type="checkbox" id="checkTM" checked onchange="Wizard.toggleTatapMuka()">
-                  <label class="form-check-label fw-semibold" for="checkTM">Melaksanakan Kegiatan Tatap Muka Hari Ini</label>
+                  <input class="form-check-input" type="checkbox" id="checkTM" checked
+                    onchange="Wizard.toggleTatapMuka()">
+                  <label class="form-check-label fw-semibold" for="checkTM">Melaksanakan Kegiatan Tatap Muka Hari
+                    Ini</label>
                 </div>
 
                 <div id="wadahFormTM">
@@ -468,21 +531,27 @@
 
                   <div class="mb-3">
                     <label class="form-label">Capaian Pembelajaran (CP)</label>
-                    <input type="text" class="form-control" id="inputCP" list="datalistCP" placeholder="Ketik atau pilih CP..." oninput="Wizard.updateVolumeCalculation()">
+                    <input type="text" class="form-control" id="inputCP" list="datalistCP"
+                      placeholder="Ketik atau pilih CP..." oninput="Wizard.updateVolumeCalculation()">
                     <datalist id="datalistCP"></datalist>
                   </div>
 
                   <div class="mb-3">
                     <label class="form-label">Tujuan Pembelajaran (TP)</label>
-                    <input type="text" class="form-control" id="inputTP" list="datalistTP" placeholder="Ketik atau pilih TP..." oninput="Wizard.updateVolumeCalculation()">
+                    <input type="text" class="form-control" id="inputTP" list="datalistTP"
+                      placeholder="Ketik atau pilih TP..." oninput="Wizard.updateVolumeCalculation()">
                     <datalist id="datalistTP"></datalist>
                   </div>
 
                   <div class="mb-4 p-3 bg-light rounded-3 border">
-                    <label class="form-label text-primary fw-bold"><i class="bi bi-camera me-2"></i>Foto Dokumentasi Tatap Muka</label>
-                    <input type="file" class="form-control mb-2" id="fileFotoTM" accept="image/*" onchange="Wizard.handleFileSelected(this, 0)">
+                    <label class="form-label text-primary fw-bold"><i class="bi bi-camera me-2"></i>Foto Dokumentasi
+                      Tatap Muka</label>
+                    <input type="file" class="form-control mb-2" id="fileFotoTM"
+                      accept="image/*,image/heic,image/heif,image/webp,.heic,.heif,.webp"
+                      onchange="Wizard.handleFileSelected(this, 0)">
                     <div class="d-flex align-items-center gap-2">
-                      <img id="previewFoto0" class="img-thumbnail rounded-3 d-none shadow-sm" style="max-height: 130px;">
+                      <img id="previewFoto0" class="img-thumbnail rounded-3 d-none shadow-sm"
+                        style="max-height: 130px;">
                       <span id="infoKompresi0" class="small text-muted"></span>
                     </div>
                   </div>
@@ -500,23 +569,29 @@
 
               <!-- STEP 3: NON TATAP MUKA (NTM) -->
               <div id="stepContainer3" class="step-container">
-                <h6 class="fw-bold text-success mb-3 pb-2 border-bottom"><i class="bi bi-briefcase me-2"></i>3. Kegiatan Non Tatap Muka (NTM)</h6>
+                <h6 class="fw-bold text-success mb-3 pb-2 border-bottom"><i class="bi bi-briefcase me-2"></i>3. Kegiatan
+                  Non Tatap Muka (NTM)</h6>
 
                 <!-- Wadah Baris Dinamis NTM -->
                 <div id="wadahBarisNTM" class="mb-3">
                   <div class="mb-3 baris-ntm-item" id="barisNtm1">
-                    <label class="form-label text-primary fw-semibold mb-1"><i class="bi bi-card-checklist me-1"></i>Kegiatan Non Tatap Muka 1</label>
+                    <label class="form-label text-primary fw-semibold mb-1"><i
+                        class="bi bi-card-checklist me-1"></i>Kegiatan Non Tatap Muka 1</label>
                     <div class="smart-dropdown-wrapper">
                       <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control border-start-0 ps-0 input-ntm-val" placeholder="Ketik atau pilih kegiatan NTM 1..." autocomplete="off" onfocus="Wizard.showNtmSuggestions(this)" onkeyup="Wizard.filterNtmSuggestions(this)">
+                        <span class="input-group-text bg-light border-end-0 text-muted"><i
+                            class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0 input-ntm-val"
+                          placeholder="Ketik atau pilih kegiatan NTM 1..." autocomplete="off"
+                          onfocus="Wizard.showNtmSuggestions(this)" onkeyup="Wizard.filterNtmSuggestions(this)">
                       </div>
                       <ul class="smart-dropdown-list"></ul>
                     </div>
                   </div>
                 </div>
 
-                <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 mb-4" onclick="Wizard.tambahNTM()">
+                <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 mb-4"
+                  onclick="Wizard.tambahNTM()">
                   <i class="bi bi-plus-lg me-1"></i> Tambah Kegiatan Lain
                 </button>
 
@@ -524,10 +599,14 @@
                 <h6 class="fw-bold text-dark mb-2"><i class="bi bi-images me-2"></i>Dokumentasi Foto NTM</h6>
                 <div id="wadahFotoNTM" class="mb-4">
                   <div class="mb-3 pb-3 border-bottom baris-foto-ntm" id="wadahFotoNtm1">
-                    <label class="form-label text-primary fw-bold"><i class="bi bi-camera me-2"></i>Dokumentasi Non Tatap Muka 1</label>
-                    <input type="file" class="form-control mb-2 file-foto-ntm" accept="image/*" onchange="Wizard.handleFileSelected(this, 1)">
+                    <label class="form-label text-primary fw-bold"><i class="bi bi-camera me-2"></i>Dokumentasi Non
+                      Tatap Muka 1</label>
+                    <input type="file" class="form-control mb-2 file-foto-ntm"
+                      accept="image/*,image/heic,image/heif,image/webp,.heic,.heif,.webp"
+                      onchange="Wizard.handleFileSelected(this, 1)">
                     <div class="d-flex align-items-center gap-2">
-                      <img id="previewFoto1" class="img-thumbnail rounded-3 d-none shadow-sm" style="max-height: 120px;">
+                      <img id="previewFoto1" class="img-thumbnail rounded-3 d-none shadow-sm"
+                        style="max-height: 120px;">
                       <span id="infoKompresi1" class="small text-muted"></span>
                     </div>
                   </div>
@@ -545,14 +624,17 @@
 
               <!-- STEP 4: PERIKSA & KIRIM -->
               <div id="stepContainer4" class="step-container">
-                <h6 class="fw-bold text-success mb-2"><i class="bi bi-shield-check me-2"></i>4. Konfirmasi & Kirim Data</h6>
-                <p class="small text-muted mb-3">Pastikan data di bawah ini sudah benar sebelum dikirimkan ke Database & Google Drive.</p>
+                <h6 class="fw-bold text-success mb-2"><i class="bi bi-shield-check me-2"></i>4. Konfirmasi & Kirim Data
+                </h6>
+                <p class="small text-muted mb-3">Pastikan data di bawah ini sudah benar sebelum dikirimkan ke Database &
+                  Google Drive.</p>
 
                 <div id="summaryContent" class="summary-box mb-4"></div>
 
                 <div class="mb-4">
                   <label class="form-label">Keterangan Tambahan (Opsional)</label>
-                  <textarea class="form-control" id="inputKeterangan" rows="2" placeholder="Catatan tambahan (default: Terlaksana)"></textarea>
+                  <textarea class="form-control" id="inputKeterangan" rows="2"
+                    placeholder="Catatan tambahan (default: Terlaksana)"></textarea>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mt-4">
@@ -570,15 +652,14 @@
         </div>
       </div>
 
-      <!-- ---------------------------------------------------- -->
-      <!-- VIEW C: RIWAYAT AGENDA & MANAGEMENT                  -->
-      <!-- ---------------------------------------------------- -->
+      <!-- View: Riwayat Agenda -->
       <div id="view-riwayat" class="cms-view d-none">
         <!-- Filter Bar -->
         <div class="card-cms p-3 mb-3">
-          <div class="row g-2 align-items-center">
-            <div class="col-6 col-md-4">
-              <select class="form-select form-select-sm" id="filterBulan">
+          <div class="row g-2 align-items-end">
+            <div class="col-6 col-md-3">
+              <label class="form-label small text-muted mb-1"><i class="bi bi-calendar-month me-1"></i>Bulan</label>
+              <select class="form-select form-select-sm" id="filterBulan" onchange="Riwayat.load()">
                 <option value="" selected>-- Semua Bulan --</option>
                 <option value="Januari">Januari</option>
                 <option value="Februari">Februari</option>
@@ -594,16 +675,23 @@
                 <option value="Desember">Desember</option>
               </select>
             </div>
-            <div class="col-6 col-md-4">
-              <select class="form-select form-select-sm" id="filterTahun">
+            <div class="col-6 col-md-3">
+              <label class="form-label small text-muted mb-1"><i class="bi bi-calendar3 me-1"></i>Tahun Ajaran</label>
+              <select class="form-select form-select-sm" id="filterTahun" onchange="Riwayat.load()">
                 <option value="2025/2026">2025/2026</option>
                 <option value="2026/2027" selected>2026/2027</option>
                 <option value="2027/2028">2027/2028</option>
               </select>
             </div>
-            <div class="col-12 col-md-4 d-flex gap-2">
+            <div class="col-6 col-md-3">
+              <label class="form-label small text-muted mb-1"><i class="bi bi-mortarboard me-1"></i>Filter Kelas</label>
+              <select class="form-select form-select-sm" id="filterKelas" onchange="Riwayat.applyFilter()">
+                <option value="" selected>-- Semua Kelas --</option>
+              </select>
+            </div>
+            <div class="col-6 col-md-3 d-flex gap-2">
               <button class="btn btn-cms-primary btn-sm flex-fill" onclick="Riwayat.load()">
-                <i class="bi bi-search me-1"></i> Cari Data
+                <i class="bi bi-search me-1"></i> Cari
               </button>
               <button class="btn btn-outline-danger btn-sm" onclick="CmsRouter.navigate('arsip')" title="Cetak Laporan">
                 <i class="bi bi-printer me-1"></i> Cetak
@@ -619,7 +707,7 @@
             </div>
             <div class="col-6">
               <small class="text-muted d-block">Total Volume Kegiatan:</small>
-              <strong id="riwayatStatVolume" class="text-success fs-5">0 Jam</strong>
+              <strong id="riwayatStatVolume" class="text-success fs-5">0 Kegiatan</strong>
             </div>
           </div>
         </div>
@@ -633,13 +721,14 @@
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light">
                 <tr>
-                  <th style="width: 50px;" class="text-center">No</th>
-                  <th style="width: 140px;">Tanggal</th>
+                  <th style="width: 45px;" class="text-center">No</th>
+                  <th style="width: 135px;">Tanggal</th>
+                  <th style="width: 105px;" class="text-center">Kelas</th>
                   <th>Tatap Muka (CP & TP)</th>
                   <th>Non Tatap Muka</th>
-                  <th style="width: 100px;" class="text-center">Dokumentasi</th>
-                  <th style="width: 80px;" class="text-center">Vol</th>
-                  <th style="width: 110px;" class="text-end">Aksi</th>
+                  <th style="width: 95px;" class="text-center">Dokumentasi</th>
+                  <th style="width: 75px;" class="text-center">Vol</th>
+                  <th style="width: 100px;" class="text-end">Aksi</th>
                 </tr>
               </thead>
               <tbody id="riwayatDesktopBody"></tbody>
@@ -648,22 +737,19 @@
         </div>
       </div>
 
-      <!-- ---------------------------------------------------- -->
-      <!-- VIEW D: ARSIP DOKUMEN LAPORAN                        -->
-      <!-- ---------------------------------------------------- -->
+      <!-- View: Arsip Dokumen -->
       <div id="view-arsip" class="cms-view d-none">
         <div id="arsipDokumenContainer"></div>
       </div>
 
-      <!-- ---------------------------------------------------- -->
-      <!-- VIEW E: MASTER CP & TP KELAS                         -->
-      <!-- ---------------------------------------------------- -->
+      <!-- View: Master CP & TP -->
       <div id="view-cptp" class="cms-view d-none">
         <div class="card-cms p-3 mb-3">
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div class="d-flex align-items-center gap-2">
               <label class="form-label mb-0 fw-bold small text-nowrap">Filter Kelas:</label>
-              <select class="form-select form-select-sm" id="filterKelasCpTp" onchange="CpTpManager.refreshList()" style="width: 180px;">
+              <select class="form-select form-select-sm" id="filterKelasCpTp" onchange="CpTpManager.refreshList()"
+                style="width: 180px;">
                 <option value="">-- Semua Kelas --</option>
               </select>
             </div>
@@ -675,21 +761,21 @@
         <div id="cptpListContainer"></div>
       </div>
 
-      <!-- ---------------------------------------------------- -->
-      <!-- VIEW F: PROFIL SAYA & GANTI PASSWORD                 -->
-      <!-- ---------------------------------------------------- -->
+      <!-- View: Profil Pengguna -->
       <div id="view-profil" class="cms-view d-none">
         <div class="row g-4" style="max-width: 900px; margin: 0 auto;">
           <div class="col-md-5">
             <div class="card-cms p-4 text-center">
-              <div class="user-avatar-circle mx-auto mb-3" style="width: 72px; height: 72px; font-size: 2.2rem; background: var(--primary-gradient);">
+              <div class="user-avatar-circle mx-auto mb-3"
+                style="width: 72px; height: 72px; font-size: 2.2rem; background: var(--primary-gradient);">
                 <i class="bi bi-person-fill"></i>
               </div>
               <h5 class="fw-bold mb-1 user-display-name">Memuat...</h5>
               <div class="badge bg-light text-success border mb-3 user-display-role">Guru Mata Pelajaran</div>
               <div class="text-start small border-top pt-3">
                 <div class="mb-2"><span class="text-muted">NIP:</span> <strong class="user-display-nip">-</strong></div>
-                <div class="mb-2"><span class="text-muted">Instansi:</span> <strong class="user-display-school">-</strong></div>
+                <div class="mb-2"><span class="text-muted">Instansi:</span> <strong
+                    class="user-display-school">-</strong></div>
                 <div><span class="text-muted">Hak Akses:</span> <strong class="user-display-role">-</strong></div>
               </div>
             </div>
@@ -715,13 +801,12 @@
         </div>
       </div>
 
-      <!-- ---------------------------------------------------- -->
-      <!-- VIEW G: ADMIN - KELOLA AKUN GURU                    -->
-      <!-- ---------------------------------------------------- -->
+      <!-- View Admin: Kelola Guru -->
       <div id="view-admin-users" class="cms-view d-none admin-only">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <div>
-            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-people-fill me-2 text-success"></i>Daftar Guru Terdaftar</h5>
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-people-fill me-2 text-success"></i>Daftar Guru Terdaftar
+            </h5>
             <small class="text-muted">Kelola akun guru dan ruang Google Drive 4 sub-folder</small>
           </div>
           <button class="btn btn-cms-primary rounded-pill btn-sm px-3" onclick="AdminManager.openAddUserModal()">
@@ -752,20 +837,22 @@
         </div>
       </div>
 
-      <!-- ---------------------------------------------------- -->
-      <!-- VIEW H: ADMIN - MONITORING & REKAP SEKOLAH           -->
-      <!-- ---------------------------------------------------- -->
+      <!-- View Admin: Monitoring & Rekap -->
       <div id="view-admin-rekap" class="cms-view d-none admin-only">
+        <!-- Filter Card -->
         <div class="card-cms p-3 mb-3">
-          <div class="row g-2 align-items-center">
+          <div class="row g-2 align-items-end">
             <div class="col-6 col-md-4">
-              <select class="form-select form-select-sm" id="filterRekapBulan">
+              <label class="form-label small text-muted mb-1"><i class="bi bi-calendar-month me-1"></i>Pilih
+                Bulan</label>
+              <select class="form-select form-select-sm" id="filterRekapBulan" onchange="AdminManager.loadRekap()">
+                <option value="">-- Semua Bulan --</option>
                 <option value="Januari">Januari</option>
                 <option value="Februari">Februari</option>
                 <option value="Maret">Maret</option>
                 <option value="April">April</option>
                 <option value="Mei">Mei</option>
-                <option value="Juni" selected>Juni</option>
+                <option value="Juni">Juni</option>
                 <option value="Juli">Juli</option>
                 <option value="Agustus">Agustus</option>
                 <option value="September">September</option>
@@ -775,7 +862,8 @@
               </select>
             </div>
             <div class="col-6 col-md-4">
-              <select class="form-select form-select-sm" id="filterRekapTahun">
+              <label class="form-label small text-muted mb-1"><i class="bi bi-calendar3 me-1"></i>Tahun Ajaran</label>
+              <select class="form-select form-select-sm" id="filterRekapTahun" onchange="AdminManager.loadRekap()">
                 <option value="2025/2026">2025/2026</option>
                 <option value="2026/2027" selected>2026/2027</option>
                 <option value="2027/2028">2027/2028</option>
@@ -783,23 +871,59 @@
             </div>
             <div class="col-12 col-md-4">
               <button class="btn btn-cms-primary btn-sm w-100" onclick="AdminManager.loadRekap()">
-                <i class="bi bi-funnel me-1"></i> Tampilkan Rekapitulasi
+                <i class="bi bi-arrow-repeat me-1"></i> Refresh Rekapitulasi
               </button>
             </div>
           </div>
         </div>
 
-        <div class="card-cms p-0 overflow-hidden">
+        <!-- 4 Statistik Summary Cards -->
+        <div class="row g-2 mb-3" id="adminRekapStatCards">
+          <div class="col-6 col-md-3">
+            <div class="card-cms p-3 text-center h-100 border-start border-4 border-primary">
+              <small class="text-muted d-block mb-1">Total Guru</small>
+              <h4 class="fw-bold mb-0 text-dark" id="rekapStatTotalGuru">0</h4>
+              <small class="text-muted" style="font-size: 0.72rem;">Guru Aktif</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="card-cms p-3 text-center h-100 border-start border-4 border-success">
+              <small class="text-muted d-block mb-1">Guru Mengisi</small>
+              <h4 class="fw-bold mb-0 text-success" id="rekapStatGuruMengisi">0</h4>
+              <small class="text-muted" style="font-size: 0.72rem;" id="rekapStatPersen">0% berpartisipasi</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="card-cms p-3 text-center h-100 border-start border-4 border-warning">
+              <small class="text-muted d-block mb-1">Akumulasi Hari</small>
+              <h4 class="fw-bold mb-0 text-warning text-dark" id="rekapStatTotalHari">0 Hari</h4>
+              <small class="text-muted" style="font-size: 0.72rem;">Total Entri</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="card-cms p-3 text-center h-100 border-start border-4 border-info">
+              <small class="text-muted d-block mb-1">Total Volume</small>
+              <h4 class="fw-bold mb-0 text-info text-dark" id="rekapStatTotalVolume">0 Kegiatan</h4>
+              <small class="text-muted" style="font-size: 0.72rem;">Volume Sekolah</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tampilan Mobile (Kartu Guru) -->
+        <div id="adminRekapMobileCards" class="d-md-none mb-3"></div>
+
+        <!-- Tampilan Desktop (Tabel Rekapitulasi) -->
+        <div class="card-cms p-0 overflow-hidden d-none d-md-block">
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light">
                 <tr>
                   <th style="width: 50px;" class="text-center">No</th>
                   <th>Nama Guru & NIP</th>
-                  <th style="width: 120px;" class="text-center">Hari Terisi</th>
-                  <th style="width: 120px;" class="text-center">Total Volume</th>
-                  <th style="width: 140px;">Pengisian Terakhir</th>
-                  <th style="width: 100px;" class="text-end">Sheet</th>
+                  <th style="width: 130px;" class="text-center">Hari Terisi</th>
+                  <th style="width: 130px;" class="text-center">Total Volume</th>
+                  <th style="width: 160px;">Pengisian Terakhir</th>
+                  <th style="width: 120px;" class="text-end">Aksi</th>
                 </tr>
               </thead>
               <tbody id="adminRekapTableBody"></tbody>
@@ -808,12 +932,11 @@
         </div>
       </div>
 
-      <!-- ---------------------------------------------------- -->
-      <!-- VIEW I: ADMIN - PENGATURAN SISTEM                    -->
-      <!-- ---------------------------------------------------- -->
+      <!-- View Admin: Pengaturan Sistem -->
       <div id="view-admin-settings" class="cms-view d-none admin-only">
         <div class="card-cms p-4" style="max-width: 800px; margin: 0 auto;">
-          <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-sliders me-2 text-success"></i>Pengaturan Sistem & Master Drive</h5>
+          <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-sliders me-2 text-success"></i>Pengaturan Sistem & Master
+            Drive</h5>
           <form onsubmit="event.preventDefault(); AdminManager.saveSettings();">
             <div class="mb-3">
               <label class="form-label">Tahun Ajaran Aktif</label>
@@ -821,20 +944,24 @@
             </div>
             <div class="mb-3">
               <label class="form-label">ID Folder Master Utama di Google Drive Anda</label>
-              <input type="text" class="form-control" id="settingParentFolderId" placeholder="1r271Uodmsj9R645hC__yeG-rU15JGexr">
+              <input type="text" class="form-control" id="settingParentFolderId"
+                placeholder="1r271Uodmsj9R645hC__yeG-rU15JGexr">
               <small class="text-muted">Folder induk tempat seluruh folder guru akan dibuat.</small>
             </div>
             <div class="mb-3">
               <label class="form-label">ID Master Template Spreadsheet (Opsional)</label>
-              <input type="text" class="form-control" id="settingTemplateSheetId" placeholder="Kosongkan jika ingin dibuat otomatis">
+              <input type="text" class="form-control" id="settingTemplateSheetId"
+                placeholder="Kosongkan jika ingin dibuat otomatis">
             </div>
             <div class="mb-3">
               <label class="form-label">ID Master Template Google Docs (Opsional)</label>
-              <input type="text" class="form-control" id="settingTemplateDocId" placeholder="Kosongkan jika ingin dibuat otomatis">
+              <input type="text" class="form-control" id="settingTemplateDocId"
+                placeholder="Kosongkan jika ingin dibuat otomatis">
             </div>
             <div class="mb-3">
               <label class="form-label">URL Web App Google Apps Script Bridge</label>
-              <input type="url" class="form-control" id="settingGasUrl" placeholder="https://script.google.com/macros/s/.../exec">
+              <input type="url" class="form-control" id="settingGasUrl"
+                placeholder="https://script.google.com/macros/s/.../exec">
               <small class="text-muted">URL Webhook hasil deploy Script Google Apps Script di akun Drive Anda.</small>
             </div>
             <div class="mb-4">
@@ -850,9 +977,7 @@
 
     </main>
 
-    <!-- ======================================================== -->
-    <!-- 6. MOBILE BOTTOM NAVIGATION BAR (JEMPOL BAWAH)           -->
-    <!-- ======================================================== -->
+    <!-- Bottom Nav Mobile -->
     <nav class="cms-bottom-nav">
       <button class="bottom-nav-item active" data-view="dashboard" onclick="CmsRouter.navigate('dashboard')">
         <i class="bi bi-grid-1x2-fill"></i>
@@ -878,16 +1003,15 @@
 
   </div> <!-- TUTUP #appContainer -->
 
-  <!-- ======================================================== -->
-  <!-- 7. MODAL-MODAL INTERAKTIF (DALAM APLIKASI)               -->
-  <!-- ======================================================== -->
+  <!-- Modal Dialogs -->
 
   <!-- MODAL CETAK LAPORAN -->
   <div class="modal fade" id="modalCetakLaporan" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg rounded-4">
         <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-file-earmark-arrow-down me-2 text-success"></i>Cetak Laporan Bulanan</h5>
+          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-file-earmark-arrow-down me-2 text-success"></i>Cetak
+            Laporan Bulanan</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body p-4">
@@ -921,11 +1045,13 @@
             <div class="d-flex gap-3">
               <div class="form-check">
                 <input class="form-check-input" type="radio" name="exportFormat" id="fmtPdf" value="pdf" checked>
-                <label class="form-check-label fw-bold text-danger" for="fmtPdf"><i class="bi bi-file-earmark-pdf-fill me-1"></i>PDF (.pdf)</label>
+                <label class="form-check-label fw-bold text-danger" for="fmtPdf"><i
+                    class="bi bi-file-earmark-pdf-fill me-1"></i>PDF (.pdf)</label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="radio" name="exportFormat" id="fmtDocx" value="docx">
-                <label class="form-check-label fw-bold text-primary" for="fmtDocx"><i class="bi bi-file-earmark-word-fill me-1"></i>Word (.docx)</label>
+                <label class="form-check-label fw-bold text-primary" for="fmtDocx"><i
+                    class="bi bi-file-earmark-word-fill me-1"></i>Word (.docx)</label>
               </div>
             </div>
           </div>
@@ -938,7 +1064,8 @@
   </div>
 
   <!-- MODAL PROGRESS UNDUH / CETAK LAPORAN -->
-  <div class="modal fade" id="modalProgressUnduh" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
+  <div class="modal fade" id="modalProgressUnduh" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
+    aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
         <div class="modal-body p-4 text-center">
@@ -948,7 +1075,8 @@
             <p class="text-muted small mb-3">Periode: <strong id="infoPeriodeUnduh">-</strong></p>
 
             <div class="progress mb-2" style="height: 8px;">
-              <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" id="unduhProgressBar" style="width: 15%;"></div>
+              <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" id="unduhProgressBar"
+                style="width: 15%;"></div>
             </div>
             <div class="d-flex justify-content-between small text-muted mb-3">
               <span id="unduhStatusText">Menghubungi server...</span>
@@ -956,11 +1084,16 @@
             </div>
 
             <ul class="list-group list-group-flush text-start small border-top pt-2">
-              <li class="list-group-item d-flex align-items-center py-1 border-0" id="stepUnduh1"><span class="step-icon me-2"><i class="bi bi-circle"></i></span> 1. Membaca data agenda</li>
-              <li class="list-group-item d-flex align-items-center py-1 border-0" id="stepUnduh2"><span class="step-icon me-2"><i class="bi bi-circle"></i></span> 2. Membaca template doc guru</li>
-              <li class="list-group-item d-flex align-items-center py-1 border-0" id="stepUnduh3"><span class="step-icon me-2"><i class="bi bi-circle"></i></span> 3. Menyusun tabel & foto</li>
-              <li class="list-group-item d-flex align-items-center py-1 border-0" id="stepUnduh4"><span class="step-icon me-2"><i class="bi bi-circle"></i></span> 4. Mengompilasi berkas cetak</li>
-              <li class="list-group-item d-flex align-items-center py-1 border-0" id="stepUnduh5"><span class="step-icon me-2"><i class="bi bi-circle"></i></span> 5. Menyimpan ke Dok_Laporan</li>
+              <li class="list-group-item d-flex align-items-center py-1 border-0" id="stepUnduh1"><span
+                  class="step-icon me-2"><i class="bi bi-circle"></i></span> 1. Membaca data agenda</li>
+              <li class="list-group-item d-flex align-items-center py-1 border-0" id="stepUnduh2"><span
+                  class="step-icon me-2"><i class="bi bi-circle"></i></span> 2. Membaca template doc guru</li>
+              <li class="list-group-item d-flex align-items-center py-1 border-0" id="stepUnduh3"><span
+                  class="step-icon me-2"><i class="bi bi-circle"></i></span> 3. Menyusun tabel & foto</li>
+              <li class="list-group-item d-flex align-items-center py-1 border-0" id="stepUnduh4"><span
+                  class="step-icon me-2"><i class="bi bi-circle"></i></span> 4. Mengompilasi berkas cetak</li>
+              <li class="list-group-item d-flex align-items-center py-1 border-0" id="stepUnduh5"><span
+                  class="step-icon me-2"><i class="bi bi-circle"></i></span> 5. Menyimpan ke Dok_Laporan</li>
             </ul>
           </div>
 
@@ -971,7 +1104,8 @@
             <p class="text-muted small mb-3">Berkas tersimpan di Google Drive & tabel Arsip Dokumen Anda.</p>
             <div class="p-3 bg-light rounded-3 text-start small mb-3">
               <div>Nama: <strong id="namaFileSukses">-</strong></div>
-              <div>Format: <span id="formatSukses" class="badge bg-success">PDF</span> • <span id="totalKegiatanSukses">0 Kegiatan</span></div>
+              <div>Format: <span id="formatSukses" class="badge bg-success">PDF</span> • <span
+                  id="totalKegiatanSukses">0 Kegiatan</span></div>
             </div>
             <a href="#" target="_blank" class="btn btn-cms-primary w-100 py-2 mb-2" id="btnBukaDokumen">
               <i class="bi bi-box-arrow-up-right me-2"></i> Buka / Unduh Berkas
@@ -981,7 +1115,8 @@
 
           <!-- ERROR STATE -->
           <div id="wadahErrorState" class="d-none py-2">
-            <div class="text-danger mb-2" style="font-size: 3.5rem;"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <div class="text-danger mb-2" style="font-size: 3.5rem;"><i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
             <h5 class="fw-bold text-dark mb-2">Gagal Membuat Dokumen</h5>
             <p class="text-danger small mb-3" id="teksErrorUnduh">-</p>
             <button type="button" class="btn btn-cms-secondary w-100" data-bs-dismiss="modal">Tutup</button>
@@ -1008,7 +1143,8 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 bg-transparent text-center">
         <div class="modal-body p-0 position-relative">
-          <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3"
+            data-bs-dismiss="modal"></button>
           <img id="galeriModalImg" src="" class="img-fluid rounded-4 shadow-lg" style="max-height: 85vh;">
         </div>
       </div>
@@ -1020,7 +1156,8 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 shadow-lg rounded-4">
         <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square me-2 text-success"></i>Edit Data Agenda</h5>
+          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square me-2 text-success"></i>Edit Data
+            Agenda</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body p-4">
@@ -1060,7 +1197,7 @@
             </div>
             <div class="row g-3 mb-4">
               <div class="col-md-4">
-                <label class="form-label">Volume (Jam)</label>
+                <label class="form-label">Volume (Jumlah Kegiatan)</label>
                 <input type="number" class="form-control" id="editVolume" required>
               </div>
               <div class="col-md-8">
@@ -1084,10 +1221,11 @@
       <div class="modal-content border-0 shadow-lg rounded-4 text-center p-4">
         <div class="text-danger mb-2" style="font-size: 3.5rem;"><i class="bi bi-trash3-fill"></i></div>
         <h5 class="fw-bold text-dark mb-1">Konfirmasi Hapus</h5>
-        <p class="text-muted small mb-4">Apakah Anda yakin ingin menghapus data agenda ini? Tindakan ini tidak dapat dibatalkan.</p>
+        <p class="text-muted small mb-4">Apakah Anda yakin ingin menghapus data agenda ini?</p>
         <div class="d-flex gap-2">
           <button type="button" class="btn btn-cms-secondary flex-fill" data-bs-dismiss="modal">Batal</button>
-          <button type="button" class="btn btn-danger flex-fill fw-bold" id="btnConfirmDelete" onclick="Riwayat.executeDelete()">Ya, Hapus</button>
+          <button type="button" class="btn btn-danger flex-fill fw-bold" id="btnConfirmDelete"
+            onclick="Riwayat.executeDelete()">Ya, Hapus</button>
         </div>
       </div>
     </div>
@@ -1098,7 +1236,8 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 shadow-lg rounded-4">
         <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-person-plus-fill me-2 text-success"></i>Pendaftaran Akun Guru Baru</h5>
+          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-person-plus-fill me-2 text-success"></i>Pendaftaran
+            Akun Guru Baru</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body p-4">
@@ -1106,7 +1245,8 @@
             <div class="row g-3 mb-3">
               <div class="col-md-6">
                 <label class="form-label">Nama Lengkap & Gelar</label>
-                <input type="text" class="form-control" id="adminInputNama" placeholder="Contoh: M. Kormasela, S.Pd." required>
+                <input type="text" class="form-control" id="adminInputNama" placeholder="Contoh: M. Kormasela, S.Pd."
+                  required>
               </div>
               <div class="col-md-6">
                 <label class="form-label">NIP Guru</label>
@@ -1115,8 +1255,21 @@
             </div>
             <div class="row g-3 mb-3">
               <div class="col-md-6">
+                <label class="form-label">Instansi / Nama Sekolah</label>
+                <input type="text" class="form-control" id="adminInputSekolah" value="SD Inpres Leling"
+                  placeholder="SD Inpres Leling">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Mata Pelajaran yang Diampu</label>
+                <input type="text" class="form-control" id="adminInputMapel"
+                  placeholder="PJOK, Matematika, Guru Kelas...">
+              </div>
+            </div>
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
                 <label class="form-label">Username Login</label>
-                <input type="text" class="form-control" id="adminInputUsername" placeholder="Contoh: kormasela" required>
+                <input type="text" class="form-control" id="adminInputUsername" placeholder="Contoh: kormasela"
+                  required>
               </div>
               <div class="col-md-6">
                 <label class="form-label">Kata Sandi Awal</label>
@@ -1125,17 +1278,14 @@
             </div>
             <div class="row g-3 mb-3">
               <div class="col-md-6">
-                <label class="form-label">Mata Pelajaran yang Diampu</label>
-                <input type="text" class="form-control" id="adminInputMapel" placeholder="PJOK, Matematika, Guru Kelas...">
-              </div>
-              <div class="col-md-6">
                 <label class="form-label">Pangkat / Golongan Ruang</label>
                 <input type="text" class="form-control" id="adminInputPangkat" placeholder="Penata Muda / III a">
               </div>
-            </div>
-            <div class="mb-4">
-              <label class="form-label">Daftar Kelas yang Diampu (Pisahkan dengan Koma)</label>
-              <input type="text" class="form-control" id="adminInputKelas" placeholder="Contoh: Kelas IV, Kelas V, Kelas VI">
+              <div class="col-md-6">
+                <label class="form-label">Daftar Kelas yang Diampu (Pisahkan dengan Koma)</label>
+                <input type="text" class="form-control" id="adminInputKelas"
+                  placeholder="Contoh: Kelas IV, Kelas V, Kelas VI">
+              </div>
             </div>
 
             <!-- Checkbox Otomasi Google Drive 4 Sub-Folder -->
@@ -1143,11 +1293,13 @@
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="adminCheckAutoDrive" checked>
                 <label class="form-check-label fw-bold text-success" for="adminCheckAutoDrive">
-                  <i class="bi bi-cloud-arrow-up-fill me-1"></i> Buat Otomatis Folder Guru & 4 Sub-Folder di Google Drive Anda
+                  <i class="bi bi-cloud-arrow-up-fill me-1"></i> Buat Otomatis Folder Guru & 4 Sub-Folder di Google
+                  Drive Anda
                 </label>
               </div>
               <small class="text-muted d-block ps-4 mt-1">
-                Sistem akan membuat folder <code>Dokumentasi</code>, <code>Dok_Laporan</code>, <code>Template</code>, dan <code>SpreadsheetDB</code> (lengkap dengan kloning master template) di Drive Admin.
+                Sistem akan membuat folder <code>Dokumentasi</code>, <code>Dok_Laporan</code>, <code>Template</code>,
+                dan <code>SpreadsheetDB</code> (lengkap dengan kloning master template) di Drive Admin.
               </small>
             </div>
 
@@ -1168,72 +1320,128 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 shadow-lg rounded-4">
         <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square me-2 text-success"></i>Edit Data Akun & Drive Guru</h5>
+          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square me-2 text-success"></i>Edit Profil
+            Guru</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body p-4">
           <form onsubmit="event.preventDefault(); AdminManager.saveEditUser();">
             <input type="hidden" id="editUserId">
-            <div class="row g-3 mb-3">
-              <div class="col-md-6">
-                <label class="form-label">Nama Lengkap & Gelar</label>
-                <input type="text" class="form-control" id="editUserNama" required>
+
+            <!-- FOTO PROFIL GURU -->
+            <div class="card p-3 mb-4 bg-light border-0 rounded-4 text-center">
+              <div class="position-relative d-inline-block mx-auto mb-2">
+                <img id="editUserFotoPreview" src="https://placehold.co/120x120?text=Foto"
+                  class="rounded-circle border border-3 border-success shadow-sm object-fit-cover"
+                  style="width: 100px; height: 100px;" alt="Foto Profil Guru">
+                <input type="file" id="editUserFotoInput" accept="image/*,.heic,.webp" class="d-none"
+                  onchange="AdminManager.handleFotoSelected(this)">
+                <input type="hidden" id="editUserFotoData">
               </div>
-              <div class="col-md-6">
-                <label class="form-label">NIP Guru</label>
-                <input type="text" class="form-control" id="editUserNip">
+              <div class="d-flex justify-content-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3"
+                  onclick="document.getElementById('editUserFotoInput').click()">
+                  <i class="bi bi-camera-fill me-1"></i> Ganti Foto Profil
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2" id="btnHapusFotoGuru"
+                  onclick="AdminManager.hapusFotoProfil()" title="Hapus Foto">
+                  <i class="bi bi-trash"></i>
+                </button>
               </div>
-            </div>
-            <div class="row g-3 mb-3">
-              <div class="col-md-6">
-                <label class="form-label">Mata Pelajaran</label>
-                <input type="text" class="form-control" id="editUserMapel">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Pangkat / Golongan</label>
-                <input type="text" class="form-control" id="editUserPangkat">
-              </div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Kelas Diampu (Pisahkan Koma)</label>
-              <input type="text" class="form-control" id="editUserKelas">
+              <div id="editUserFotoInfo" class="small text-muted mt-2">Dukungan: JPG, JPEG, PNG, WEBP, HEIC</div>
             </div>
 
-            <h6 class="fw-bold text-dark border-top pt-3 mt-3 mb-2"><i class="bi bi-google me-2"></i>ID Aset Google Drive Guru</h6>
-            <div class="row g-2 mb-2">
+            <!-- PROFIL GURU -->
+            <div class="row g-3 mb-3">
               <div class="col-md-6">
-                <label class="form-label small">ID Folder Utama Guru</label>
-                <input type="text" class="form-control form-control-sm" id="editUserFolderGuru">
+                <label class="form-label fw-semibold">Nama Lengkap & Gelar</label>
+                <input type="text" class="form-control" id="editUserNama" placeholder="Nama Guru" required>
               </div>
               <div class="col-md-6">
-                <label class="form-label small">ID Subfolder Dokumentasi (Foto)</label>
-                <input type="text" class="form-control form-control-sm" id="editUserFolderDokumentasi">
+                <label class="form-label fw-semibold">NIP Guru</label>
+                <input type="text" class="form-control" id="editUserNip" placeholder="1985...">
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Instansi / Nama Sekolah</label>
+                <input type="text" class="form-control" id="editUserSekolah" placeholder="SD Inpres Leling">
               </div>
               <div class="col-md-6">
-                <label class="form-label small">ID Subfolder Dok_Laporan</label>
-                <input type="text" class="form-control form-control-sm" id="editUserFolderDokLaporan">
+                <label class="form-label fw-semibold">Mata Pelajaran yang Diampu</label>
+                <input type="text" class="form-control" id="editUserMapel"
+                  placeholder="PJOK, Matematika, Guru Kelas...">
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Pangkat / Golongan</label>
+                <input type="text" class="form-control" id="editUserPangkat" placeholder="Penata Muda / III a">
               </div>
               <div class="col-md-6">
-                <label class="form-label small">ID Subfolder Template</label>
-                <input type="text" class="form-control form-control-sm" id="editUserFolderTemplate">
+                <label class="form-label fw-semibold">Jabatan</label>
+                <input type="text" class="form-control" id="editUserJabatan" placeholder="Guru Mata Pelajaran">
               </div>
-              <div class="col-md-6">
-                <label class="form-label small">ID Subfolder SpreadsheetDB</label>
-                <input type="text" class="form-control form-control-sm" id="editUserFolderDb">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label small">ID File Spreadsheet DB</label>
-                <input type="text" class="form-control form-control-sm" id="editUserSheetId">
-              </div>
-              <div class="col-md-12">
-                <label class="form-label small">ID File Template Google Docs</label>
-                <input type="text" class="form-control form-control-sm" id="editUserTemplateDocId">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Kelas Diampu (Pisahkan dengan Koma)</label>
+              <input type="text" class="form-control" id="editUserKelas" placeholder="Kelas IV, Kelas V, Kelas VI">
+            </div>
+
+            <!-- ACCORDION GOOGLE DRIVE ASET -->
+            <div class="accordion mt-4" id="accordionDriveEdit">
+              <div class="accordion-item border rounded-3">
+                <h2 class="accordion-header" id="headingDrive">
+                  <button class="accordion-button collapsed py-2 text-dark small fw-bold" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#collapseDrive" aria-expanded="false"
+                    aria-controls="collapseDrive">
+                    <i class="bi bi-google me-2 text-success"></i> Pengaturan Aset Google Drive Guru (Lanjutan)
+                  </button>
+                </h2>
+                <div id="collapseDrive" class="accordion-collapse collapse" aria-labelledby="headingDrive"
+                  data-bs-parent="#accordionDriveEdit">
+                  <div class="accordion-body p-3 bg-light">
+                    <div class="row g-2">
+                      <div class="col-md-6">
+                        <label class="form-label small">ID Folder Utama Guru</label>
+                        <input type="text" class="form-control form-control-sm" id="editUserFolderGuru">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label small">ID Subfolder Dokumentasi (Foto)</label>
+                        <input type="text" class="form-control form-control-sm" id="editUserFolderDokumentasi">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label small">ID Subfolder Dok_Laporan</label>
+                        <input type="text" class="form-control form-control-sm" id="editUserFolderDokLaporan">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label small">ID Subfolder Template</label>
+                        <input type="text" class="form-control form-control-sm" id="editUserFolderTemplate">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label small">ID Subfolder SpreadsheetDB</label>
+                        <input type="text" class="form-control form-control-sm" id="editUserFolderDb">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label small">ID File Spreadsheet DB</label>
+                        <input type="text" class="form-control form-control-sm" id="editUserSheetId">
+                      </div>
+                      <div class="col-md-12">
+                        <label class="form-label small">ID File Template Google Docs</label>
+                        <input type="text" class="form-control form-control-sm" id="editUserTemplateDocId">
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
             <div class="d-flex justify-content-end gap-2 mt-4">
               <button type="button" class="btn btn-cms-secondary" data-bs-dismiss="modal">Batal</button>
-              <button type="submit" class="btn btn-cms-primary" id="btnSimpanEditGuru">Simpan Perubahan</button>
+              <button type="submit" class="btn btn-cms-primary" id="btnSimpanEditGuru">Simpan Perubahan Profil</button>
             </div>
           </form>
         </div>
@@ -1246,7 +1454,8 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg rounded-4">
         <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-plus-circle me-2 text-success"></i>Tambah CP & TP Baru</h5>
+          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-plus-circle me-2 text-success"></i>Tambah CP & TP
+            Baru</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body p-4">
@@ -1257,11 +1466,13 @@
             </div>
             <div class="mb-3">
               <label class="form-label">Capaian Pembelajaran (CP)</label>
-              <textarea class="form-control" id="inputCpTpCP" rows="2" placeholder="Tuliskan capaian pembelajaran..." required></textarea>
+              <textarea class="form-control" id="inputCpTpCP" rows="2" placeholder="Tuliskan capaian pembelajaran..."
+                required></textarea>
             </div>
             <div class="mb-4">
               <label class="form-label">Tujuan Pembelajaran (TP)</label>
-              <textarea class="form-control" id="inputCpTpTP" rows="2" placeholder="Tuliskan tujuan pembelajaran..." required></textarea>
+              <textarea class="form-control" id="inputCpTpTP" rows="2" placeholder="Tuliskan tujuan pembelajaran..."
+                required></textarea>
             </div>
             <div class="d-flex justify-content-end gap-2">
               <button type="button" class="btn btn-cms-secondary" data-bs-dismiss="modal">Batal</button>
@@ -1277,7 +1488,8 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg rounded-4">
         <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square me-2 text-success"></i>Edit CP & TP</h5>
+          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square me-2 text-success"></i>Edit CP & TP
+          </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body p-4">
@@ -1301,10 +1513,104 @@
     </div>
   </div>
 
-  <!-- ======================================================== -->
-  <!-- 8. JAVASCRIPT LIBRARIES & MODUL-MODUL APLIKASI           -->
-  <!-- ======================================================== -->
+  <!-- Floating PWA Install Banner (Mobile & Desktop) -->
+  <div id="pwaInstallBanner" class="pwa-install-banner d-none">
+    <div class="d-flex align-items-center justify-content-between gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <img src="icons/icon-96x96.png" alt="Logo" class="pwa-banner-icon rounded-3">
+        <div>
+          <strong class="d-block text-dark small fw-bold">Pasang Manager LHK</strong>
+          <small class="text-muted" style="font-size: 0.75rem;">Akses cepat dari layar utama HP / Laptop</small>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-1">
+        <button class="btn btn-sm btn-cms-primary rounded-pill px-3 py-1 fw-bold btn-install-pwa"
+          style="font-size: 0.8rem;">
+          <i class="bi bi-download me-1"></i>Pasang
+        </button>
+        <button class="btn btn-sm btn-link text-muted p-1" onclick="PwaInstaller.dismissBanner()" title="Tutup">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Panduan Install iOS (Safari iPhone/iPad) -->
+  <div class="modal fade" id="modalInstallIos" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 rounded-4 shadow">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-apple me-2 text-dark"></i>Pasang di iPhone / iPad
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 text-center">
+          <img src="icons/icon-128x128.png" class="rounded-4 shadow-sm mb-3" width="72" height="72" alt="App Icon">
+          <h6 class="fw-bold mb-2">Tambahkan ke Layar Utama (Homescreen)</h6>
+          <p class="text-muted small mb-4">Aplikasi ini dapat diinstal langsung tanpa melalui App Store dengan langkah
+            mudah:</p>
+
+          <div class="text-start bg-light p-3 rounded-3 mb-3 small">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-primary rounded-circle">1</span>
+              <span>Buka situs ini di browser <strong>Safari</strong> iPhone.</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-primary rounded-circle">2</span>
+              <span>Ketuk ikon <strong>Bagikan / Share</strong> (<i class="bi bi-box-arrow-up text-primary fs-6"></i>)
+                di bilah bawah.</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-primary rounded-circle">3</span>
+              <span>Gulir ke bawah, lalu pilih <strong>'Tambahkan ke Layar Utama'</strong> (<i
+                  class="bi bi-plus-square text-success fs-6"></i>).</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-primary rounded-circle">4</span>
+              <span>Ketuk tombol <strong>Tambah</strong> di pojok kanan atas. Selesai!</span>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-cms-primary w-100 rounded-pill py-2" data-bs-dismiss="modal">
+            Saya Mengerti
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Panduan Install Komputer/Android -->
+  <div class="modal fade" id="modalInstallPanduan" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 rounded-4 shadow">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-download me-2 text-success"></i>Pasang Aplikasi
+            Manager LHK</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 text-center">
+          <img src="icons/icon-128x128.png" class="rounded-4 shadow-sm mb-3" width="72" height="72" alt="App Icon">
+          <h6 class="fw-bold mb-2">Pasang ke Layar Utama Perangkat</h6>
+          <p class="text-muted small mb-3">Nikmati pengalaman aplikasi mandiri tanpa bilah alamat browser:</p>
+
+          <div class="text-start bg-light p-3 rounded-3 mb-3 small">
+            <div class="mb-2"><strong>Pada Android (Google Chrome):</strong> Ketuk menu titik tiga (⋮) di kanan atas,
+              lalu pilih <em>"Pasang aplikasi"</em> atau <em>"Tambahkan ke Layar utama"</em>.</div>
+            <div><strong>Pada Laptop/Komputer (Chrome / Edge):</strong> Klik ikon download/pasang di bilah alamat
+              browser sebelah kanan atas untuk memasang.</div>
+          </div>
+
+          <button type="button" class="btn btn-cms-primary w-100 rounded-pill py-2" data-bs-dismiss="modal">
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts & Modules -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
   <script src="js/image-compressor.js"></script>
   <script src="js/api.js"></script>
   <script src="js/auth.js"></script>
@@ -1315,6 +1621,7 @@
   <script src="js/dokumen.js"></script>
   <script src="js/cptp.js"></script>
   <script src="js/admin.js"></script>
+  <script src="js/pwa-installer.js"></script>
 
   <script>
     // Inisialisasi awal saat halaman dimuat

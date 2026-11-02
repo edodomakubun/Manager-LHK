@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buku Panduan Penggunaan - E-Agenda LHK CMS Guru</title>
+  <meta name="description" content="Buku panduan operasional lengkap aplikasi E-Agenda LHK (CMS Laporan Harian Kinerja Guru). Dilengkapi panduan visual langkah demi langkah untuk Guru dan Administrator Sekolah.">
+  <link rel="icon" type="image/png" href="panduan-assets/image15.png">
+
+  <!-- Google Fonts: Inter & Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 & Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+    :root {
+      --primary: #059669;
+      --primary-dark: #047857;
+      --primary-light: #ecfdf5;
+      --primary-subtle: #d1fae5;
+      --secondary: #0284c7;
+      --secondary-light: #e0f2fe;
+      --dark-text: #1e293b;
+      --muted-text: #64748b;
+      --border-color: #e2e8f0;
+      --card-bg: #ffffff;
+      --page-bg: #f8fafc;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-heading: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--dark-text);
+      background-color: var(--page-bg);
+      line-height: 1.65;
+      font-size: 0.96rem;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* Top Sticky Action Bar */
+    .top-action-bar {
+      position: sticky;
+      top: 0;
+      z-index: 1030;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Sidebar Table of Contents */
+    .toc-sidebar {
+      position: sticky;
+      top: 75px;
+      max-height: calc(100vh - 90px);
+      overflow-y: auto;
+      padding-right: 12px;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
+
+    .toc-sidebar::-webkit-scrollbar {
+      width: 5px;
+    }
+    .toc-sidebar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px;
+      color: #475569;
+      text-decoration: none;
+      font-size: 0.86rem;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      margin-bottom: 3px;
+    }
+
+    .toc-link:hover, .toc-link.active {
+      color: var(--primary-dark);
+      background-color: var(--primary-light);
+      font-weight: 600;
+      transform: translateX(3px);
+    }
+
+    .toc-link i {
+      font-size: 1rem;
+      color: var(--primary);
+    }
+
+    /* Hero Cover Card */
+    .hero-guide-card {
+      background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%);
+      color: #ffffff;
+      border-radius: 20px;
+      padding: 40px 35px;
+      box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.3);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 35px;
+    }
+
+    .hero-guide-card::after {
+      content: '';
+      position: absolute;
+      top: -30%;
+      right: -10%;
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    /* Content Cards */
+    .guide-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.03);
+      scroll-margin-top: 80px;
+    }
+
+    .guide-section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid var(--primary-subtle);
+    }
+
+    .guide-section-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* Modern Browser Window Mockup */
+    .browser-mockup {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.12);
+      margin: 22px 0 14px 0;
+    }
+
+    .browser-bar {
+      background: #f1f5f9;
+      padding: 9px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .browser-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .browser-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #ef4444; }
+    .dot-yellow { background: #f59e0b; }
+    .dot-green { background: #10b981; }
+
+    .browser-url {
+      flex: 1;
+      background: #ffffff;
+      border-radius: 6px;
+      padding: 3px 12px;
+      font-size: 0.78rem;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #e2e8f0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .browser-mockup img {
+      width: 100%;
+      height: auto;
+      display: block;
+      cursor: zoom-in;
+      transition: opacity 0.2s ease;
+    }
+
+    .browser-mockup img:hover {
+      opacity: 0.95;
+    }
+
+    /* Modern Smartphone Frame Mockup */
+    .phone-mockup-wrapper {
+      display: flex;
+      justify-content: center;
+      margin: 22px 0 14px 0;
+    }
+
+    .phone-mockup {
+      max-width: 330px;
+      width: 100%;
+      background: #0f172a;
+      border-radius: 36px;
+      padding: 10px;
+      box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.35);
+      border: 3px solid #334155;
+      position: relative;
+    }
+
+    .phone-notch {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90px;
+      height: 16px;
+      background: #0f172a;
+      border-radius: 10px;
+      z-index: 10;
+    }
+
+    .phone-screen {
+      border-radius: 26px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .phone-screen img {
+      width: 100%;
+      height: auto;
+      display: block;
+      cursor: zoom-in;
+    }
+
+    /* Figure Caption */
+    .figure-caption-custom {
+      font-size: 0.84rem;
+      color: #64748b;
+      background: #f8fafc;
+      padding: 9px 14px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .figure-caption-custom .caption-text {
+      font-weight: 500;
+    }
+
+    .figure-caption-custom .zoom-hint {
+      font-size: 0.78rem;
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    /* Step Badge & List */
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #ffffff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-right: 8px;
+    }
+
+    .feature-step-box {
+      background: #f8fafc;
+      border-left: 4px solid var(--primary);
+      border-radius: 0 10px 10px 0;
+      padding: 14px 18px;
+      margin-bottom: 14px;
+    }
+
+    .pro-tip-box {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 18px 0;
+      color: #065f46;
+    }
+
+    .warning-box {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 18px 0;
+      color: #92400e;
+    }
+
+    .info-box {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 18px 0;
+      color: #0369a1;
+    }
+
+    /* Quick Grid */
+    .spec-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin: 18px 0;
+    }
+
+    .spec-card {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 18px;
+      transition: transform 0.2s ease;
+    }
+
+    .spec-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .spec-card i {
+      font-size: 1.7rem;
+      color: var(--primary);
+      margin-bottom: 10px;
+      display: inline-block;
+    }
+
+    /* Image Lightbox Modal */
+    #imageModal .modal-dialog {
+      max-width: 90vw;
+      margin: 20px auto;
+    }
+
+    #imageModal .modal-content {
+      background: rgba(15, 23, 42, 0.96);
+      border: none;
+      border-radius: 16px;
+    }
+
+    #imageModal img {
+      max-height: 82vh;
+      object-fit: contain;
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        font-size: 10pt;
+        color: #000000 !important;
+      }
+
+      .top-action-bar, .toc-sidebar, .btn-print, .btn-pdf, .zoom-hint, .no-print {
+        display: none !important;
+      }
+
+      .guide-card {
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        padding: 18px !important;
+        margin-bottom: 22px !important;
+        page-break-inside: avoid;
+      }
+
+      .browser-mockup, .phone-mockup-wrapper, .feature-step-box, .pro-tip-box, .warning-box {
+        page-break-inside: avoid;
+      }
+
+      .browser-mockup {
+        border: 1px solid #94a3b8 !important;
+        box-shadow: none !important;
+      }
+
+      .phone-mockup {
+        box-shadow: none !important;
+        border: 2px solid #64748b !important;
+        background: #f8fafc !important;
+      }
+
+      .phone-screen {
+        border: 1px solid #cbd5e1 !important;
+      }
+
+      .hero-guide-card {
+        background: #047857 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color: #ffffff !important;
+        padding: 24px !important;
+      }
+
+      a {
+        text-decoration: none !important;
+        color: inherit !important;
+      }
+
+      @page {
+        margin: 1.6cm;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Action Navigation Bar -->
+  <header class="top-action-bar py-2">
+    <div class="container-xl d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
+        <img src="panduan-assets/image15.png" alt="Logo E-Agenda LHK" width="36" height="36" class="rounded">
+        <div>
+          <span class="fw-bold d-block text-dark lh-1" style="font-size: 1.05rem;">E-Agenda LHK</span>
+          <small class="text-muted" style="font-size: 0.75rem;">Panduan Operasional Resmi v2.5</small>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <a href="Panduan-Penggunaan-CMS-Manager-LHK.pdf" download class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 btn-pdf">
+          <i class="bi bi-file-earmark-pdf-fill"></i> <span class="d-none d-sm-inline">Unduh Versi PDF</span>
+        </a>
+        <a href="/" class="btn btn-sm btn-success d-inline-flex align-items-center gap-1 px-3">
+          <i class="bi bi-box-arrow-in-right"></i> <span>Buka Web CMS</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="container-xl py-4">
+    <div class="row">
+
+      <!-- Left Sidebar TOC (Desktop) -->
+      <nav class="col-lg-3 d-none d-lg-block no-print">
+        <div class="toc-sidebar">
+          <div class="small fw-bold text-uppercase text-muted px-2 mb-2 tracking-wide">
+            <i class="bi bi-list-nested me-1"></i> Daftar Isi Panduan
+          </div>
+          <a href="#pendahuluan" class="toc-link"><i class="bi bi-info-circle"></i> 1. Pendahuluan & Arsitektur</a>
+          <a href="#instalasi-pwa" class="toc-link"><i class="bi bi-phone"></i> 2. Instalasi Aplikasi (PWA)</a>
+          <a href="#login" class="toc-link"><i class="bi bi-box-arrow-in-right"></i> 3. Halaman Login & Akses</a>
+          <a href="#dashboard" class="toc-link"><i class="bi bi-speedometer2"></i> 4. Antarmuka Dashboard</a>
+          <a href="#input-lhk" class="toc-link"><i class="bi bi-pencil-square"></i> 5. Pengisian LHK (4 Langkah)</a>
+          <a href="#edit-agenda" class="toc-link"><i class="bi bi-pencil-fill"></i> 6. Edit & Hapus Foto Drive</a>
+          <a href="#riwayat-filter" class="toc-link"><i class="bi bi-clock-history"></i> 7. Riwayat & Filter Kelas</a>
+          <a href="#arsip-cetak" class="toc-link"><i class="bi bi-archive-fill"></i> 8. Arsip & Cetak Bulanan</a>
+          <a href="#master-cptp" class="toc-link"><i class="bi bi-book-half"></i> 9. Master CP & TP Kelas</a>
+          <a href="#profil-guru" class="toc-link"><i class="bi bi-person-badge"></i> 10. Profil Guru & Sandi</a>
+          <a href="#drawer-mobile" class="toc-link"><i class="bi bi-layout-sidebar"></i> 11. Navigasi Ponsel (Drawer)</a>
+          <a href="#faq" class="toc-link"><i class="bi bi-question-circle-fill"></i> 12. FAQ & Solusi Kendala</a>
+        </div>
+      </nav>
+
+      <!-- Right Main Content Area -->
+      <main class="col-lg-9 col-12">
+
+        <!-- Hero Header -->
+        <div class="hero-guide-card">
+          <div class="row align-items-center">
+            <div class="col-md-9 col-12">
+              <span class="badge bg-white text-success fw-bold px-3 py-1 rounded-pill mb-3" style="font-size: 0.8rem;">
+                <i class="bi bi-patch-check-fill me-1"></i> DOKUMEN PANDUAN PENGGUNA RESMI (USER GUIDE)
+              </span>
+              <h1 class="h2 fw-bolder mb-2 text-white">Panduan Penggunaan Web CMS E-Agenda LHK</h1>
+              <p class="mb-3 text-white-50 fs-6">
+                Sistem Manajemen Laporan Harian Kinerja (LHK) Guru Multi-User Terintegrasi Cloudflare Workers, Cloudflare D1 Database, dan Google Drive Cloud Storage.
+              </p>
+              <div class="d-flex flex-wrap gap-2 text-white small">
+                <span><i class="bi bi-building me-1"></i> SD Inpres Leling & Satuan Pendidikan Mitra</span>
+                <span class="opacity-50">•</span>
+                <span><i class="bi bi-shield-check me-1"></i> Edisi Kurikulum Merdeka & K-13</span>
+                <span class="opacity-50">•</span>
+                <span><i class="bi bi-phone-fill me-1"></i> PWA Mobile & Desktop Ready</span>
+              </div>
+            </div>
+            <div class="col-md-3 d-none d-md-flex justify-content-center">
+              <img src="panduan-assets/image15.png" alt="Logo E-Agenda LHK" class="img-fluid rounded-4 shadow-sm" style="max-height: 120px; background: white; padding: 10px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Bagian 1: Pendahuluan & Arsitektur -->
+        <section id="pendahuluan" class="guide-card">
+          <div class="guide-section-header">
+            <div class="guide-section-badge">1</div>
+            <div>
+              <h2 class="h4 mb-0">Pendahuluan & Arsitektur Sistem</h2>
+              <small class="text-muted">Mengenal platform E-Agenda LHK dan keunggulan teknologi cloud</small>
+            </div>
+          </div>
+
+          <p>
+            <strong>E-Agenda LHK CMS</strong> dirancang khusus sebagai solusi modern, efisien, dan ramah pengguna bagi tenaga pendidik (guru) dan pimpinan sekolah (Kepala Sekolah/Pengawas) dalam mendokumentasikan, merekap, dan mengarsipkan Laporan Harian Kinerja secara terpusat dan akuntabel.
+          </p>
+
+          <div class="spec-grid">
+            <div class="spec-card">
+              <i class="bi bi-lightning-charge-fill"></i>
+              <h6 class="fw-bold mb-1">Performa Server Cepat</h6>
+              <p class="small text-muted mb-0">Didukung oleh Cloudflare Edge Network global dengan latensi rendah dan uptime 99.9%.</p>
+            </div>
+            <div class="spec-card">
+              <i class="bi bi-hdd-network-fill"></i>
+              <h6 class="fw-bold mb-1">Penyimpanan Google Drive</h6>
+              <p class="small text-muted mb-0">Setiap guru memiliki struktur 4 sub-folder privat di Google Drive tanpa batas kuota hosting.</p>
+            </div>
+            <div class="spec-card">
+              <i class="bi bi-file-earmark-diff-fill"></i>
+              <h6 class="fw-bold mb-1">Cetak Dokumen Otomatis</h6>
+              <p class="small text-muted mb-0">Ekspor instan ke format Google Docs editable, PDF cetak resmi, dan file Microsoft Word (.docx).</p>
+            </div>
+            <div class="spec-card">
+              <i class="bi bi-phone-vibrate-fill"></i>
+              <h6 class="fw-bold mb-1">Aplikasi Web Progresif (PWA)</h6>
+              <p class="small text-muted mb-0">Dapat dipasang langsung ke layar utama Android, iPhone, tablet, maupun komputer tanpa Play Store.</p>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <i class="bi bi-globe me-2"></i><strong>Tautan Resmi Aplikasi Web CMS:</strong> 
+            <a href="https://lhk-pak.cmsmanager.my.id" target="_blank" class="fw-bold text-decoration-underline text-info-emphasis">https://lhk-pak.cmsmanager.my.id</a> 
+            (atau URL domain resmi yang dibagikan oleh Operator Sekolah).
+          </div>
+        </section>
+
+        <!-- Bagian 2: Instalasi Aplikasi (PWA) -->
+        <section id="instalasi-pwa" class="guide-card">
+          <div class="guide-section-header">
+            <div class="guide-section-badge">2</div>
+            <div>
+              <h2 class="h4 mb-0">Panduan Instalasi Aplikasi (PWA)</h2>
+              <small class="text-muted">Pasang aplikasi di Smartphone (Android/iOS) dan Laptop/PC</small>
+            </div>
+          </div>
+
+          <p>
+            Aplikasi ini mendukung teknologi <strong>Progressive Web App (PWA)</strong>. Anda tidak perlu mengunduh installer berat dari Google Play Store atau Apple App Store. Aplikasi sangat ringan (kurang dari 2 MB) dan dapat berjalan lancar di berbagai perangkat.
+          </p>
+
+          <div class="row g-3 mt-2">
+            <!-- Android -->
+            <div class="col-md-4 col-12">
+              <div class="border rounded-3 p-3 h-100 bg-white shadow-sm">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <i class="bi bi-android2 text-success fs-3"></i>
+                  <h6 class="fw-bold mb-0">Smartphone Android</h6>
+                </div>
+                <ol class="small text-muted ps-3 mb-0" style="line-height: 1.6;">
+                  <li>Buka browser <strong>Google Chrome</strong> di HP Anda.</li>
+                  <li>Kunjungi tautan web CMS.</li>
+                  <li>Klik tombol hijau <strong>"Pasang Aplikasi ke Layar Utama"</strong> di bawah form login.</li>
+                  <li>Jika tidak muncul, tekan menu titik tiga (<strong>⋮</strong>) di pojok kanan atas browser > pilih <strong>"Pasang aplikasi"</strong> atau <strong>"Tambahkan ke Layar Utama"</strong>.</li>
+                </ol>
+              </div>
+            </div>
+
+            <!-- iOS / iPhone -->
+            <div class="col-md-4 col-12">
+              <div class="border rounded-3 p-3 h-100 bg-white shadow-sm">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <i class="bi bi-apple text-dark fs-3"></i>
+                  <h6 class="fw-bold mb-0">iPhone / iPad (iOS)</h6>
+                </div>
+                <ol class="small text-muted ps-3 mb-0" style="line-height: 1.6;">
+                  <li>Buka browser bawaan <strong>Safari</strong> (wajib Safari).</li>
+                  <li>Kunjungi tautan web CMS.</li>
+                  <li>Tekan ikon <strong>Share</strong> (kotak dengan panah mengarah ke atas di navigasi bawah).</li>
+                  <li>Gulir ke bawah dan ketuk opsi <strong>"Add to Home Screen"</strong> (Tambahkan ke Layar Utama).</li>
+                  <li>Tekan <strong>"Add"</strong> di pojok kanan atas.</li>
+                </ol>
+              </div>
+            </div>
+
+            <!-- PC / Laptop -->
+            <div class="col-md-4 col-12">
+              <div class="border rounded-3 p-3 h-100 bg-white shadow-sm">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <i class="bi bi-laptop text-primary fs-3"></i>
+                  <h6 class="fw-bold mb-0">Laptop / Komputer (PC)</h6>
+                </div>
+                <ol class="small text-muted ps-3 mb-0" style="line-height: 1.6;">
+                  <li>Buka <strong>Google Chrome</strong> atau <strong>Microsoft Edge</strong>.</li>
+                  <li>Lihat di sebelah kanan kolom alamat (address bar), klik ikon <strong>Install Aplikasi</strong> (<i class="bi bi-display"></i>).</li>
+                  <li>Atau klik menu <strong>"Pasang Aplikasi"</strong> di bilah sidebar navigasi CMS.</li>
+                  <li>Aplikasi akan terbuka dalam jendela tersendiri layaknya software desktop profesional.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <div class="pro-tip-box mt-3 mb-0">
+            <i class="bi bi-check-circle-fill me-2"></i><strong>Keuntungan Memasang PWA:</strong> Akses super cepat hanya dengan 1 kali sentuh dari layar beranda smartphone, tampilan layar penuh tanpa bilah browser (fullscreen immersive), dan pembaruan sistem berjalan otomatis tanpa perlu update manual.
+          </div>
+        </section>
+
+        <!-- Bagian 3: Halaman Login & Autentikasi -->
+        <section id="login" class="guide-card">
+          <div class="guide-section-header">
+            <div class="guide-section-badge">3</div>
+            <div>
+              <h2 class="h4 mb-0">Halaman Login & Akses Masuk Akun</h2>
+              <small class="text-muted">Prosedur autentikasi dan keamanan kredensial guru</small>
+            </div>
+          </div>
+
+          <p>
+            Setiap guru dan staf pengajar memiliki kredensial akun tersendiri yang diterbitkan langsung oleh <strong>Admin / Operator Sekolah</strong>.
+          </p>
+
+          <!-- Mockup Screenshot Login (PC & HP) -->
+          <div class="browser-mockup">
+            <div class="browser-bar">
+              <div class="browser-dots">
+                <span class="browser-dot dot-red"></span>
+                <span class="browser-dot dot-yellow"></span>
+                <span class="browser-dot dot-green"></span>
+              </div>
+              <div class="browser-url">
+                <i class="bi bi-lock-fill text-success"></i> https://lhk-pak.cmsmanager.my.id/login
+              </div>
+            </div>
+            <img src="panduan-assets/image1.png" alt="Tampilan Halaman Login Web CMS E-Agenda LHK (PC & Mobile)" onclick="openLightbox(this.src, 'Tampilan Halaman Login Web CMS E-Agenda LHK')">
+            <div class="figure-caption-custom">
+              <span class="caption-text"><i class="bi bi-image me-1"></i> Gambar 1: Tampilan Halaman Login Web CMS E-Agenda LHK (PC & Mobile)</span>
+              <span class="zoom-hint"><i class="bi bi-zoom-in"></i> Klik untuk memperbesar</span>
+            </div>
+          </div>
+
+          <div class="feature-step-box mt-3">
+            <h6 class="fw-bold mb-2">Langkah-Langkah Masuk (Login):</h6>
+            <ol class="mb-0 ps-3">
+              <li>Masukkan <strong>Username</strong> atau <strong>NIP Guru</strong> pada kolom isian pertama.</li>
+              <li>Ketikkan <strong>Kata Sandi</strong> Anda pada kolom kedua. Klik ikon mata (<i class="bi bi-eye"></i>) jika ingin memastikan ketikan kata sandi sudah benar.</li>
+              <li>Klik tombol hijau <strong>"Masuk ke CMS"</strong>.</li>
+              <li>Sistem memverifikasi kredensial dan otomatis mengarahkan Anda ke Halaman Dashboard Utama.</li>
+            </ol>
+          </div>
+
+          <div class="warning-box mb-0">
+            <i class="bi bi-shield-exclamation me-2"></i><strong>Penting:</strong> Jangan membagikan kata sandi Anda kepada orang lain. Jika Anda baru pertama kali login, disarankan segera mengganti kata sandi bawaan melalui menu <strong>Profil Guru</strong>.
+          </div>
+        </section>
+
+        <!-- Bagian 4: Antarmuka Dashboard Guru -->
+        <section id="dashboard" class="guide-card">
+          <div class="guide-section-header">
+            <div class="guide-section-badge">4</div>
+            <div>
+              <h2 class="h4 mb-0">Antarmuka Dashboard Guru</h2>
+              <small class="text-muted">Pusat pemantauan kinerja harian, ringkasan jam, dan akses cepat</small>
+            </div>
+          </div>
+
+          <p>
+            Setelah berhasil login, Anda akan disambut oleh halaman <strong>Dashboard</strong>. Tampilan dirancang bersih dan responsif, baik saat diakses menggunakan Laptop/PC maupun Layar Ponsel.
+          </p>
+
+          <!-- Tampilan PC Dashboard -->
+          <h6 class="fw-bold text-dark mt-4 mb-2"><i class="bi bi-laptop me-1 text-primary"></i> A. Tampilan Dashboard pada Komputer / Laptop (PC View)</h6>
+          <div class="browser-mockup">
+            <div class="browser-bar">
+              <div class="browser-dots">
+                <span class="browser-dot dot-red"></span>
+                <span class="browser-dot dot-yellow"></span>
+                <span class="browser-dot dot-green"></span>
+              </div>
+              <div class="browser-url">
+                <i class="bi bi-lock-fill text-success"></i> https://lhk-pak.cmsmanager.my.id/#dashboard
+              </div>
+            </div>
+            <img src="panduan-assets/image2.png" alt="Tampilan Dashboard Utama pada Layar Komputer / Laptop" onclick="openLightbox(this.src, 'Tampilan Dashboard Utama pada Layar Komputer / Laptop')">
+            <div class="figure-caption-custom">
+              <span class="caption-text"><i class="bi bi-image me-1"></i> Gambar 2: Antarmuka Dashboard Guru pada Layar PC/Laptop</span>
+              <span class="zoom-hint"><i class="bi bi-zoom-in"></i> Klik untuk memperbesar</span>
+            </div>
+          </div>
+
+          <!-- Tampilan HP Dashboard -->
+          <h6 class="fw-bold text-dark mt-4 mb-2"><i class="bi bi-phone me-1 text-success"></i> B. Tampilan Dashboard pada Smartphone (Mobile View)</h6>
+          <div class="row align-items-center">
+            <div class="col-md-5 col-12">
+              <div class="phone-mockup-wrapper">
+                <div class="phone-mockup">
+                  <div class="phone-notch"></div>
+                  <div class="phone-screen">
+                    <img src="panduan-assets/image9.png" alt="Tampilan Dashboard Guru pada Layar Smartphone" onclick="openLightbox(this.src, 'Tampilan Dashboard Guru pada Layar Smartphone')">
+                  </div>
+                </div>
+              </div>
+              <div class="text-center small text-muted mb-3">
+                <i class="bi bi-image me-1"></i> Gambar 3: Dashboard HP
+              </div>
+            </div>
+            <div class="col-md-7 col-12">
+              <h6 class="fw-bold text-dark mb-2">Komponen Utama Dashboard:</h6>
+              <ul class="list-unstyled ps-0">
+                <li class="mb-2 pb-2 border-bottom">
+                  <strong><i class="bi bi-person-circle text-primary me-2"></i>Kartu Salam & Identitas Guru:</strong> Menampilkan ucapan selamat datang dinamis, nama lengkap guru, NIP, serta tanggal kalender berjalan.
+                </li>
+                <li class="mb-2 pb-2 border-bottom">
+                  <strong><i class="bi bi-clock-fill text-success me-2"></i>Kartu Statistik Realtime:</strong> Menghitung otomatis Total Jam Kerja Bulan Ini, Total Hari Aktif Mengajar, dan Rata-rata Durasi Pengajaran Harian.
+                </li>
+                <li class="mb-2 pb-2 border-bottom">
+                  <strong><i class="bi bi-bar-chart-fill text-warning me-2"></i>Progress Target Volume:</strong> Indikator persentase capaian target jam kerja dinas bulanan (misal target akumulasi 1500 menit atau 25 jam).
+                </li>
+                <li class="mb-2 pb-2 border-bottom">
+                  <strong><i class="bi bi-lightning-fill text-info me-2"></i>Tombol Akses Cepat (Quick Actions):</strong> Tombol pintas untuk langsung mengisi agenda baru, membuka riwayat, atau mengunduh arsip dokumen bulanan.
+                </li>
+                <li class="mb-0">
+                  <strong><i class="bi bi-card-checklist text-secondary me-2"></i>Daftar Agenda Terkini:</strong> Pratinjau 5 aktivitas pembelajaran terakhir yang telah Anda simpan.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Bagian 5: Pengisian LHK Harian 4 Langkah -->
+        <section id="input-lhk" class="guide-card">
+          <div class="guide-section-header">
+            <div class="guide-section-badge">5</div>
+            <div>
+              <h2 class="h4 mb-0">Pengisian LHK Harian (Wizard 4 Langkah)</h2>
+              <small class="text-muted">Proses penginputan kegiatan mengajar dengan kalkulasi volume & kompresi foto otomatis</small>
+            </div>
+          </div>
+
+          <p>
+            Menu <strong>Input LHK Harian</strong> mengadopsi alur bertahap (4-Step Wizard) yang sangat teratur sehingga meminimalkan kesalahan pengisian data.
+          </p>
+
+          <!-- Tampilan PC Input LHK -->
+          <div class="browser-mockup">
+            <div class="browser-bar">
+              <div class="browser-dots">
+                <span class="browser-dot dot-red"></span>
+                <span class="browser-dot dot-yellow"></span>
+                <span class="browser-dot dot-green"></span>
+              </div>
+              <div class="browser-url">
+                <i class="bi bi-lock-fill text-success"></i> https://lhk-pak.cmsmanager.my.id/#input
+              </div>
+            </div>
+            <img src="panduan-assets/image3.png" alt="Formulir Input LHK Harian pada Layar PC" onclick="openLightbox(this.src, 'Formulir Input LHK Harian pada Layar PC')">
+            <div class="figure-caption-custom">
+              <span class="caption-text"><i class="bi bi-image me-1"></i> Gambar 4: Formulir Input LHK Harian Bertahap pada Layar Komputer / Laptop</span>
+              <span class="zoom-hint"><i class="bi bi-zoom-in"></i> Klik untuk memperbesar</span>
+            </div>
+          </div>
+
+          <!-- Tampilan Mobile Input LHK -->
+          <div class="row align-items-center mt-4">
+            <div class="col-md-5 col-12">
+              <div class="phone-mockup-wrapper">
+                <div class="phone-mockup">
+                  <div class="phone-notch"></div>
+                  <div class="phone-screen">
+                    <img src="panduan-assets/image10.png" alt="Formulir Input LHK Harian pada Layar Smartphone" onclick="openLightbox(this.src, 'Formulir Input LHK Harian pada Layar Smartphone')">
+                  </div>
+                </div>
+              </div>
+              <div class="text-center small text-muted mb-3">
+                <i class="bi bi-image me-1"></i> Gambar 5: Input LHK di Smartphone
+              </div>
+            </div>
+            <div class="col-md-7 col-12">
+              <div class="feature-step-box">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="step-badge">1</span>
+                  <h6 class="fw-bold mb-0">Langkah 1: Waktu & Kelas Pembelajaran</h6>
+                </div>
+                <p class="small text-muted mb-0">
+                  Pilih <strong>Tanggal Kegiatan</strong>, tentukan <strong>Waktu Mulai</strong> dan <strong>Waktu Selesai</strong>, serta pilih <strong>Kelas / Rombongan Belajar</strong> (misal: Kelas 1 s/d Kelas 6). Sistem secara otomatis menghitung selisih waktu menjadi durasi volume menit dan jam kerja aktual!
+                </p>
+              </div>
+
+              <div class="feature-step-box">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="step-badge">2</span>
+                  <h6 class="fw-bold mb-0">Langkah 2: Capaian & Tujuan Pembelajaran (CP/TP)</h6>
+                </div>
+                <p class="small text-muted mb-0">
+                  Pilih Capaian Pembelajaran (CP) dan Tujuan Pembelajaran (TP) dari menu tarik-turun (dropdown). Pilihan ini terhubung langsung ke Master CP/TP Anda sesuai kelas yang dipilih. Tersedia pula opsi input kustom untuk tugas dinas atau kegiatan di luar kelas.
+                </p>
+              </div>
+
+              <div class="feature-step-box">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="step-badge">3</span>
+                  <h6 class="fw-bold mb-0">Langkah 3: Uraian Kegiatan & Output Hasil</h6>
+                </div>
+                <p class="small text-muted mb-0">
+                  Tuliskan ringkasan aktivitas pembelajaran yang terlaksana (misal: "Menjelaskan materi penjumlahan pecahan dengan media konkret"), kemudian isi kolom output/hasil (misal: "Siswa mampu menyelesaikan 5 soal latihan secara mandiri").
+                </p>
+              </div>
+
+              <div class="feature-step-box mb-0">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="step-badge">4</span>
+                  <h6 class="fw-bold mb-0">Langkah 4: Bukti Dokumentasi Foto (Otomatis Kompres)</h6>
+                </div>
+                <p class="small text-muted mb-0">
+                  Ambil foto langsung melalui kamera HP atau pilih file foto dari galeri/komputer. Mendukung format JPG, PNG, WEBP, hingga HEIC (iPhone). Browser akan otomatis mengompresi foto menjadi ringan sebelum diunggah ke Google Drive!
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pro-tip-box mt-3 mb-0">
+            <i class="bi bi-magic me-2"></i><strong>Teknologi Kompresi Otomatis:</strong> Anda tidak perlu repot mengecilkan ukuran foto secara manual. Sistem pintar kami mengompresi gambar resolusi tinggi (bahkan file 10-15 MB dari kamera HP modern) menjadi ukuran ideal (~250 KB) tanpa mengurangi kejelasan visual. Sangat hemat kuota internet dan proses unggah selesai dalam 1-2 detik!
+          </div>
+        </section>
+
+        <!-- Bagian 6: Edit Data Agenda & Manajemen Foto Drive -->
+        <section id="edit-agenda" class="guide-card">
+          <div class="guide-section-header">
+            <div class="guide-section-badge">6</div>
+            <div>
+              <h2 class="h4 mb-0">Edit Data Agenda & Manajemen Foto Drive</h2>
+              <small class="text-muted">Prosedur perbaikan data agenda dan otomasi pembersihan penyimpanan cloud</small>
+            </div>
+          </div>
+
+          <p>
+            Apabila terjadi kesalahan ketik tanggal, jam mengajar, kelas, deskripsi, atau foto dokumentasi yang salah pilih, Anda dapat melakukan perbaikan kapan saja melalui tombol <strong>Edit</strong> di menu Riwayat Agenda.
+          </p>
+
+          <div class="row g-3">
+            <div class="col-md-6 col-12">
+              <div class="border rounded-3 p-3 bg-light h-100">
+                <h6 class="fw-bold text-dark"><i class="bi bi-layout-text-window-reverse text-primary me-2"></i>Tampilan Form Edit Serupa dengan Form Input</h6>
+                <p class="small text-muted mb-0">
+                  Formulir Edit Data Agenda dirancang persis dengan form input harian (menggunakan sistem tab/wizard yang sama). Seluruh data lama akan terisi otomatis, sehingga Anda hanya perlu mengubah bagian yang keliru tanpa perlu mengetik ulang dari awal.
+                </p>
+              </div>
+            </div>
+            <div class="col-md-6 col-12">
+              <div class="border rounded-3 p-3 bg-light h-100">
+                <h6 class="fw-bold text-dark"><i class="bi bi-trash3-fill text-danger me-2"></i>Pembersihan Otomatis Foto Lama di Google Drive</h6>
+                <p class="small text-muted mb-0">
+                  Ketika Anda mengunggah foto baru saat proses pengeditan, sistem kami secara cerdas akan langsung <strong>menghapus/membuang foto lama ke tempat sampah Google Drive (trashing)</strong>. Ini mencegah penumpukan file sampah dan menjaga kapasitas penyimpanan Google Drive guru tetap lega dan tertata rapi.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Bagian 7: Riwayat Agenda & Fitur Filter Kelas -->
+        <section id="riwayat-filter" class="guide-card">
+          <div class="guide-section-header">
+            <div class="guide-section-badge">7</div>
+            <div>
+              <h2 class="h4 mb-0">Riwayat Agenda & Fitur Filter Kelas</h2>
+              <small class="text-muted">Pencarian data cepat, pemilahan berdasarkan kelas/rombel, dan kartu agenda</small>
+            </div>
+          </div>
+
+          <p>
+            Menu <strong>Riwayat Agenda</strong> menyajikan seluruh rekaman kegiatan pembelajaran yang telah Anda simpan dalam bentuk kartu-kartu (agenda cards) yang informatif dan terstruktur.
+          </p>
+
+          <!-- Tampilan PC Riwayat Agenda -->
+          <div class="browser-mockup">
+            <div class="browser-bar">
+              <div class="browser-dots">
+                <span class="browser-dot dot-red"></span>
+                <span class="browser-dot dot-yellow"></span>
+                <span class="browser-dot dot-green"></span>
+              </div>
+              <div class="browser-url">
+                <i class="bi bi-lock-fill text-success"></i> https://lhk-pak.cmsmanager.my.id/#riwayat
+              </div>
+            </div>
+            <img src="panduan-assets/image4.png" alt="Tampilan Halaman Riwayat Agenda pada Layar PC" onclick="openLightbox(this.src, 'Tampilan Halaman Riwayat Agenda pada Layar PC')">
+            <div class="figure-caption-custom">
+              <span class="caption-text"><i class="bi bi-image me-1"></i> Gambar 6: Riwayat Agenda Guru Lengkap dengan Filter Pencarian (PC)</span>
+              <span class="zoom-hint"><i class="bi bi-zoom-in"></i> Klik untuk memperbesar</span>
+            </div>
+          </div>
+
+          <!-- Tampilan HP Riwayat Agenda -->
+          <div class="row align-items-center mt-4">
+            <div class="col-md-5 col-12">
+              <div class="phone-mockup-wrapper">
+                <div class="phone-mockup">
+                  <div class="phone-notch"></div>
+                  <div class="phone-screen">
+                    <img src="panduan-assets/image11.png" alt="Tampilan Riwayat Agenda pada Smartphone" onclick="openLightbox(this.src, 'Tampilan Riwayat Agenda pada Smartphone')">
+                  </div>
+                </div>
+              </div>
+              <div class="text-center small text-muted mb-3">
+                <i class="bi bi-image me-1"></i> Gambar 7: Riwayat di Smartphone
+              </div>
+            </div>
+            <div class="col-md-7 col-12">
+              <h6 class="fw-bold text-dark mb-2">Fitur-Fitur Unggulan Riwayat:</h6>
+              <ul class="list-unstyled ps-0">
+                <li class="mb-2 pb-2 border-bottom">
+                  <strong><i class="bi bi-funnel-fill text-primary me-2"></i>Filter Kelas / Rombel:</strong> Memungkinkan Anda menyaring riwayat berdasarkan kelas tertentu (misal: hanya melihat kegiatan di "Kelas 4" atau "Semua Kelas").
+                </li>
+                <li class="mb-2 pb-2 border-bottom">
+                  <strong><i class="bi bi-calendar3 text-success me-2"></i>Filter Periode Bulan & Tahun:</strong> Menampilkan arsip kegiatan bulan berjalan atau bulan-bulan sebelumnya dengan cepat.
+                </li>
+                <li class="mb-2 pb-2 border-bottom">
+                  <strong><i class="bi bi-tag-fill text-warning me-2"></i>Badge Informasi Lengkap:</strong> Setiap kartu agenda menampilkan tanggal, jam mulai-selesai, durasi jam & menit, badge kelas, CP, TP, rincian aktivitas, serta thumbnail foto.
+                </li>
+                <li class="mb-0">
+                  <strong><i class="bi bi-gear-fill text-secondary me-2"></i>Aksi Cepat:</strong> Tombol <strong>"Edit"</strong> untuk merevisi data dan tombol <strong>"Hapus"</strong> jika ada agenda ganda.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Bagian 8: Arsip Dokumen & Cetak Laporan Bulanan -->
+        <section id="arsip-cetak" class="guide-card">
+          <div class="guide-section-header">
+            <div class="guide-section-badge">8</div>
+            <div>
+              <h2 class="h4 mb-0">Arsip Dokumen & Cetak Laporan Bulanan</h2>
+              <small class="text-muted">Generate otomatis berkas LHK resmi ke format Google Docs, PDF, dan Word</small>
+            </div>
+          </div>
+
+          <p>
+            Menu <strong>Arsip Dokumen</strong> adalah pusat pembuatan dan pengunduhan Laporan Kinerja Bulanan resmi. Anda tidak perlu lagi menyusun tabel berlembar-lembar secara manual di komputer. Sistem kami menyusunnya secara otomatis lengkap dengan kop instansi, rekap kegiatan harian, foto dokumentasi, dan lembar pengesahan.
+          </p>
+
+          <!-- Tampilan PC Arsip Dokumen -->
+          <div class="browser-mockup">
+            <div class="browser-bar">
+              <div class="browser-dots">
+                <span class="browser-dot dot-red"></span>
+                <span class="browser-dot dot-yellow"></span>
+                <span class="browser-dot dot-green"></span>
+              </div>
+              <div class="browser-url">
+                <i class="bi bi-lock-fill text-success"></i> https://lhk-pak.cmsmanager.my.id/#arsip
+              </div>
+            </div>
+            <img src="panduan-assets/image5.png" alt="Tampilan Halaman Arsip Dokumen LHK pada Layar Komputer" onclick="openLightbox(this.src, 'Tampilan Halaman Arsip Dokumen LHK pada Layar Komputer')">
+            <div class="figure-caption-custom">
+              <span class="caption-text"><i class="bi bi-image me-1"></i> Gambar 8: Halaman Arsip Dokumen & Daftar Berkas LHK Siap Unduh (PC)</span>
+              <span class="zoom-hint"><i class="bi bi-zoom-in"></i> Klik untuk memperbesar</span>
+            </div>
+          </div>
+
+          <!-- Tampilan Mobile Arsip Dokumen (2 Phone Mockups) -->
+          <div class="row align-items-center mt-4">
+            <div class="col-md-6 col-12 text-center">
+              <div class="phone-mockup-wrapper">
+                <div class="phone-mockup">
+                  <div class="phone-notch"></div>
+                  <div class="phone-screen">
+                    <img src="panduan-assets/image12.png" alt="Daftar Berkas Arsip di Layar HP" onclick="openLightbox(this.src, 'Daftar Berkas Arsip di Layar HP')">
+                  </div>
+                </div>
+              </div>
+              <div class="small text-muted mb-3"><i class="bi bi-image me-1"></i> Gambar 9: Daftar Berkas Arsip di HP</div>
+            </div>
+            <div class="col-md-6 col-12 text-center">
+              <div class="phone-mockup-wrapper">
+                <div class="phone-mockup">
+                  <div class="phone-notch"></div>
+                  <div class="phone-screen">
+                    <img src="panduan-assets/image13.png" alt="Dialog Cetak / Generate Laporan di Layar HP" onclick="openLightbox(this.src, 'Dialog Cetak / Generate Laporan di Layar HP')">
+                  </div>
+                </div>
+              </div>
+              <div class="small text-muted mb-3"><i class="bi bi-image me-1"></i> Gambar 10: Dialog Form Cetak Laporan di HP</div>
+            </div>
+          </div>
+
+          <div class="feature-step-box mt-3">
+            <h6 class="fw-bold mb-2">Langkah Membuat & Mencetak Laporan Bulanan:</h6>
+            <ol class="mb-0 ps-3">
+              <li>Klik tombol <strong>"Cetak Laporan Bulanan"</strong> atau <strong>"Buat Laporan Baru"</strong>.</li>
+              <li>Pilih <strong>Bulan</strong> dan <strong>Tahun</strong> laporan kinerja yang hendak dicetak.</li>
+              <li>Periksa nama penilai / Kepala Sekolah serta tanggal penandatanganan dokumen.</li>
+              <li>Klik <strong>"Proses / Generate Laporan"</strong>. Tunggu beberapa detik saat server Google Apps Script menyusun dokumen Anda.</li>
+              <li>Setelah berhasil, berkas laporan siap diakses dalam 3 format:
+                <ul class="mt-2 mb-0">
+                  <li><strong><i class="bi bi-file-earmark-richtext text-primary me-1"></i>Buka di Google Docs:</strong> Tautan langsung untuk meninjau atau mengedit dokumen di Google Docs secara online.</li>
+                  <li><strong><i class="bi bi-file-earmark-pdf text-danger me-1"></i>Unduh PDF:</strong> Dokumen PDF berkualitas tinggi siap cetak atau dikirim via WhatsApp.</li>
+                  <li><strong><i class="bi bi-file-earmark-word text-info me-1"></i>Unduh Dokumen Word (.docx):</strong> File Microsoft Word untuk arsip offline di laptop Anda.</li>
+                </ul>
+              </li>
+            </ol>
+          </div>
+        </section>
+
+        <!-- Bagian 9: Master CP & TP Kelas -->
+        <section id="master-cptp" class="guide-card">
+          <div class="guide-section-header">
+            <div class="guide-section-badge">9</div>
+            <div>
+              <h2 class="h4 mb-0">Master Capaian Pembelajaran (CP) & Tujuan Pembelajaran (TP)</h2>
+              <small class="text-muted">Katalog kurikulum terpadu untuk efisiensi pengisian agenda</small>
+            </div>
+          </div>
+
+          <p>
+            Fitur <strong>Master CP & TP Kelas</strong> dibuat agar guru tidak perlu lagi mengetik Capaian dan Tujuan Pembelajaran yang panjang setiap kali mengisi laporan harian. Cukup daftarkan sekali di master, dan data akan selalu muncul di dropdown saat mengisi agenda.
+          </p>
+
+          <!-- Tampilan PC Master CP TP -->
+          <div class="browser-mockup">
+            <div class="browser-bar">
+              <div class="browser-dots">
+                <span class="browser-dot dot-red"></span>
+                <span class="browser-dot dot-yellow"></span>
+                <span class="browser-dot dot-green"></span>
+              </div>
+              <div class="browser-url">
+                <i class="bi bi-lock-fill text-success"></i> https://lhk-pak.cmsmanager.my.id/#cptp
+              </div>
+            </div>
+            <img src="panduan-assets/image6.png" alt="Daftar Master Capaian dan Tujuan Pembelajaran Kelas pada Layar Komputer" onclick="openLightbox(this.src, 'Daftar Master Capaian dan Tujuan Pembelajaran Kelas pada Layar Komputer')">
+            <div class="figure-caption-custom">
+              <span class="caption-text"><i class="bi bi-image me-1"></i> Gambar 11: Daftar Master CP & TP per Tingkat Kelas (PC)</span>
+              <span class="zoom-hint"><i class="bi bi-zoom-in"></i> Klik untuk memperbesar</span>
+            </div>
+          </div>
+
+          <!-- Tampilan Form Input Master CP TP -->
+          <div class="browser-mockup mt-4">
+            <div class="browser-bar">
+              <div class="browser-dots">
+                <span class="browser-dot dot-red"></span>
+                <span class="browser-dot dot-yellow"></span>
+                <span class="browser-dot dot-green"></span>
+              </div>
+              <div class="browser-url">
+                <i class="bi bi-lock-fill text-success"></i> https://lhk-pak.cmsmanager.my.id/#cptp-modal
+              </div>
+            </div>
+            <img src="panduan-assets/image7.png" alt="Modal Dialog Input Master Capaian dan Tujuan Pembelajaran Baru" onclick="openLightbox(this.src, 'Modal Dialog Input Master Capaian dan Tujuan Pembelajaran Baru')">
+            <div class="figure-caption-custom">
+              <span class="caption-text"><i class="bi bi-image me-1"></i> Gambar 12: Dialog Tambah & Edit Master CP & TP Baru</span>
+              <span class="zoom-hint"><i class="bi bi-zoom-in"></i> Klik untuk memperbesar</span>
+            </div>
+          </div>
+
+          <div class="feature-step-box mt-3 mb-0">
+            <h6 class="fw-bold mb-2">Cara Menambah CP & TP Baru:</h6>
+            <ol class="mb-0 ps-3">
+              <li>Buka menu <strong>"Master CP & TP Kelas"</strong> pada sidebar atau navigasi drawer.</li>
+              <li>Klik tombol hijau <strong>"+ Tambah Master CP/TP"</strong>.</li>
+              <li>Pilih <strong>Tingkat Kelas</strong> yang sesuai (misal: Kelas 1, 2, 3, 4, 5, atau 6).</li>
+              <li>Tuliskan <strong>Capaian Pembelajaran (CP)</strong> dan rincian <strong>Tujuan Pembelajaran (TP)</strong>.</li>
+              <li>Tekan tombol <strong>"Simpan Master"</strong>. Data langsung tersinkronisasi ke form input harian.</li>
+            </ol>
+          </div>
+        </section>
+
+        <!-- Bagian 10: Profil Guru & Kata Sandi -->
+        <section id="profil-guru" class="guide-card">
+          <div class="guide-section-header">
+            <div class="guide-section-badge">10</div>
+            <div>
+              <h2 class="h4 mb-0">Pengaturan Profil Guru & Ubah Kata Sandi</h2>
+              <small class="text-muted">Manajemen identitas pengajar dan keamanan akses akun</small>
+            </div>
+          </div>
+
+          <p>
+            Menu <strong>Profil Saya</strong> menampilkan rincian data kepegawaian Anda yang tercantum dalam laporan dinas, mencakup Nama Lengkap, Gelar, NIP/NUPTK, Asal Instansi/Sekolah, Mata Pelajaran atau Jabatan Guru Kelas, serta Foto Profil.
+          </p>
+
+          <!-- Tampilan PC Profil Guru -->
+          <div class="browser-mockup">
+            <div class="browser-bar">
+              <div class="browser-dots">
+                <span class="browser-dot dot-red"></span>
+                <span class="browser-dot dot-yellow"></span>
+                <span class="browser-dot dot-green"></span>
+              </div>
+              <div class="browser-url">
+                <i class="bi bi-lock-fill text-success"></i> https://lhk-pak.cmsmanager.my.id/#profil
+              </div>
+            </div>
+            <img src="panduan-assets/image8.png" alt="Tampilan Halaman Pengaturan Profil Guru pada Layar Komputer" onclick="openLightbox(this.src, 'Tampilan Halaman Pengaturan Profil Guru pada Layar Komputer')">
+            <div class="figure-caption-custom">
+              <span class="caption-text"><i class="bi bi-image me-1"></i> Gambar 13: Halaman Profil Guru & Form Ganti Kata Sandi (PC)</span>
+              <span class="zoom-hint"><i class="bi bi-zoom-in"></i> Klik untuk memperbesar</span>
+            </div>
+          </div>
+
+          <div class="feature-step-box mt-3 mb-0">
+            <h6 class="fw-bold mb-2">Panduan Mengganti Kata Sandi Pribadi:</h6>
+            <ol class="mb-0 ps-3">
+              <li>Masuk ke menu <strong>"Profil Saya"</strong>.</li>
+              <li>Pada bagian <strong>Keamanan & Kata Sandi</strong>, masukkan kata sandi Anda saat ini di kolom <em>Kata Sandi Lama</em>.</li>
+              <li>Ketikkan kata sandi baru yang Anda kehendaki minimal 6 karakter di kolom <em>Kata Sandi Baru</em>.</li>
+              <li>Ulangi ketikan pada kolom <em>Konfirmasi Kata Sandi Baru</em>.</li>
+              <li>Klik tombol <strong>"Perbarui Kata Sandi"</strong>. Sistem akan mengonfirmasi pembaruan seketika.</li>
+            </ol>
+          </div>
+        </section>
+
+        <!-- Bagian 11: Menu Navigasi Mobile / Drawer Menu -->
+        <section id="drawer-mobile" class="guide-card">
+          <div class="guide-section-header">
+            <div class="guide-section-badge">11</div>
+            <div>
+              <h2 class="h4 mb-0">Navigasi Ponsel (Drawer Menu Mobile)</h2>
+              <small class="text-muted">Akses cepat satu sentuhan ke seluruh modul di layar smartphone</small>
+            </div>
+          </div>
+
+          <p>
+            Saat Anda menggunakan smartphone, seluruh navigasi desktop dialihkan menjadi <strong>Menu Drawer Samping</strong> yang dapat dibuka kapan saja dengan menekan ikon hamburger (<i class="bi bi-list fs-5"></i>) di pojok kiri atas atau melalui tombol navigasi bawah (bottom navigation bar).
+          </p>
+
+          <div class="row align-items-center">
+            <div class="col-md-5 col-12">
+              <div class="phone-mockup-wrapper">
+                <div class="phone-mockup">
+                  <div class="phone-notch"></div>
+                  <div class="phone-screen">
+                    <img src="panduan-assets/image14.png" alt="Tampilan Menu Drawer Samping pada Layar Ponsel" onclick="openLightbox(this.src, 'Tampilan Menu Drawer Samping pada Layar Ponsel')">
+                  </div>
+                </div>
+              </div>
+              <div class="text-center small text-muted mb-3">
+                <i class="bi bi-image me-1"></i> Gambar 14: Menu Drawer Mobile
+              </div>
+            </div>
+            <div class="col-md-7 col-12">
+              <h6 class="fw-bold text-dark mb-2">Pintasan Navigasi di Ponsel:</h6>
+              <ul class="list-unstyled ps-0">
+                <li class="mb-2 pb-1 border-bottom">
+                  <strong><i class="bi bi-speedometer2 text-primary me-2"></i>Dashboard:</strong> Melihat performa statistik dan ringkasan kerja.
+                </li>
+                <li class="mb-2 pb-1 border-bottom">
+                  <strong><i class="bi bi-pencil-square text-success me-2"></i>Input LHK Harian:</strong> Membuka formulir input 4 langkah.
+                </li>
+                <li class="mb-2 pb-1 border-bottom">
+                  <strong><i class="bi bi-clock-history text-warning me-2"></i>Riwayat Agenda:</strong> Membuka arsip kartu agenda dengan filter kelas.
+                </li>
+                <li class="mb-2 pb-1 border-bottom">
+                  <strong><i class="bi bi-archive-fill text-info me-2"></i>Arsip Dokumen:</strong> Mencetak laporan bulanan ke Docs, PDF, & Word.
+                </li>
+                <li class="mb-2 pb-1 border-bottom">
+                  <strong><i class="bi bi-book-half text-secondary me-2"></i>Master CP & TP:</strong> Mengelola kurikulum capaian mengajar.
+                </li>
+                <li class="mb-2 pb-1 border-bottom">
+                  <strong><i class="bi bi-person-circle text-dark me-2"></i>Profil & Sandi:</strong> Memperbarui sandi dan identitas guru.
+                </li>
+                <li class="mb-2 pb-1 border-bottom">
+                  <strong><i class="bi bi-phone-fill text-success me-2"></i>Pasang Aplikasi:</strong> Pintasan instalasi PWA ke layar beranda HP.
+                </li>
+                <li class="mb-0">
+                  <strong><i class="bi bi-box-arrow-left text-danger me-2"></i>Keluar Akun:</strong> Mengakhiri sesi login secara aman.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Bagian 12: Tanya Jawab (FAQ) & Penyelesaian Masalah -->
+        <section id="faq" class="guide-card">
+          <div class="guide-section-header">
+            <div class="guide-section-badge">12</div>
+            <div>
+              <h2 class="h4 mb-0">Tanya Jawab (FAQ) & Penyelesaian Masalah</h2>
+              <small class="text-muted">Solusi praktis kendala operasional yang sering ditemui pengguna</small>
+            </div>
+          </div>
+
+          <div class="accordion" id="faqAccordion">
+            <!-- FAQ 1 -->
+            <div class="accordion-item mb-2 border rounded-3">
+              <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button collapsed fw-bold py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                  <i class="bi bi-question-circle text-primary me-2"></i> Mengapa foto kegiatan yang saya unggah terasa sangat cepat prosesnya?
+                </button>
+              </h2>
+              <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body small text-muted">
+                  Aplikasi dilengkapi algoritma kompresi gambar berbasis browser. Sebelum foto dikirim ke Google Drive, file otomatis dikompresi ke dimensi dan ukuran ideal (~250 KB) tanpa mengurangi keterbacaan foto oleh pengawas. Hal ini menghemat kuota internet guru hingga 80% dan mempercepat waktu upload.
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ 2 -->
+            <div class="accordion-item mb-2 border rounded-3">
+              <h2 class="accordion-header" id="headingTwo">
+                <button class="accordion-button collapsed fw-bold py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                  <i class="bi bi-question-circle text-primary me-2"></i> Apa yang harus saya lakukan jika lupa kata sandi akun?
+                </button>
+              </h2>
+              <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body small text-muted">
+                  Jangan panik. Segera hubungi <strong>Admin / Operator Sekolah</strong> Anda. Admin memiliki akses pada menu <em>Kelola Akun Guru</em> untuk melakukan reset kata sandi akun Anda kembali ke kata sandi standar dalam hitungan detik.
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ 3 -->
+            <div class="accordion-item mb-2 border rounded-3">
+              <h2 class="accordion-header" id="headingThree">
+                <button class="accordion-button collapsed fw-bold py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                  <i class="bi bi-question-circle text-primary me-2"></i> Apakah saya bisa mengisi agenda untuk hari-hari kemarin yang belum sempat terinput?
+                </button>
+              </h2>
+              <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body small text-muted">
+                  Bisa. Pada <strong>Langkah 1 (Waktu & Kelas)</strong> di formulir input, klik kolom <em>Tanggal Kegiatan</em> dan pilih tanggal mundur sesuai kegiatan riil yang Anda laksanakan.
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ 4 -->
+            <div class="accordion-item mb-2 border rounded-3">
+              <h2 class="accordion-header" id="headingFour">
+                <button class="accordion-button collapsed fw-bold py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour">
+                  <i class="bi bi-question-circle text-primary me-2"></i> Jika laporan bulanan sudah digenerate namun ada salah ketik, apakah bisa diperbaiki?
+                </button>
+              </h2>
+              <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body small text-muted">
+                  Sangat bisa. Anda memiliki 2 opsi:
+                  <ol class="ps-3 mt-1 mb-0">
+                    <li>Buka menu <strong>Arsip Dokumen</strong>, klik tombol <strong>"Buka Google Docs"</strong> pada laporan tersebut, dan Anda dapat langsung mengedit teksnya secara online di browser.</li>
+                    <li>Atau perbaiki data agendanya di menu <strong>Riwayat Agenda</strong>, lalu lakukan proses <strong>Generate Laporan Ulang</strong> di menu Arsip.</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ 5 -->
+            <div class="accordion-item mb-0 border rounded-3">
+              <h2 class="accordion-header" id="headingFive">
+                <button class="accordion-button collapsed fw-bold py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive">
+                  <i class="bi bi-question-circle text-primary me-2"></i> Bagaimana cara memperbarui aplikasi jika Admin merilis fitur baru?
+                </button>
+              </h2>
+              <div id="collapseFive" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body small text-muted">
+                  Teknologi PWA kami mengelola pembaruan secara otomatis melalui Service Worker. Cukup tutup aplikasi dan buka kembali saat terhubung internet, atau tekan tombol segarkan halaman (refresh / F5). Sistem akan otomatis memperbarui aset ke versi terbaru.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Footer Card -->
+        <footer class="text-center py-4 text-muted small border-top mt-4">
+          <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+            <img src="panduan-assets/image15.png" alt="Logo" width="24" height="24">
+            <span class="fw-bold text-dark">E-Agenda LHK CMS Guru</span>
+          </div>
+          <p class="mb-1">Hak Cipta &copy; 2026 SD Inpres Leling & Tim Pengembang Sistem Informasi Pendidikan.</p>
+          <p class="mb-0 text-muted" style="font-size: 0.78rem;">Dokumen Panduan Operasional Terpadu • Versi Dokumen: 2.5 • Terakhir Diperbarui: November 2026</p>
+        </footer>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Image Lightbox Modal -->
+  <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0 pb-0 justify-content-between">
+          <span class="text-white small" id="imageModalCaption">Pratinjau Tangkapan Layar</span>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center p-3">
+          <img id="imageModalImg" src="" alt="Pratinjau Screenshot" class="img-fluid shadow">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Interactive Lightbox & TOC Active Script -->
+  <script>
+    function openLightbox(src, caption) {
+      document.getElementById('imageModalImg').src = src;
+      document.getElementById('imageModalCaption').textContent = caption || 'Pratinjau Tangkapan Layar';
+      var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
+      myModal.show();
+    }
+
+    // Active TOC link on scroll
+    window.addEventListener('scroll', function() {
+      const sections = document.querySelectorAll('section[id]');
+      const scrollPos = window.scrollY + 120;
+      sections.forEach(function(section) {
+        const top = section.offsetTop;
+        const height = section.offsetHeight;
+        const id = section.getAttribute('id');
+        const link = document.querySelector('.toc-link[href="#' + id + '"]');
+        if (link) {
+          if (scrollPos >= top && scrollPos < top + height) {
+            document.querySelectorAll('.toc-link').forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+

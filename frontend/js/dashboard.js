@@ -33,7 +33,7 @@ const Dashboard = {
     const elPeriode = document.getElementById('dashPeriodeBulan');
 
     if (elHari) elHari.innerText = m.totalHariBulanIni || 0;
-    if (elVol) elVol.innerText = (m.totalVolumeBulanIni || 0) + ' Jam';
+    if (elVol) elVol.innerText = (m.totalVolumeBulanIni || 0) + ' Kegiatan';
     if (elDocs) elDocs.innerText = m.totalDokumen || 0;
     if (elKelas) elKelas.innerText = m.totalKelas || 0;
     if (elPeriode) elPeriode.innerText = `${data.bulanIni || ''} (${data.tahunAjaranAktif || ''})`;
@@ -67,7 +67,7 @@ const Dashboard = {
         <div class="d-flex align-items-center justify-content-between p-3 border-bottom">
           <div class="me-3">
             <span class="badge bg-light text-success fw-bold border mb-1">${r.tanggal_teks || r.tanggal}</span>
-            <div class="fw-semibold text-dark">${r.kelas ? '<span class="badge bg-secondary me-1">' + r.kelas + '</span> ' : ''}${r.cp || r.non_tatap_muka || 'Kegiatan LHK'}</div>
+            <div class="fw-semibold text-dark">${r.kelas ? '<span class="badge bg-success-subtle text-success border border-success me-1"><i class="bi bi-mortarboard-fill me-1"></i>' + r.kelas + '</span> ' : ''}${r.cp || r.non_tatap_muka || 'Kegiatan LHK'}</div>
             <small class="text-muted">${r.keterangan || 'Terlaksana'} • Volume: <strong>${r.volume || 0}</strong></small>
           </div>
           <button class="btn btn-outline-success btn-sm rounded-pill px-3" onclick="CmsRouter.navigate('riwayat')">

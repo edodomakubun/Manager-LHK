@@ -31,6 +31,7 @@ export interface UserRecord {
   folder_db_id?: string;
   spreadsheet_id?: string;
   template_doc_id?: string;
+  foto_profil?: string;
   is_active: number;
   created_at: string;
   updated_at: string;

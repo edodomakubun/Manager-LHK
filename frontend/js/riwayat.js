@@ -5,10 +5,55 @@
  */
 
 const Riwayat = {
+  rawRecords: [],
   activeRecords: [],
   selectedDeleteId: null,
+  classesLoaded: false,
+
+  initClasses: async function () {
+    if (Riwayat.classesLoaded) return;
+    const select = document.getElementById('filterKelas');
+    if (!select) return;
+
+    try {
+      const res = await Api.getClasses();
+      const currentVal = select.value;
+      if (res && res.sukses && Array.isArray(res.classes) && res.classes.length > 0) {
+        select.innerHTML = '<option value="" selected>-- Semua Kelas --</option>';
+        res.classes.forEach(k => {
+          select.innerHTML += `<option value="${k}">${k}</option>`;
+        });
+        if (currentVal) select.value = currentVal;
+        Riwayat.classesLoaded = true;
+      }
+    } catch (e) {
+      console.warn('Gagal memuat daftar kelas filter:', e);
+    }
+  },
+
+  populateClassOptions: function (records) {
+    const select = document.getElementById('filterKelas');
+    if (!select || !Array.isArray(records)) return;
+
+    const currentVal = select.value;
+    const existingOptions = new Set(Array.from(select.options).map(o => o.value).filter(Boolean));
+
+    records.forEach(r => {
+      if (r.kelas && r.kelas.trim() && !existingOptions.has(r.kelas.trim())) {
+        existingOptions.add(r.kelas.trim());
+        const opt = document.createElement('option');
+        opt.value = r.kelas.trim();
+        opt.textContent = r.kelas.trim();
+        select.appendChild(opt);
+      }
+    });
+
+    if (currentVal) select.value = currentVal;
+  },
 
   load: async function () {
+    await Riwayat.initClasses();
+
     const filterBulan = document.getElementById('filterBulan')?.value || '';
     const filterTahun = document.getElementById('filterTahun')?.value || '2026/2027';
 
@@ -21,8 +66,9 @@ const Riwayat = {
       });
 
       if (res && res.sukses) {
-        Riwayat.activeRecords = res.records || [];
-        Riwayat.render(Riwayat.activeRecords);
+        Riwayat.rawRecords = res.records || [];
+        Riwayat.populateClassOptions(Riwayat.rawRecords);
+        Riwayat.applyFilter();
       } else {
         throw new Error(res.pesan || 'Gagal memuat riwayat.');
       }
@@ -36,6 +82,18 @@ const Riwayat = {
         `;
       }
     }
+  },
+
+  applyFilter: function () {
+    const filterKelas = document.getElementById('filterKelas')?.value || '';
+    let filtered = Riwayat.rawRecords || [];
+
+    if (filterKelas && filterKelas.trim() !== '') {
+      filtered = filtered.filter(r => r.kelas && r.kelas.trim().toLowerCase() === filterKelas.trim().toLowerCase());
+    }
+
+    Riwayat.activeRecords = filtered;
+    Riwayat.render(filtered);
   },
 
   renderSkeleton: function () {
@@ -58,7 +116,7 @@ const Riwayat = {
 
     if (dskContainer) {
       dskContainer.innerHTML = `
-        <tr><td colspan="7" class="text-center py-4"><span class="spinner-border spinner-border-sm text-success me-2"></span>Memuat data agenda...</td></tr>
+        <tr><td colspan="8" class="text-center py-4"><span class="spinner-border spinner-border-sm text-success me-2"></span>Memuat data agenda...</td></tr>
       `;
     }
   },
@@ -67,13 +125,14 @@ const Riwayat = {
     const mobContainer = document.getElementById('riwayatMobileContainer');
     const dskContainer = document.getElementById('riwayatDesktopBody');
     const statSection = document.getElementById('riwayatStatSection');
+    const filterKelas = document.getElementById('filterKelas')?.value || '';
 
     // Update Ringkasan Statistik
     if (statSection) {
       let totalVol = 0;
       records.forEach(r => totalVol += (r.volume || 0));
       document.getElementById('riwayatStatHari').innerText = records.length;
-      document.getElementById('riwayatStatVolume').innerText = totalVol + ' Jam';
+      document.getElementById('riwayatStatVolume').innerText = totalVol + ' Kegiatan';
       statSection.style.display = records.length > 0 ? 'flex' : 'none';
     }
 
@@ -81,11 +140,11 @@ const Riwayat = {
       const emptyHtml = `
         <div class="text-center py-5 text-muted">
           <i class="bi bi-folder-x fs-1 text-secondary opacity-50 d-block mb-3"></i>
-          <p class="mb-0">Tidak ada agenda pada periode bulan yang dipilih.</p>
+          <p class="mb-0">Tidak ada agenda ${filterKelas ? 'untuk <strong>' + filterKelas + '</strong>' : 'pada periode yang dipilih'}.</p>
         </div>
       `;
       if (mobContainer) mobContainer.innerHTML = emptyHtml;
-      if (dskContainer) dskContainer.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">Tidak ada data ditemukan.</td></tr>`;
+      if (dskContainer) dskContainer.innerHTML = `<tr><td colspan="8" class="text-center py-5 text-muted">Tidak ada data ditemukan.</td></tr>`;
       return;
     }
 
@@ -98,14 +157,23 @@ const Riwayat = {
 
         mobHtml += `
           <div class="timeline-card-mobile">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="timeline-date-badge"><i class="bi bi-calendar3 me-1"></i>${r.tanggal_teks || r.tanggal}</span>
-              <span class="badge bg-light text-dark border">Vol: <strong>${r.volume || 0} Jam</strong></span>
+            <!-- Header Kartu: Tanggal, Badge Kelas & Volume -->
+            <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
+              <div class="d-flex align-items-center gap-1 flex-wrap">
+                <span class="timeline-date-badge"><i class="bi bi-calendar3 me-1"></i>${r.tanggal_teks || r.tanggal}</span>
+                ${r.kelas 
+                  ? `<span class="badge bg-success text-white px-2 py-1 shadow-sm"><i class="bi bi-mortarboard-fill me-1"></i>${r.kelas}</span>` 
+                  : '<span class="badge bg-secondary-subtle text-secondary border px-2 py-1"><i class="bi bi-briefcase me-1"></i>Non Tatap Muka</span>'}
+              </div>
+              <span class="badge bg-light text-dark border">Vol: <strong>${r.volume || 0} Kegiatan</strong></span>
             </div>
 
             ${r.cp || r.tp || r.kelas ? `
             <div class="mb-2 p-2 rounded bg-light border-start border-3 border-success">
-              <div class="fw-bold text-success small"><i class="bi bi-person-video3 me-1"></i>Tatap Muka ${r.kelas ? `(${r.kelas})` : ''}</div>
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="fw-bold text-success small"><i class="bi bi-person-video3 me-1"></i>Pembelajaran Tatap Muka</div>
+                ${r.kelas ? `<span class="badge bg-success-subtle text-success border border-success fw-bold">${r.kelas}</span>` : ''}
+              </div>
               ${r.cp ? `<div class="small text-dark"><strong>CP:</strong> ${r.cp}</div>` : ''}
               ${r.tp ? `<div class="small text-muted"><strong>TP:</strong> ${r.tp}</div>` : ''}
             </div>` : ''}
@@ -151,8 +219,10 @@ const Riwayat = {
           <tr>
             <td class="text-center">${idx + 1}</td>
             <td class="fw-semibold text-nowrap">${r.tanggal_teks || r.tanggal}</td>
+            <td class="text-center">
+              ${r.kelas ? `<span class="badge bg-success-subtle text-success border border-success px-2 py-1 fw-bold"><i class="bi bi-mortarboard-fill me-1"></i>${r.kelas}</span>` : '<span class="badge bg-light text-muted border">-</span>'}
+            </td>
             <td>
-              ${r.kelas ? `<span class="badge bg-secondary me-1">${r.kelas}</span>` : ''}
               <strong>${r.cp || '-'}</strong>
               ${r.tp ? `<div class="small text-muted">${r.tp}</div>` : ''}
             </td>
@@ -201,26 +271,10 @@ const Riwayat = {
     }
   },
 
-  // --- EDIT AGENDA ---
+  // --- EDIT AGENDA (MEMBUKA FORM WIZARD INPUT DALAM MODE EDIT) ---
   openEditModal: async function (id) {
-    const record = Riwayat.activeRecords.find(r => r.id === id);
-    if (!record) return;
-
-    document.getElementById('editAgendaId').value = record.id;
-    document.getElementById('editTanggal').value = record.tanggal;
-    document.getElementById('editBulan').value = record.bulan;
-    document.getElementById('editTahun').value = record.tahun_ajaran;
-    document.getElementById('editKelas').value = record.kelas || '';
-    document.getElementById('editCP').value = record.cp || '';
-    document.getElementById('editTP').value = record.tp || '';
-    document.getElementById('editNTM').value = record.non_tatap_muka || '';
-    document.getElementById('editVolume').value = record.volume || 0;
-    document.getElementById('editKeterangan').value = record.keterangan || 'Terlaksana';
-
-    const modalEl = document.getElementById('modalEditData');
-    if (modalEl) {
-      const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
-      bsModal.show();
+    if (window.Wizard && typeof window.Wizard.loadForEdit === 'function') {
+      await window.Wizard.loadForEdit(id);
     }
   },
 

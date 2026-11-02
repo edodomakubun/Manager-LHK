@@ -2965,8 +2965,8 @@ var DatabaseQueries = class {
       INSERT INTO users (
         id, username, password_hash, role, nama_lengkap, nip, pangkat_golongan, jabatan, mapel, nama_sekolah,
         folder_guru_id, folder_dokumentasi_id, folder_dok_laporan_id, folder_template_id, folder_db_id,
-        spreadsheet_id, template_doc_id, is_active
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        spreadsheet_id, template_doc_id, foto_profil, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       user.id,
       user.username,
@@ -2985,6 +2985,7 @@ var DatabaseQueries = class {
       user.folder_db_id || "",
       user.spreadsheet_id || "",
       user.template_doc_id || "",
+      user.foto_profil || "",
       user.is_active !== void 0 ? user.is_active : 1
     ).run();
   }
@@ -3005,6 +3006,7 @@ var DatabaseQueries = class {
       "folder_db_id",
       "spreadsheet_id",
       "template_doc_id",
+      "foto_profil",
       "is_active",
       "password_hash"
     ];
@@ -3076,6 +3078,10 @@ var DatabaseQueries = class {
     if (params.tahunAjaran && params.tahunAjaran !== "semua") {
       query += " AND tahun_ajaran = ?";
       bindings.push(params.tahunAjaran);
+    }
+    if (params.kelas && params.kelas !== "semua") {
+      query += " AND kelas = ?";
+      bindings.push(params.kelas);
     }
     query += " ORDER BY tanggal DESC, id DESC";
     if (params.limit) {
@@ -3198,21 +3204,34 @@ var DatabaseQueries = class {
     await this.db.prepare("INSERT INTO system_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(key, value).run();
   }
   async getAdminRekap(bulan, tahunAjaran) {
-    const query = `
+    let query = `
       SELECT 
         u.id, u.nama_lengkap, u.nip, u.mapel, u.spreadsheet_id, u.folder_guru_id,
         COUNT(l.id) as total_hari,
         COALESCE(SUM(l.volume), 0) as total_volume,
         MAX(l.tanggal) as tanggal_terakhir
       FROM users u
-      LEFT JOIN lhk_records l ON u.id = l.user_id 
-        AND LOWER(l.bulan) = LOWER(?) 
-        AND l.tahun_ajaran = ?
+      LEFT JOIN lhk_records l ON u.id = l.user_id
+    `;
+    const bindings = [];
+    const conditions = [];
+    if (bulan && bulan.trim() !== "" && bulan.toLowerCase() !== "semua") {
+      conditions.push("LOWER(l.bulan) = LOWER(?)");
+      bindings.push(bulan.trim());
+    }
+    if (tahunAjaran && tahunAjaran.trim() !== "" && tahunAjaran.toLowerCase() !== "semua") {
+      conditions.push("l.tahun_ajaran = ?");
+      bindings.push(tahunAjaran.trim());
+    }
+    if (conditions.length > 0) {
+      query += ` AND ${conditions.join(" AND ")}`;
+    }
+    query += `
       WHERE u.role = 'guru' AND u.is_active = 1
       GROUP BY u.id
       ORDER BY u.nama_lengkap ASC
     `;
-    const res = await this.db.prepare(query).bind(bulan, tahunAjaran).all();
+    const res = await this.db.prepare(query).bind(...bindings).all();
     return res.results;
   }
   async getTeacherDashboardMetrics(userId, bulan, tahunAjaran) {
@@ -4676,6 +4695,7 @@ authRoutes.post("/login", async (c) => {
       jabatan: user.jabatan,
       mapel: user.mapel,
       nama_sekolah: user.nama_sekolah,
+      foto_profil: user.foto_profil,
       classes,
       folder_guru_id: user.folder_guru_id,
       spreadsheet_id: user.spreadsheet_id,
@@ -4703,6 +4723,7 @@ authRoutes.get("/me", authMiddleware, async (c) => {
       jabatan: user.jabatan,
       mapel: user.mapel,
       nama_sekolah: user.nama_sekolah,
+      foto_profil: user.foto_profil,
       classes,
       folder_guru_id: user.folder_guru_id,
       folder_dokumentasi_id: user.folder_dokumentasi_id,
@@ -4811,6 +4832,31 @@ var GasBridgeService = class {
     return await this.callGas("buat_laporan_bulanan", params);
   }
   /**
+   * 4. Hapus Baris di SpreadsheetDB & Hapus File Foto di Google Drive
+   */
+  async hapusLhk(params) {
+    if (!this.isConfigured()) {
+      return {
+        sukses: true,
+        pesan: "Mode Simulasi: Data agenda simulasi dihapus."
+      };
+    }
+    return await this.callGas("hapus_lhk", params);
+  }
+  /**
+   * 5. Update Baris di SpreadsheetDB & Ganti Foto di Google Drive (Hapus Foto Lama)
+   */
+  async updateLhk(params) {
+    if (!this.isConfigured()) {
+      return {
+        sukses: true,
+        pesan: "Mode Simulasi: Data agenda dan foto diperbarui.",
+        fotoIds: params.fotoArr.map((f, i) => f?.existingId || `SIMULASI_UPDATED_IMG_${Date.now()}_${i}`)
+      };
+    }
+    return await this.callGas("update_lhk", params);
+  }
+  /**
    * Helper internal untuk memanggil Apps Script doPost
    */
   async callGas(action, data) {
@@ -4858,6 +4904,7 @@ adminRoutes.get("/users", async (c) => {
         jabatan: u.jabatan,
         mapel: u.mapel,
         nama_sekolah: u.nama_sekolah,
+        foto_profil: u.foto_profil,
         folder_guru_id: u.folder_guru_id,
         folder_dokumentasi_id: u.folder_dokumentasi_id,
         folder_dok_laporan_id: u.folder_dok_laporan_id,
@@ -4977,6 +5024,7 @@ adminRoutes.put("/users/:id", async (c) => {
     jabatan: body.jabatan,
     mapel: body.mapel,
     nama_sekolah: body.nama_sekolah,
+    foto_profil: body.foto_profil !== void 0 ? body.foto_profil : existing.foto_profil,
     folder_guru_id: body.folder_guru_id,
     folder_dokumentasi_id: body.folder_dokumentasi_id,
     folder_dok_laporan_id: body.folder_dok_laporan_id,
@@ -5054,11 +5102,11 @@ adminRoutes.post("/users/:id/provision-drive", async (c) => {
   return c.json({ sukses: false, pesan: res.pesan || "Gagal membuat ruang Drive." }, 400);
 });
 adminRoutes.get("/rekap", async (c) => {
-  const bulan = c.req.query("bulan") || "Juni";
+  const bulan = c.req.query("bulan");
   const tahunAjaran = c.req.query("tahunAjaran") || "2026/2027";
   const db = new DatabaseQueries(c.env.DB);
   const rekap = await db.getAdminRekap(bulan, tahunAjaran);
-  return c.json({ sukses: true, bulan, tahunAjaran, rekap });
+  return c.json({ sukses: true, bulan: bulan || "semua", tahunAjaran, rekap });
 });
 adminRoutes.get("/settings", async (c) => {
   const db = new DatabaseQueries(c.env.DB);
@@ -5151,6 +5199,7 @@ lhkRoutes.get("/", async (c) => {
   const targetUserId = session.role === "admin" && c.req.query("userId") ? c.req.query("userId") : session.id;
   const bulan = c.req.query("bulan");
   const tahunAjaran = c.req.query("tahunAjaran");
+  const kelas = c.req.query("kelas");
   const limit = c.req.query("limit") ? parseInt(c.req.query("limit"), 10) : void 0;
   const offset = c.req.query("offset") ? parseInt(c.req.query("offset"), 10) : void 0;
   const db = new DatabaseQueries(c.env.DB);
@@ -5158,6 +5207,7 @@ lhkRoutes.get("/", async (c) => {
     userId: targetUserId,
     bulan: bulan || void 0,
     tahunAjaran: tahunAjaran || void 0,
+    kelas: kelas || void 0,
     limit,
     offset
   });
@@ -5287,6 +5337,41 @@ lhkRoutes.put("/:id", async (c) => {
     const mArr = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     tglFormat = `${hArr[tglObj.getDay()]}, ${bagianTgl[2]} ${mArr[tglObj.getMonth()]} ${bagianTgl[0]}`;
   }
+  const user = await db.getUserById(existing.user_id);
+  let updatedFotoIds = [
+    existing.foto_tm_id,
+    existing.foto_ntm1_id,
+    existing.foto_ntm2_id,
+    existing.foto_ntm3_id,
+    existing.foto_ntm4_id,
+    existing.foto_ntm5_id
+  ];
+  if (user && user.spreadsheet_id && Array.isArray(body.fotoArr)) {
+    try {
+      const gas = await GasBridgeService.create(c.env);
+      const gasRes = await gas.updateLhk({
+        id,
+        spreadsheetId: user.spreadsheet_id,
+        folderDokumentasiId: user.folder_dokumentasi_id || "",
+        tanggal: body.tanggal || existing.tanggal,
+        tanggalTeks: tglFormat || existing.tanggal_teks,
+        bulan: body.bulan || existing.bulan,
+        tahunAjaran: body.tahunAjaran || existing.tahun_ajaran,
+        cp: body.cp !== void 0 ? body.cp : existing.cp,
+        tp: body.tp !== void 0 ? body.tp : existing.tp,
+        kelas: body.kelas !== void 0 ? body.kelas : existing.kelas,
+        nonTatapMuka: body.nonTatapMuka !== void 0 ? body.nonTatapMuka : existing.non_tatap_muka,
+        volume: body.volume !== void 0 ? parseInt(body.volume, 10) : existing.volume,
+        keterangan: body.keterangan !== void 0 ? body.keterangan : existing.keterangan,
+        fotoArr: body.fotoArr
+      });
+      if (gasRes && gasRes.sukses && Array.isArray(gasRes.fotoIds)) {
+        updatedFotoIds = gasRes.fotoIds;
+      }
+    } catch (gasErr) {
+      console.warn("Gagal sinkronisasi update Drive/Sheet:", gasErr);
+    }
+  }
   await db.updateLhkRecord(id, {
     tanggal: body.tanggal || existing.tanggal,
     tanggal_teks: tglFormat || existing.tanggal_teks,
@@ -5297,9 +5382,18 @@ lhkRoutes.put("/:id", async (c) => {
     kelas: body.kelas !== void 0 ? body.kelas : existing.kelas,
     non_tatap_muka: body.nonTatapMuka !== void 0 ? body.nonTatapMuka : existing.non_tatap_muka,
     volume: body.volume !== void 0 ? parseInt(body.volume, 10) : existing.volume,
-    keterangan: body.keterangan !== void 0 ? body.keterangan : existing.keterangan
+    keterangan: body.keterangan !== void 0 ? body.keterangan : existing.keterangan,
+    foto_tm_id: updatedFotoIds[0] || "",
+    foto_ntm1_id: updatedFotoIds[1] || "",
+    foto_ntm2_id: updatedFotoIds[2] || "",
+    foto_ntm3_id: updatedFotoIds[3] || "",
+    foto_ntm4_id: updatedFotoIds[4] || "",
+    foto_ntm5_id: updatedFotoIds[5] || ""
   });
-  return c.json({ sukses: true, pesan: "Data agenda berhasil diperbarui!" });
+  return c.json({
+    sukses: true,
+    pesan: "Data agenda dan foto berhasil diperbarui di Web, Database, dan Google Drive!"
+  });
 });
 lhkRoutes.delete("/:id", async (c) => {
   const id = c.req.param("id");
@@ -5312,8 +5406,29 @@ lhkRoutes.delete("/:id", async (c) => {
   if (session.role !== "admin" && existing.user_id !== session.id) {
     return c.json({ sukses: false, pesan: "Akses ditolak." }, 403);
   }
+  const user = await db.getUserById(existing.user_id);
+  const fotoIds = [
+    existing.foto_tm_id,
+    existing.foto_ntm1_id,
+    existing.foto_ntm2_id,
+    existing.foto_ntm3_id,
+    existing.foto_ntm4_id,
+    existing.foto_ntm5_id
+  ].filter(Boolean);
+  if (user && user.spreadsheet_id) {
+    try {
+      const gas = await GasBridgeService.create(c.env);
+      await gas.hapusLhk({
+        spreadsheetId: user.spreadsheet_id,
+        lhkId: id,
+        fotoIds
+      });
+    } catch (gasErr) {
+      console.warn("Gagal sinkronisasi hapus Drive/Sheet:", gasErr);
+    }
+  }
   await db.deleteLhkRecord(id);
-  return c.json({ sukses: true, pesan: "Data agenda berhasil dihapus!" });
+  return c.json({ sukses: true, pesan: "Data agenda berhasil dihapus dari sistem dan Google Drive!" });
 });
 
 // src/routes/documents.ts

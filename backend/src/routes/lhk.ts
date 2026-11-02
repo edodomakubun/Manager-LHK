@@ -19,6 +19,7 @@ lhkRoutes.get('/', async (c) => {
   const targetUserId = (session.role === 'admin' && c.req.query('userId')) ? c.req.query('userId')! : session.id;
   const bulan = c.req.query('bulan');
   const tahunAjaran = c.req.query('tahunAjaran');
+  const kelas = c.req.query('kelas');
   const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!, 10) : undefined;
   const offset = c.req.query('offset') ? parseInt(c.req.query('offset')!, 10) : undefined;
 
@@ -27,6 +28,7 @@ lhkRoutes.get('/', async (c) => {
     userId: targetUserId,
     bulan: bulan || undefined,
     tahunAjaran: tahunAjaran || undefined,
+    kelas: kelas || undefined,
     limit,
     offset
   });
@@ -191,6 +193,45 @@ lhkRoutes.put('/:id', async (c) => {
     tglFormat = `${hArr[tglObj.getDay()]}, ${bagianTgl[2]} ${mArr[tglObj.getMonth()]} ${bagianTgl[0]}`;
   }
 
+  const user = await db.getUserById(existing.user_id);
+  let updatedFotoIds = [
+    existing.foto_tm_id,
+    existing.foto_ntm1_id,
+    existing.foto_ntm2_id,
+    existing.foto_ntm3_id,
+    existing.foto_ntm4_id,
+    existing.foto_ntm5_id
+  ];
+
+  // Sinkronisasi ke Google Apps Script (Update SpreadsheetDB & ganti foto di Google Drive)
+  if (user && user.spreadsheet_id && Array.isArray(body.fotoArr)) {
+    try {
+      const gas = await GasBridgeService.create(c.env);
+      const gasRes = await gas.updateLhk({
+        id,
+        spreadsheetId: user.spreadsheet_id,
+        folderDokumentasiId: user.folder_dokumentasi_id || '',
+        tanggal: body.tanggal || existing.tanggal,
+        tanggalTeks: tglFormat || existing.tanggal_teks,
+        bulan: body.bulan || existing.bulan,
+        tahunAjaran: body.tahunAjaran || existing.tahun_ajaran,
+        cp: body.cp !== undefined ? body.cp : existing.cp,
+        tp: body.tp !== undefined ? body.tp : existing.tp,
+        kelas: body.kelas !== undefined ? body.kelas : existing.kelas,
+        nonTatapMuka: body.nonTatapMuka !== undefined ? body.nonTatapMuka : existing.non_tatap_muka,
+        volume: body.volume !== undefined ? parseInt(body.volume, 10) : existing.volume,
+        keterangan: body.keterangan !== undefined ? body.keterangan : existing.keterangan,
+        fotoArr: body.fotoArr
+      });
+
+      if (gasRes && gasRes.sukses && Array.isArray(gasRes.fotoIds)) {
+        updatedFotoIds = gasRes.fotoIds;
+      }
+    } catch (gasErr) {
+      console.warn('Gagal sinkronisasi update Drive/Sheet:', gasErr);
+    }
+  }
+
   await db.updateLhkRecord(id, {
     tanggal: body.tanggal || existing.tanggal,
     tanggal_teks: tglFormat || existing.tanggal_teks,
@@ -201,10 +242,19 @@ lhkRoutes.put('/:id', async (c) => {
     kelas: body.kelas !== undefined ? body.kelas : existing.kelas,
     non_tatap_muka: body.nonTatapMuka !== undefined ? body.nonTatapMuka : existing.non_tatap_muka,
     volume: body.volume !== undefined ? parseInt(body.volume, 10) : existing.volume,
-    keterangan: body.keterangan !== undefined ? body.keterangan : existing.keterangan
+    keterangan: body.keterangan !== undefined ? body.keterangan : existing.keterangan,
+    foto_tm_id: updatedFotoIds[0] || '',
+    foto_ntm1_id: updatedFotoIds[1] || '',
+    foto_ntm2_id: updatedFotoIds[2] || '',
+    foto_ntm3_id: updatedFotoIds[3] || '',
+    foto_ntm4_id: updatedFotoIds[4] || '',
+    foto_ntm5_id: updatedFotoIds[5] || ''
   });
 
-  return c.json({ sukses: true, pesan: 'Data agenda berhasil diperbarui!' });
+  return c.json({
+    sukses: true,
+    pesan: 'Data agenda dan foto berhasil diperbarui di Web, Database, dan Google Drive!'
+  });
 });
 
 /**
@@ -224,6 +274,31 @@ lhkRoutes.delete('/:id', async (c) => {
     return c.json({ sukses: false, pesan: 'Akses ditolak.' }, 403);
   }
 
+  // Ambil data user pemilik LHK untuk mendapatkan spreadsheet_id
+  const user = await db.getUserById(existing.user_id);
+  const fotoIds = [
+    existing.foto_tm_id,
+    existing.foto_ntm1_id,
+    existing.foto_ntm2_id,
+    existing.foto_ntm3_id,
+    existing.foto_ntm4_id,
+    existing.foto_ntm5_id
+  ].filter(Boolean) as string[];
+
+  // Hubungi Google Apps Script Bridge untuk menghapus baris di Google Spreadsheet & hapus foto di Drive
+  if (user && user.spreadsheet_id) {
+    try {
+      const gas = await GasBridgeService.create(c.env);
+      await gas.hapusLhk({
+        spreadsheetId: user.spreadsheet_id,
+        lhkId: id,
+        fotoIds: fotoIds
+      });
+    } catch (gasErr) {
+      console.warn('Gagal sinkronisasi hapus Drive/Sheet:', gasErr);
+    }
+  }
+
   await db.deleteLhkRecord(id);
-  return c.json({ sukses: true, pesan: 'Data agenda berhasil dihapus!' });
+  return c.json({ sukses: true, pesan: 'Data agenda berhasil dihapus dari sistem dan Google Drive!' });
 });
