@@ -4,13 +4,17 @@
  * ==============================================================================
  * Script ini berjalan di akun Google (Email) Admin sebagai Microservice Webhook.
  * Menangani:
- * 1. Otomasi pembuatan Folder Guru beserta 4 Sub-Folder:
- *    [Dokumentasi], [Dok_Laporan], [Template], [SpreadsheetDB]
- * 2. Kloning Master Spreadsheet DB & Master Google Docs Template per guru.
+ * 1. Otomasi pembuatan Folder Guru beserta 3 Sub-Folder:
+ *    [Dokumentasi], [Dok_Laporan], [SpreadsheetDB]
+ * 2. Pembuatan/Kloning Spreadsheet DB per guru (16 Kolom Standar LHK).
  * 3. Penyimpanan foto dokumentasi harian ke folder [Dokumentasi].
  * 4. Sinkronisasi data agenda LHK harian ke Spreadsheet di [SpreadsheetDB].
- * 5. Pengisian template Google Docs dan pembuatan berkas laporan (PDF/Word)
- *    ke folder [Dok_Laporan].
+ * 5. Penyimpanan langsung dokumen laporan Word (.docx) yang dikompilasi
+ *    oleh Cloudflare Worker ke dalam folder [Dok_Laporan].
+ * 
+ * Catatan:
+ * Master Template LHK Word (.docx) dikelola terpusat di Cloudflare R2,
+ * sehingga folder khusus Template Google Docs di Drive tidak lagi digunakan.
  * ==============================================================================
  */
 
@@ -112,8 +116,8 @@ function doPost(e) {
       case 'update_lhk':
         return responseJson(handleUpdateLhk(payload.data));
 
-      case 'convert_docx_to_pdf':
-        return responseJson(handleConvertDocxToPdf(payload.data));
+      case 'simpan_docx_ke_drive':
+        return responseJson(handleSimpanDocxKeDrive(payload.data));
 
       default:
         return responseJson({ sukses: false, pesan: "Aksi tidak dikenali: " + action });
@@ -133,13 +137,12 @@ function responseJson(obj) {
 }
 
 // ==============================================================================
-// 1. OTOMASI PEMBUATAN FOLDER GURU & 4 SUB-FOLDER (ONE-CLICK PROVISIONING)
+// 1. OTOMASI PEMBUATAN FOLDER GURU & 3 SUB-FOLDER (ONE-CLICK PROVISIONING)
 // ==============================================================================
 function handleInitGuruDrive(data) {
   try {
     const masterParentFolderId = data.masterParentFolderId;
     const masterTemplateSheetId = data.masterTemplateSheetId;
-    const masterTemplateDocId = data.masterTemplateDocId;
     const namaGuru = data.namaGuru || "Guru";
     const nip = data.nip || "";
 
@@ -149,10 +152,9 @@ function handleInitGuruDrive(data) {
     const namaFolderGuru = "LHK - " + namaGuru + (nip ? " (" + nip + ")" : "");
     const folderGuru = parentFolder.createFolder(namaFolderGuru);
 
-    // 2. Buat 4 Sub-Folder Berstandar
+    // 2. Buat 3 Sub-Folder Berstandar (Dokumentasi, Dok_Laporan, SpreadsheetDB)
     const folderDokumentasi = folderGuru.createFolder("Dokumentasi");
     const folderDokLaporan = folderGuru.createFolder("Dok_Laporan");
-    const folderTemplate = folderGuru.createFolder("Template");
     const folderSpreadsheetDB = folderGuru.createFolder("SpreadsheetDB");
 
     // Atur izin baca publik untuk tautan berkas (graceful jika dibatasi kebijakan organisasi)
@@ -224,22 +226,6 @@ function handleInitGuruDrive(data) {
       }
     }
 
-    // 4. Buat / Kloning Template Dokumen ke dalam sub-folder "Template"
-    let docId = "";
-    let docUrl = "";
-
-    if (masterTemplateDocId && masterTemplateDocId !== "1FnlDbYxiQUGOnK8yv4527j2Q_TutNTb_9AQCfO1lOHU") {
-      try {
-        const masterDoc = DriveApp.getFileById(masterTemplateDocId);
-        const docGuru = masterDoc.makeCopy("Template Dokumen - " + namaGuru, folderTemplate);
-        try { docGuru.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(_) {}
-        docId = docGuru.getId();
-        docUrl = docGuru.getUrl();
-      } catch (eCopyDoc) {
-        Logger.log("Peringatan kloning doc template: " + eCopyDoc.message);
-      }
-    }
-
     return {
       sukses: true,
       pesan: "Struktur Google Drive berhasil diinisialisasi!",
@@ -247,12 +233,12 @@ function handleInitGuruDrive(data) {
       folderGuruUrl: folderGuru.getUrl(),
       folderDokumentasiId: folderDokumentasi.getId(),
       folderDokLaporanId: folderDokLaporan.getId(),
-      folderTemplateId: folderTemplate.getId(),
+      folderTemplateId: "",
       folderDbId: folderSpreadsheetDB.getId(),
       spreadsheetId: sheetId,
       spreadsheetUrl: sheetUrl,
-      templateDocId: docId,
-      templateDocUrl: docUrl
+      templateDocId: "",
+      templateDocUrl: ""
     };
   } catch (err) {
     return { sukses: false, pesan: "Gagal inisialisasi folder guru: " + err.message };
@@ -823,51 +809,49 @@ function rapikanDanUrutkanSpreadsheet(sheet) {
 
 /**
  * ==============================================================================
- * 6. KONVERSI BERKAS DOCX KE PDF DENGAN GOOGLE DRIVE
+ * 6. SIMPAN BERKAS DOCX LANGSUNG KE GOOGLE DRIVE (FOLDER DOK_LAPORAN)
  * ==============================================================================
  */
-function handleConvertDocxToPdf(data) {
+function handleSimpanDocxKeDrive(data) {
   try {
     const folderDokLaporanId = data.folderDokLaporanId;
-    const namaFile = data.namaFile || "Laporan_LHK.pdf";
-    const namaPdf = namaFile.replace(/\.docx$/i, "") + ".pdf";
+    const namaFile = data.namaFile || "Laporan_LHK.docx";
     const docxBase64 = data.docxBase64;
 
     if (!docxBase64) {
       return { sukses: false, pesan: "Data base64 DOCX kosong." };
     }
 
+    if (!folderDokLaporanId) {
+      return { sukses: false, pesan: "Folder Dok_Laporan guru belum ditentukan di sistem." };
+    }
+
     const folderOutput = DriveApp.getFolderById(folderDokLaporanId);
     const bytes = Utilities.base64Decode(docxBase64);
     const docxBlob = Utilities.newBlob(bytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", namaFile);
 
-    // Buat file docx sementara di Drive untuk dikonversi
-    const tempFile = DriveApp.createFile(docxBlob);
-    
-    // Ambil blob PDF
-    const pdfBlob = tempFile.getAs(MimeType.PDF).setName(namaPdf);
-    
-    // Simpan PDF ke folder output Dok_Laporan
-    const filePdf = folderOutput.createFile(pdfBlob);
+    // Simpan berkas DOCX langsung ke Google Drive
+    const fileDocx = folderOutput.createFile(docxBlob);
     try {
-      filePdf.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      fileDocx.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     } catch (_) {}
 
-    // Hapus file docx sementara
-    try {
-      tempFile.setTrashed(true);
-    } catch (_) {}
+    const fileId = fileDocx.getId();
+    const viewUrl = fileDocx.getUrl();
+    const downloadUrl = "https://drive.google.com/uc?export=download&id=" + fileId;
 
     return {
       sukses: true,
-      format: "pdf",
-      url: filePdf.getUrl(),
-      downloadUrl: filePdf.getUrl(),
-      viewUrl: filePdf.getUrl(),
-      namaFile: namaPdf
+      format: "docx",
+      fileId: fileId,
+      url: downloadUrl,
+      downloadUrl: downloadUrl,
+      viewUrl: viewUrl,
+      namaFile: namaFile
     };
   } catch (err) {
-    return { sukses: false, pesan: "Gagal konversi DOCX ke PDF di Drive: " + err.message };
+    return { sukses: false, pesan: "Gagal menyimpan berkas DOCX ke Google Drive: " + err.message };
   }
 }
+
 

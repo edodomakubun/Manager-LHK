@@ -1081,11 +1081,7 @@
               <input type="text" class="form-control" id="settingTemplateSheetId"
                 placeholder="Kosongkan jika ingin dibuat otomatis">
             </div>
-            <div class="mb-3">
-              <label class="form-label">ID Master Template Google Docs (Opsional)</label>
-              <input type="text" class="form-control" id="settingTemplateDocId"
-                placeholder="Kosongkan jika ingin dibuat otomatis">
-            </div>
+
             <div class="mb-3">
               <label class="form-label">URL Web App Google Apps Script Bridge</label>
               <input type="url" class="form-control" id="settingGasUrl"
@@ -1181,23 +1177,15 @@
               <option value="2027/2028">2027/2028</option>
             </select>
           </div>
-          <div class="mb-4">
-            <label class="form-label">Format Berkas</label>
-            <div class="d-flex gap-3">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="exportFormat" id="fmtPdf" value="pdf" checked>
-                <label class="form-check-label fw-bold text-danger" for="fmtPdf"><i
-                    class="bi bi-file-earmark-pdf-fill me-1"></i>PDF (.pdf)</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="exportFormat" id="fmtDocx" value="docx">
-                <label class="form-check-label fw-bold text-primary" for="fmtDocx"><i
-                    class="bi bi-file-earmark-word-fill me-1"></i>Word (.docx)</label>
-              </div>
+          <div class="mb-4 p-3 bg-light rounded-3 d-flex align-items-center border">
+            <i class="bi bi-file-earmark-word-fill text-primary fs-2 me-3"></i>
+            <div>
+              <div class="fw-bold text-dark">Format Berkas: Word (.docx)</div>
+              <small class="text-muted">Laporan langsung diproses & diunduh otomatis dalam format Microsoft Word (.docx).</small>
             </div>
           </div>
           <button type="button" class="btn btn-cms-primary w-100 py-2 fs-6" onclick="Dokumen.startExport()">
-            <i class="bi bi-gear-wide-connected me-2"></i> Proses Pembuatan Dokumen
+            <i class="bi bi-file-earmark-arrow-down me-2"></i> Proses & Unduh Dokumen (.docx)
           </button>
         </div>
       </div>
@@ -1228,7 +1216,7 @@
               <li class="list-group-item d-flex align-items-center py-1 border-0" id="stepUnduh1"><span
                   class="step-icon me-2"><i class="bi bi-circle"></i></span> 1. Membaca data agenda</li>
               <li class="list-group-item d-flex align-items-center py-1 border-0" id="stepUnduh2"><span
-                  class="step-icon me-2"><i class="bi bi-circle"></i></span> 2. Membaca template doc guru</li>
+                  class="step-icon me-2"><i class="bi bi-circle"></i></span> 2. Membaca template LHK (.docx)</li>
               <li class="list-group-item d-flex align-items-center py-1 border-0" id="stepUnduh3"><span
                   class="step-icon me-2"><i class="bi bi-circle"></i></span> 3. Menyusun tabel & foto</li>
               <li class="list-group-item d-flex align-items-center py-1 border-0" id="stepUnduh4"><span
@@ -1490,8 +1478,7 @@
                 </label>
               </div>
               <small class="text-muted d-block ps-4 mt-1">
-                Sistem akan membuat folder <code>Dokumentasi</code>, <code>Dok_Laporan</code>, <code>Template</code>,
-                dan <code>SpreadsheetDB</code> (lengkap dengan kloning master template) di Drive Admin.
+                Sistem akan membuat folder <code>Dokumentasi</code>, <code>Dok_Laporan</code>, dan <code>SpreadsheetDB</code> di Google Drive Anda.
               </small>
             </div>
 
@@ -1610,20 +1597,12 @@
                         <input type="text" class="form-control form-control-sm" id="editUserFolderDokLaporan">
                       </div>
                       <div class="col-md-6">
-                        <label class="form-label small">ID Subfolder Template</label>
-                        <input type="text" class="form-control form-control-sm" id="editUserFolderTemplate">
-                      </div>
-                      <div class="col-md-6">
                         <label class="form-label small">ID Subfolder SpreadsheetDB</label>
                         <input type="text" class="form-control form-control-sm" id="editUserFolderDb">
                       </div>
                       <div class="col-md-6">
                         <label class="form-label small">ID File Spreadsheet DB</label>
                         <input type="text" class="form-control form-control-sm" id="editUserSheetId">
-                      </div>
-                      <div class="col-md-12">
-                        <label class="form-label small">ID File Template Google Docs</label>
-                        <input type="text" class="form-control form-control-sm" id="editUserTemplateDocId">
                       </div>
                     </div>
                   </div>

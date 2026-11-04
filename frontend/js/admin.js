@@ -285,10 +285,10 @@ const AdminManager = {
     document.getElementById('editUserFolderGuru').value = user.folder_guru_id || '';
     document.getElementById('editUserFolderDokumentasi').value = user.folder_dokumentasi_id || '';
     document.getElementById('editUserFolderDokLaporan').value = user.folder_dok_laporan_id || '';
-    document.getElementById('editUserFolderTemplate').value = user.folder_template_id || '';
     document.getElementById('editUserFolderDb').value = user.folder_db_id || '';
     document.getElementById('editUserSheetId').value = user.spreadsheet_id || '';
-    document.getElementById('editUserTemplateDocId').value = user.template_doc_id || '';
+    if (document.getElementById('editUserFolderTemplate')) document.getElementById('editUserFolderTemplate').value = user.folder_template_id || '';
+    if (document.getElementById('editUserTemplateDocId')) document.getElementById('editUserTemplateDocId').value = user.template_doc_id || '';
 
     // Foto Profil
     const preview = document.getElementById('editUserFotoPreview');
@@ -366,10 +366,10 @@ const AdminManager = {
         folder_guru_id: document.getElementById('editUserFolderGuru').value,
         folder_dokumentasi_id: document.getElementById('editUserFolderDokumentasi').value,
         folder_dok_laporan_id: document.getElementById('editUserFolderDokLaporan').value,
-        folder_template_id: document.getElementById('editUserFolderTemplate').value,
         folder_db_id: document.getElementById('editUserFolderDb').value,
         spreadsheet_id: document.getElementById('editUserSheetId').value,
-        template_doc_id: document.getElementById('editUserTemplateDocId').value,
+        folder_template_id: document.getElementById('editUserFolderTemplate')?.value || '',
+        template_doc_id: document.getElementById('editUserTemplateDocId')?.value || '',
         classes
       };
 
@@ -655,7 +655,7 @@ const AdminManager = {
         active_academic_year: document.getElementById('settingAcademicYear').value,
         master_parent_folder_id: document.getElementById('settingParentFolderId').value,
         master_template_sheet_id: document.getElementById('settingTemplateSheetId').value,
-        master_template_doc_id: document.getElementById('settingTemplateDocId').value,
+        master_template_doc_id: document.getElementById('settingTemplateDocId') ? document.getElementById('settingTemplateDocId').value : '',
         gas_bridge_url: document.getElementById('settingGasUrl').value,
         gas_secret_token: document.getElementById('settingGasToken').value,
         whatsapp_group_url: document.getElementById('settingWhatsappGroupUrl') ? document.getElementById('settingWhatsappGroupUrl').value.trim() : ''

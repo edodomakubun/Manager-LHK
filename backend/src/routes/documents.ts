@@ -31,7 +31,7 @@ documentRoutes.get('/', async (c) => {
 documentRoutes.post('/export', async (c) => {
   const session = c.get('user');
   const body = await c.req.json();
-  const { bulan, tahunAjaran, format = 'pdf', userId } = body;
+  const { bulan, tahunAjaran, format = 'docx', userId } = body;
 
   if (!bulan || !tahunAjaran) {
     return c.json({ sukses: false, pesan: 'Bulan dan tahun ajaran wajib dipilih.' }, 400);
@@ -70,57 +70,22 @@ documentRoutes.post('/export', async (c) => {
     }, 400);
   }
 
+  const folderDokLaporanId = user.folder_dok_laporan_id || user.folder_guru_id;
+  if (!folderDokLaporanId) {
+    return c.json({
+      sukses: false,
+      pesan: 'Folder Dok_Laporan guru di Google Drive belum diatur. Silakan atur di data pengguna.'
+    }, 400);
+  }
+
   const thnSlug = String(tahunAjaran).replace(/[\/\\]/g, '-');
   const namaFileDocx = `Laporan_Agenda_${user.nama_lengkap.replace(/[^\w.-]/g, '_')}_${bulan}_${thnSlug}.docx`;
 
-  // === 2A. FORMAT DOCX (100% NATIVE CLOUDFLARE WORKER & R2) ===
-  if (format === 'docx') {
-    try {
-      const docxBytes = await DocxGeneratorService.generate(c.env, user, bulan, tahunAjaran, records);
-      const storageKey = `generated/${targetUserId}/${Date.now()}_${namaFileDocx}`;
-
-      await c.env.STORAGE.put(storageKey, docxBytes, {
-        httpMetadata: {
-          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          contentDisposition: `attachment; filename="${namaFileDocx}"`
-        }
-      });
-
-      const downloadUrl = `/api/documents/download/${storageKey}`;
-
-      const newDoc: UserDocument = {
-        user_id: targetUserId,
-        bulan,
-        tahun_ajaran: tahunAjaran,
-        format: 'docx',
-        nama_file: namaFileDocx,
-        doc_url: downloadUrl,
-        view_url: downloadUrl,
-        total_kegiatan: records.length
-      };
-
-      const docId = await db.saveUserDocument(newDoc);
-      newDoc.id = docId;
-
-      return c.json({
-        sukses: true,
-        pesan: 'Dokumen Word (.docx) berhasil dibuat secara instan dari Cloudflare R2!',
-        document: newDoc
-      });
-    } catch (docxErr: any) {
-      console.error('Gagal render DOCX:', docxErr);
-      return c.json({
-        sukses: false,
-        pesan: `Gagal memproses DOCX di Cloudflare: ${docxErr.message}`
-      }, 500);
-    }
-  }
-
-  // === 2B. FORMAT PDF (HYBRID VIA GAS BRIDGE) ===
   try {
+    // 1. Generate berkas Word (.docx) secara rapi (Ukuran Legal, foto Google Drive, tabel rapi)
     const docxBytes = await DocxGeneratorService.generate(c.env, user, bulan, tahunAjaran, records);
 
-    // Konversi Uint8Array ke Base64
+    // 2. Konversi Uint8Array ke Base64
     let binary = '';
     const bytes = new Uint8Array(docxBytes);
     const len = bytes.byteLength;
@@ -129,67 +94,30 @@ documentRoutes.post('/export', async (c) => {
     }
     const docxBase64 = btoa(binary);
 
+    // 3. Simpan berkas DOCX langsung ke Google Drive (Folder Dok_Laporan) via GAS Bridge
     const gas = await GasBridgeService.create(c.env);
-    const pdfRes = await gas.convertDocxToPdf({
-      folderDokLaporanId: user.folder_dok_laporan_id || user.folder_guru_id || '',
+    const driveRes = await gas.simpanDocxKeDrive({
+      folderDokLaporanId,
       namaFile: namaFileDocx,
       docxBase64
     });
 
-    if (!pdfRes || !pdfRes.sukses) {
-      // Fallback jika action convert_docx_to_pdf di GAS belum ter-deploy
-      const gasFallback = await gas.buatLaporanBulanan({
-        templateDocId: user.template_doc_id || '',
-        folderDokLaporanId: user.folder_dok_laporan_id || user.folder_guru_id || '',
-        bulan,
-        tahunAjaran,
-        format: 'pdf',
-        records,
-        guru: {
-          nama_lengkap: user.nama_lengkap,
-          nip: user.nip,
-          pangkat_golongan: user.pangkat_golongan,
-          mapel: user.mapel,
-          nama_sekolah: user.nama_sekolah
-        }
-      });
-
-      if (!gasFallback || !gasFallback.sukses) {
-        return c.json({
-          sukses: false,
-          pesan: pdfRes?.pesan || gasFallback?.pesan || 'Gagal mengekspor PDF ke Google Drive.'
-        }, 500);
-      }
-
-      const newDocFallback: UserDocument = {
-        user_id: targetUserId,
-        bulan,
-        tahun_ajaran: tahunAjaran,
-        format: 'pdf',
-        nama_file: gasFallback.namaFile || `Laporan_Agenda_${bulan}_${thnSlug}.pdf`,
-        doc_url: gasFallback.url || gasFallback.downloadUrl,
-        view_url: gasFallback.viewUrl || gasFallback.url,
-        total_kegiatan: records.length
-      };
-
-      const docId = await db.saveUserDocument(newDocFallback);
-      newDocFallback.id = docId;
-
+    if (!driveRes || !driveRes.sukses) {
       return c.json({
-        sukses: true,
-        pesan: 'Dokumen PDF berhasil dibuat!',
-        document: newDocFallback
-      });
+        sukses: false,
+        pesan: driveRes?.pesan || 'Gagal menyimpan berkas Word (.docx) ke Google Drive.'
+      }, 500);
     }
 
+    // 4. Simpan catatan dokumen ke database D1
     const newDoc: UserDocument = {
       user_id: targetUserId,
       bulan,
       tahun_ajaran: tahunAjaran,
-      format: 'pdf',
-      nama_file: pdfRes.namaFile || namaFileDocx.replace(/\.docx$/i, '.pdf'),
-      doc_url: pdfRes.url || pdfRes.downloadUrl,
-      view_url: pdfRes.viewUrl || pdfRes.url,
+      format: 'docx',
+      nama_file: namaFileDocx,
+      doc_url: driveRes.url || driveRes.downloadUrl,
+      view_url: driveRes.viewUrl || driveRes.url,
       total_kegiatan: records.length
     };
 
@@ -198,14 +126,14 @@ documentRoutes.post('/export', async (c) => {
 
     return c.json({
       sukses: true,
-      pesan: 'Dokumen PDF berhasil dibuat via GAS Bridge!',
+      pesan: 'Dokumen Word (.docx) berhasil dibuat dan tersimpan di Google Drive!',
       document: newDoc
     });
-  } catch (pdfErr: any) {
-    console.error('Gagal render PDF:', pdfErr);
+  } catch (err: any) {
+    console.error('Gagal memproses dokumen Word ke Google Drive:', err);
     return c.json({
       sukses: false,
-      pesan: `Gagal membuat PDF: ${pdfErr.message}`
+      pesan: `Gagal memproses dokumen: ${err.message}`
     }, 500);
   }
 });

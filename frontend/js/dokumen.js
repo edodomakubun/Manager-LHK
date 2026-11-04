@@ -106,8 +106,8 @@ const Dokumen = {
               </div>
             </div>
             <div class="d-flex align-items-center gap-2">
-              <a href="${doc.doc_url.startsWith('/') ? doc.doc_url + '?token=' + encodeURIComponent(Api.getToken()) : doc.doc_url}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill px-3">
-                <i class="bi bi-box-arrow-up-right me-1"></i> Buka / Unduh
+              <a href="${doc.doc_url.startsWith('/') ? doc.doc_url + '?token=' + encodeURIComponent(Api.getToken()) : doc.doc_url}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3" title="Unduh File Word (.docx)">
+                <i class="bi bi-file-earmark-word-fill me-1"></i> Word (.docx)
               </a>
               <button class="btn btn-sm btn-light border rounded-pill px-2" onclick="Dokumen.salinLink('${doc.doc_url.startsWith('/') ? window.location.origin + doc.doc_url + '?token=' + encodeURIComponent(Api.getToken()) : doc.doc_url}')" title="Salin Tautan">
                 <i class="bi bi-clipboard"></i>
@@ -153,11 +153,10 @@ const Dokumen = {
     }
   },
 
-  // --- PROSES GENERATE DOKUMEN DENGAN STEP TRACKER REALTIME ---
+  // --- PROSES GENERATE DOKUMEN WORD (.DOCX) SECARA INSTAN ---
   startExport: async function () {
     const bulan = document.getElementById('exportBulan').value;
     const tahun = document.getElementById('exportTahun').value;
-    const format = document.querySelector('input[name="exportFormat"]:checked')?.value || 'pdf';
 
     // Buka Modal Progres
     const modalCetak = bootstrap.Modal.getInstance(document.getElementById('modalCetakLaporan'));
@@ -171,7 +170,7 @@ const Dokumen = {
     document.getElementById('wadahErrorState').classList.add('d-none');
     document.getElementById('infoPeriodeUnduh').innerText = `${bulan} (${tahun})`;
 
-    Dokumen.setProgressStep(1, 15, 'Membaca data agenda dari Database Cloudflare D1...');
+    Dokumen.setProgressStep(1, 25, 'Membaca data agenda dari Database Cloudflare D1...');
     modalProgres.show();
 
     if (Dokumen.progressTimer) clearInterval(Dokumen.progressTimer);
@@ -179,57 +178,73 @@ const Dokumen = {
     Dokumen.progressTimer = setInterval(() => {
       stepCount++;
       if (stepCount === 2) {
-        Dokumen.setProgressStep(2, 40, format === 'docx' ? 'Membaca template DOCX dari Cloudflare R2...' : 'Menghubungi GAS Bridge & membaca template...');
+        Dokumen.setProgressStep(2, 50, 'Membaca template master DOCX dari Cloudflare R2...');
       } else if (stepCount === 3) {
-        Dokumen.setProgressStep(3, 70, format === 'docx' ? 'Menyusun tabel kegiatan & menyisipkan variabel guru...' : 'Menyusun tabel kegiatan & memproses foto...');
+        Dokumen.setProgressStep(3, 75, 'Menyusun tabel kegiatan & menyisipkan foto...');
       } else if (stepCount === 4) {
-        Dokumen.setProgressStep(4, 90, `Mengompilasi dan menyimpan berkas ${format.toUpperCase()}...`);
+        Dokumen.setProgressStep(4, 90, 'Mengompilasi berkas Word (.docx) & menyimpan ke Google Drive...');
       }
-    }, 1200);
+    }, 700);
 
     try {
+      // Backend memproses data, foto, dan template DOCX lalu menyimpannya langsung ke Google Drive
       const res = await Api.exportDocument({
         bulan,
         tahunAjaran: tahun,
-        format
+        format: 'docx'
       });
 
       if (Dokumen.progressTimer) clearInterval(Dokumen.progressTimer);
 
-      if (res && res.sukses && res.document) {
-        Dokumen.setProgressStep(5, 100, format === 'docx' ? 'Dokumen Word (.docx) berhasil dibuat instan dari Cloudflare R2!' : 'Dokumen PDF berhasil dibuat!');
-
-        setTimeout(() => {
-          document.getElementById('wadahProgressState').classList.add('d-none');
-          document.getElementById('wadahSuksesState').classList.remove('d-none');
-
-          document.getElementById('namaFileSukses').innerText = res.document.nama_file;
-          document.getElementById('formatSukses').innerText = res.document.format.toUpperCase();
-          document.getElementById('totalKegiatanSukses').innerText = res.document.total_kegiatan + ' Kegiatan';
-
-          const now = new Date();
-          const jam = String(now.getHours()).padStart(2, '0');
-          const menit = String(now.getMinutes()).padStart(2, '0');
-          const detik = String(now.getSeconds()).padStart(2, '0');
-          const elWaktu = document.getElementById('waktuUnduhSukses');
-          if (elWaktu) elWaktu.innerText = `${jam}:${menit}:${detik}`;
-
-          const btnBuka = document.getElementById('btnBukaDokumen');
-          if (btnBuka) {
-            let downloadHref = res.document.doc_url;
-            if (downloadHref.startsWith('/')) {
-              downloadHref += `?token=${encodeURIComponent(Api.getToken())}`;
-            }
-            btnBuka.href = downloadHref;
-            btnBuka.innerHTML = (format === 'docx' ? '<i class="bi bi-file-earmark-word-fill me-2"></i> Unduh File Word (.docx)' : '<i class="bi bi-file-earmark-pdf-fill me-2"></i> Buka / Unduh PDF');
-          }
-
-          // Muat ulang daftar arsip
-          Dokumen.load();
-        }, 400);
-      } else {
-        throw new Error(res.pesan || 'Gagal membuat dokumen laporan.');
+      if (!res || !res.sukses || !res.document) {
+        throw new Error(res?.pesan || 'Gagal membuat dokumen laporan.');
       }
+
+      let finalDownloadUrl = res.document.doc_url;
+      if (finalDownloadUrl.startsWith('/')) {
+        finalDownloadUrl += (finalDownloadUrl.includes('?') ? '&' : '?') + `token=${encodeURIComponent(Api.getToken())}`;
+      }
+      const finalFileName = res.document.nama_file;
+
+      // Otomatis picu download berkas .docx di browser
+      const link = document.createElement('a');
+      link.href = finalDownloadUrl;
+      link.download = finalFileName;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Tampilkan status sukses
+      Dokumen.setProgressStep(5, 100, 'Dokumen Word (.docx) berhasil disimpan di Google Drive & diunduh!');
+
+      setTimeout(() => {
+        document.getElementById('wadahProgressState').classList.add('d-none');
+        document.getElementById('wadahSuksesState').classList.remove('d-none');
+
+        document.getElementById('namaFileSukses').innerText = finalFileName;
+        document.getElementById('formatSukses').innerText = 'WORD (.DOCX)';
+        document.getElementById('formatSukses').className = 'badge bg-primary';
+        document.getElementById('totalKegiatanSukses').innerText = res.document.total_kegiatan + ' Kegiatan';
+
+        const now = new Date();
+        const jam = String(now.getHours()).padStart(2, '0');
+        const menit = String(now.getMinutes()).padStart(2, '0');
+        const detik = String(now.getSeconds()).padStart(2, '0');
+        const elWaktu = document.getElementById('waktuUnduhSukses');
+        if (elWaktu) elWaktu.innerText = `${jam}:${menit}:${detik}`;
+
+        const btnBuka = document.getElementById('btnBukaDokumen');
+        if (btnBuka) {
+          btnBuka.href = finalDownloadUrl;
+          btnBuka.download = finalFileName;
+          btnBuka.innerHTML = '<i class="bi bi-file-earmark-word-fill me-2"></i> Unduh Ulang File Word (.docx)';
+        }
+
+        // Muat ulang daftar arsip
+        Dokumen.load();
+      }, 400);
+
     } catch (err) {
       if (Dokumen.progressTimer) clearInterval(Dokumen.progressTimer);
       document.getElementById('wadahProgressState').classList.add('d-none');

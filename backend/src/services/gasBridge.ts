@@ -179,9 +179,9 @@ export class GasBridgeService {
   }
 
   /**
-   * 6. Konversi DOCX Base64 ke PDF di Google Drive
+   * 6. Simpan Berkas DOCX Base64 ke Google Drive (Dok_Laporan)
    */
-  async convertDocxToPdf(params: {
+  async simpanDocxKeDrive(params: {
     folderDokLaporanId: string;
     namaFile: string;
     docxBase64: string;
@@ -189,15 +189,15 @@ export class GasBridgeService {
     if (!this.isConfigured()) {
       return {
         sukses: true,
-        format: 'pdf',
-        namaFile: params.namaFile.replace(/\.docx$/i, '.pdf'),
-        url: 'https://docs.google.com/document/d/simulation/export?format=pdf',
+        format: 'docx',
+        namaFile: params.namaFile,
+        url: 'https://docs.google.com/document/d/simulation/export?format=docx',
         viewUrl: 'https://docs.google.com/document/d/simulation/view',
-        pesan: 'Mode Simulasi: PDF berhasil dikonversi dari DOCX!'
+        pesan: 'Mode Simulasi: DOCX berhasil disimpan ke Google Drive!'
       };
     }
 
-    return await this.callGas('convert_docx_to_pdf', params);
+    return await this.callGas('simpan_docx_ke_drive', params);
   }
 
   /**
