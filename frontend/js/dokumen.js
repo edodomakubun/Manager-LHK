@@ -106,10 +106,10 @@ const Dokumen = {
               </div>
             </div>
             <div class="d-flex align-items-center gap-2">
-              <a href="${doc.doc_url}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill px-3">
+              <a href="${doc.doc_url.startsWith('/') ? doc.doc_url + '?token=' + encodeURIComponent(Api.getToken()) : doc.doc_url}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill px-3">
                 <i class="bi bi-box-arrow-up-right me-1"></i> Buka / Unduh
               </a>
-              <button class="btn btn-sm btn-light border rounded-pill px-2" onclick="Dokumen.salinLink('${doc.doc_url}')" title="Salin Tautan">
+              <button class="btn btn-sm btn-light border rounded-pill px-2" onclick="Dokumen.salinLink('${doc.doc_url.startsWith('/') ? window.location.origin + doc.doc_url + '?token=' + encodeURIComponent(Api.getToken()) : doc.doc_url}')" title="Salin Tautan">
                 <i class="bi bi-clipboard"></i>
               </button>
               <button class="btn btn-sm btn-outline-danger border-0 rounded-pill px-2" onclick="Dokumen.hapusArsip(${doc.id})" title="Hapus dari Arsip">
@@ -179,13 +179,13 @@ const Dokumen = {
     Dokumen.progressTimer = setInterval(() => {
       stepCount++;
       if (stepCount === 2) {
-        Dokumen.setProgressStep(2, 40, 'Menghubungi Google Apps Script Bridge & membaca template doc guru...');
+        Dokumen.setProgressStep(2, 40, format === 'docx' ? 'Membaca template DOCX dari Cloudflare R2...' : 'Menghubungi GAS Bridge & membaca template...');
       } else if (stepCount === 3) {
-        Dokumen.setProgressStep(3, 70, 'Menyusun tabel kegiatan & memproses foto dari folder Dokumentasi...');
+        Dokumen.setProgressStep(3, 70, format === 'docx' ? 'Menyusun tabel kegiatan & menyisipkan variabel guru...' : 'Menyusun tabel kegiatan & memproses foto...');
       } else if (stepCount === 4) {
-        Dokumen.setProgressStep(4, 90, `Mengompilasi dan menyimpan berkas ${format.toUpperCase()} ke Dok_Laporan...`);
+        Dokumen.setProgressStep(4, 90, `Mengompilasi dan menyimpan berkas ${format.toUpperCase()}...`);
       }
-    }, 1800);
+    }, 1200);
 
     try {
       const res = await Api.exportDocument({
@@ -197,7 +197,7 @@ const Dokumen = {
       if (Dokumen.progressTimer) clearInterval(Dokumen.progressTimer);
 
       if (res && res.sukses && res.document) {
-        Dokumen.setProgressStep(5, 100, 'Dokumen berhasil dibuat dan tersimpan di Google Drive!');
+        Dokumen.setProgressStep(5, 100, format === 'docx' ? 'Dokumen Word (.docx) berhasil dibuat instan dari Cloudflare R2!' : 'Dokumen PDF berhasil dibuat!');
 
         setTimeout(() => {
           document.getElementById('wadahProgressState').classList.add('d-none');
@@ -216,13 +216,17 @@ const Dokumen = {
 
           const btnBuka = document.getElementById('btnBukaDokumen');
           if (btnBuka) {
-            btnBuka.href = res.document.doc_url;
+            let downloadHref = res.document.doc_url;
+            if (downloadHref.startsWith('/')) {
+              downloadHref += `?token=${encodeURIComponent(Api.getToken())}`;
+            }
+            btnBuka.href = downloadHref;
             btnBuka.innerHTML = (format === 'docx' ? '<i class="bi bi-file-earmark-word-fill me-2"></i> Unduh File Word (.docx)' : '<i class="bi bi-file-earmark-pdf-fill me-2"></i> Buka / Unduh PDF');
           }
 
           // Muat ulang daftar arsip
           Dokumen.load();
-        }, 500);
+        }, 400);
       } else {
         throw new Error(res.pesan || 'Gagal membuat dokumen laporan.');
       }

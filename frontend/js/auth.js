@@ -8,6 +8,10 @@
 const Auth = {
   currentUser: null,
 
+  getToken: function () {
+    return Api.getToken();
+  },
+
   init: async function () {
     const token = Api.getToken();
     if (!token) {

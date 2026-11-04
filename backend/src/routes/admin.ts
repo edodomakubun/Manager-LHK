@@ -41,6 +41,7 @@ adminRoutes.get('/users', async (c) => {
         folder_db_id: u.folder_db_id,
         spreadsheet_id: u.spreadsheet_id,
         template_doc_id: u.template_doc_id,
+        custom_template_r2_key: u.custom_template_r2_key,
         is_active: u.is_active,
         created_at: u.created_at,
         classes
@@ -185,6 +186,7 @@ adminRoutes.put('/users/:id', async (c) => {
     folder_db_id: body.folder_db_id,
     spreadsheet_id: body.spreadsheet_id,
     template_doc_id: body.template_doc_id,
+    custom_template_r2_key: body.custom_template_r2_key !== undefined ? body.custom_template_r2_key : existing.custom_template_r2_key,
     is_active: body.is_active
   });
 
@@ -468,4 +470,161 @@ adminRoutes.put('/payment-settings', async (c) => {
 
   return c.json({ sukses: true, pesan: 'Pengaturan pembayaran berhasil disimpan!' });
 });
+
+/**
+ * ========================================================
+ * 📂 MANAJEMEN TEMPLATE DOCX (CLOUDFLARE R2) - EKSKLUSIF ADMIN
+ * ========================================================
+ */
+
+/**
+ * GET /api/admin/templates/master - Unduh Master Template LHK dari R2
+ */
+adminRoutes.get('/templates/master', async (c) => {
+  const db = new DatabaseQueries(c.env.DB);
+  const setting = await db.getAllSettings();
+  const masterKey = setting['r2_master_template_key'] || 'templates/master_template_lhk.docx';
+
+  const obj = await c.env.STORAGE.get(masterKey);
+  if (!obj) {
+    return c.text('Berkas Master Template tidak ditemukan di Cloudflare R2.', 404);
+  }
+
+  const headers = new Headers();
+  obj.writeHttpMetadata(headers);
+  headers.set('etag', obj.httpEtag);
+  headers.set('content-type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  headers.set('content-disposition', 'attachment; filename="Master_Template_LHK.docx"');
+
+  return new Response(obj.body, { headers });
+});
+
+/**
+ * POST /api/admin/templates/master - Unggah Master Template LHK baru ke R2
+ */
+adminRoutes.post('/templates/master', async (c) => {
+  const formData = await c.req.formData();
+  const file = formData.get('template') as File | null;
+
+  if (!file || !file.name) {
+    return c.json({ sukses: false, pesan: 'File template .docx wajib diunggah.' }, 400);
+  }
+
+  const buffer = await file.arrayBuffer();
+  const masterKey = 'templates/master_template_lhk.docx';
+
+  await c.env.STORAGE.put(masterKey, buffer, {
+    httpMetadata: {
+      contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      contentDisposition: 'attachment; filename="Master_Template_LHK.docx"'
+    }
+  });
+
+  const db = new DatabaseQueries(c.env.DB);
+  await db.updateSetting('r2_master_template_key', masterKey);
+
+  return c.json({
+    sukses: true,
+    pesan: 'Master Template DOCX berhasil diunggah dan disimpan ke Cloudflare R2!'
+  });
+});
+
+/**
+ * GET /api/admin/users/:id/template - Unduh template aktif milik guru dari R2
+ */
+adminRoutes.get('/users/:id/template', async (c) => {
+  const userId = c.req.param('id');
+  const db = new DatabaseQueries(c.env.DB);
+  const user = await db.getUserById(userId);
+
+  if (!user) {
+    return c.text('Guru tidak ditemukan.', 404);
+  }
+
+  let templateKey = user.custom_template_r2_key;
+  if (!templateKey) {
+    const setting = await db.getAllSettings();
+    templateKey = setting['r2_master_template_key'] || 'templates/master_template_lhk.docx';
+  }
+
+  const obj = await c.env.STORAGE.get(templateKey);
+  if (!obj) {
+    return c.text('Berkas template tidak ditemukan di Cloudflare R2.', 404);
+  }
+
+  const namaFileClean = `Template_${user.nama_lengkap.replace(/[^\w.-]/g, '_')}.docx`;
+
+  const headers = new Headers();
+  obj.writeHttpMetadata(headers);
+  headers.set('etag', obj.httpEtag);
+  headers.set('content-type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  headers.set('content-disposition', `attachment; filename="${namaFileClean}"`);
+
+  return new Response(obj.body, { headers });
+});
+
+/**
+ * POST /api/admin/users/:id/template - Unggah template khusus guru ke R2
+ */
+adminRoutes.post('/users/:id/template', async (c) => {
+  const userId = c.req.param('id');
+  const db = new DatabaseQueries(c.env.DB);
+  const user = await db.getUserById(userId);
+
+  if (!user) {
+    return c.json({ sukses: false, pesan: 'Guru tidak ditemukan.' }, 404);
+  }
+
+  const formData = await c.req.formData();
+  const file = formData.get('template') as File | null;
+
+  if (!file || !file.name) {
+    return c.json({ sukses: false, pesan: 'Berkas template .docx wajib dipilih.' }, 400);
+  }
+
+  const buffer = await file.arrayBuffer();
+  const key = `templates/guru/${userId}.docx`;
+
+  await c.env.STORAGE.put(key, buffer, {
+    httpMetadata: {
+      contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      contentDisposition: `attachment; filename="Template_${user.nama_lengkap.replace(/[^\w.-]/g, '_')}.docx"`
+    }
+  });
+
+  await db.updateUser(userId, { custom_template_r2_key: key });
+
+  return c.json({
+    sukses: true,
+    pesan: `Template khusus untuk ${user.nama_lengkap} berhasil disimpan ke Cloudflare R2!`,
+    templateKey: key
+  });
+});
+
+/**
+ * DELETE /api/admin/users/:id/template - Reset template guru ke Master Template
+ */
+adminRoutes.delete('/users/:id/template', async (c) => {
+  const userId = c.req.param('id');
+  const db = new DatabaseQueries(c.env.DB);
+  const user = await db.getUserById(userId);
+
+  if (!user) {
+    return c.json({ sukses: false, pesan: 'Guru tidak ditemukan.' }, 404);
+  }
+
+  if (user.custom_template_r2_key) {
+    try {
+      await c.env.STORAGE.delete(user.custom_template_r2_key);
+    } catch (_) {}
+  }
+
+  await db.updateUser(userId, { custom_template_r2_key: '' });
+
+  return c.json({
+    sukses: true,
+    pesan: `Template untuk ${user.nama_lengkap} berhasil direset ke Master Template bawaan.`
+  });
+});
+
 

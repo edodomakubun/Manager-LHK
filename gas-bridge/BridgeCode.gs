@@ -112,6 +112,9 @@ function doPost(e) {
       case 'update_lhk':
         return responseJson(handleUpdateLhk(payload.data));
 
+      case 'convert_docx_to_pdf':
+        return responseJson(handleConvertDocxToPdf(payload.data));
+
       default:
         return responseJson({ sukses: false, pesan: "Aksi tidak dikenali: " + action });
     }
@@ -815,6 +818,56 @@ function rapikanDanUrutkanSpreadsheet(sheet) {
     range.setValues(rows);
   } catch (err) {
     Logger.log("Peringatan urut sheet: " + err.message);
+  }
+}
+
+/**
+ * ==============================================================================
+ * 6. KONVERSI BERKAS DOCX KE PDF DENGAN GOOGLE DRIVE
+ * ==============================================================================
+ */
+function handleConvertDocxToPdf(data) {
+  try {
+    const folderDokLaporanId = data.folderDokLaporanId;
+    const namaFile = data.namaFile || "Laporan_LHK.pdf";
+    const namaPdf = namaFile.replace(/\.docx$/i, "") + ".pdf";
+    const docxBase64 = data.docxBase64;
+
+    if (!docxBase64) {
+      return { sukses: false, pesan: "Data base64 DOCX kosong." };
+    }
+
+    const folderOutput = DriveApp.getFolderById(folderDokLaporanId);
+    const bytes = Utilities.base64Decode(docxBase64);
+    const docxBlob = Utilities.newBlob(bytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", namaFile);
+
+    // Buat file docx sementara di Drive untuk dikonversi
+    const tempFile = DriveApp.createFile(docxBlob);
+    
+    // Ambil blob PDF
+    const pdfBlob = tempFile.getAs(MimeType.PDF).setName(namaPdf);
+    
+    // Simpan PDF ke folder output Dok_Laporan
+    const filePdf = folderOutput.createFile(pdfBlob);
+    try {
+      filePdf.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch (_) {}
+
+    // Hapus file docx sementara
+    try {
+      tempFile.setTrashed(true);
+    } catch (_) {}
+
+    return {
+      sukses: true,
+      format: "pdf",
+      url: filePdf.getUrl(),
+      downloadUrl: filePdf.getUrl(),
+      viewUrl: filePdf.getUrl(),
+      namaFile: namaPdf
+    };
+  } catch (err) {
+    return { sukses: false, pesan: "Gagal konversi DOCX ke PDF di Drive: " + err.message };
   }
 }
 

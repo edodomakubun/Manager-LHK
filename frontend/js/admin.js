@@ -309,6 +309,26 @@ const AdminManager = {
       if (infoFoto) infoFoto.innerText = 'Dukungan: JPG, JPEG, PNG, WEBP, HEIC';
     }
 
+    // Status Template Cloudflare R2 Guru
+    const badgeTpl = document.getElementById('badgeTemplateUserStatus');
+    const btnResetTpl = document.getElementById('btnResetTemplateUser');
+    const infoUploadTpl = document.getElementById('infoUploadUserTemplate');
+    if (infoUploadTpl) infoUploadTpl.innerHTML = '';
+
+    if (user.custom_template_r2_key) {
+      if (badgeTpl) {
+        badgeTpl.className = 'badge bg-success-subtle text-success border border-success';
+        badgeTpl.innerText = 'Template Kustom R2 Aktif';
+      }
+      if (btnResetTpl) btnResetTpl.classList.remove('d-none');
+    } else {
+      if (badgeTpl) {
+        badgeTpl.className = 'badge bg-secondary-subtle text-secondary border border-secondary';
+        badgeTpl.innerText = 'Master Template R2';
+      }
+      if (btnResetTpl) btnResetTpl.classList.add('d-none');
+    }
+
     const modalEl = document.getElementById('modalEditGuru');
     if (modalEl) {
       const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
@@ -1014,6 +1034,131 @@ const AdminManager = {
     } catch (err) {
       alert('Gagal memperbarui status: ' + err.message);
       checkboxEl.checked = !checkboxEl.checked;
+    }
+  },
+
+  // --- TEMPLATE CLOUDFLARE R2 ACTIONS ---
+  downloadMasterTemplate: function () {
+    Api.downloadMasterTemplate();
+  },
+
+  triggerUploadMasterTemplate: function () {
+    const input = document.getElementById('inputUploadMasterTemplate');
+    if (input) input.click();
+  },
+
+  handleUploadMasterTemplate: async function (event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.docx')) {
+      alert('Hanya file Microsoft Word (.docx) yang diperbolehkan.');
+      return;
+    }
+
+    const info = document.getElementById('infoUploadMasterTemplate');
+    if (info) info.innerHTML = '<span class="spinner-border spinner-border-sm text-primary me-2"></span>Mengunggah Master Template ke Cloudflare R2...';
+
+    try {
+      const formData = new FormData();
+      formData.append('template', file);
+
+      const res = await Api.uploadMasterTemplate(formData);
+      if (res && res.sukses) {
+        if (info) info.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>${res.pesan}</span>`;
+        alert(res.pesan || 'Master Template berhasil diperbarui di Cloudflare R2!');
+      } else {
+        throw new Error(res?.pesan || 'Gagal mengunggah template.');
+      }
+    } catch (err) {
+      if (info) info.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>${err.message}</span>`;
+      alert('Gagal unggah template: ' + err.message);
+    } finally {
+      event.target.value = '';
+    }
+  },
+
+  downloadUserTemplate: function () {
+    const userId = document.getElementById('editUserId').value;
+    if (!userId) return;
+    Api.downloadUserTemplate(userId);
+  },
+
+  triggerUploadUserTemplate: function () {
+    const input = document.getElementById('inputUploadUserTemplate');
+    if (input) input.click();
+  },
+
+  handleUploadUserTemplate: async function (event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.docx')) {
+      alert('Hanya file Microsoft Word (.docx) yang diperbolehkan.');
+      return;
+    }
+
+    const userId = document.getElementById('editUserId').value;
+    if (!userId) return;
+
+    const info = document.getElementById('infoUploadUserTemplate');
+    if (info) info.innerHTML = '<span class="spinner-border spinner-border-sm text-primary me-2"></span>Mengunggah template guru ke Cloudflare R2...';
+
+    try {
+      const formData = new FormData();
+      formData.append('template', file);
+
+      const res = await Api.uploadUserTemplate(userId, formData);
+      if (res && res.sukses) {
+        if (info) info.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>${res.pesan}</span>`;
+        alert(res.pesan);
+
+        // Update badge
+        const badgeTpl = document.getElementById('badgeTemplateUserStatus');
+        const btnResetTpl = document.getElementById('btnResetTemplateUser');
+        if (badgeTpl) {
+          badgeTpl.className = 'badge bg-success-subtle text-success border border-success';
+          badgeTpl.innerText = 'Template Kustom R2 Aktif';
+        }
+        if (btnResetTpl) btnResetTpl.classList.remove('d-none');
+
+        await AdminManager.loadUsers();
+      } else {
+        throw new Error(res?.pesan || 'Gagal mengunggah template guru.');
+      }
+    } catch (err) {
+      if (info) info.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>${err.message}</span>`;
+      alert('Gagal unggah template guru: ' + err.message);
+    } finally {
+      event.target.value = '';
+    }
+  },
+
+  resetUserTemplate: async function () {
+    const userId = document.getElementById('editUserId').value;
+    if (!userId) return;
+
+    if (!confirm('Kembalikan template guru ini ke Master Template Cloudflare R2 bawaan? Template kustom di R2 akan dihapus.')) {
+      return;
+    }
+
+    try {
+      const res = await Api.resetUserTemplate(userId);
+      if (res && res.sukses) {
+        alert(res.pesan);
+        const badgeTpl = document.getElementById('badgeTemplateUserStatus');
+        const btnResetTpl = document.getElementById('btnResetTemplateUser');
+        if (badgeTpl) {
+          badgeTpl.className = 'badge bg-secondary-subtle text-secondary border border-secondary';
+          badgeTpl.innerText = 'Master Template R2';
+        }
+        if (btnResetTpl) btnResetTpl.classList.add('d-none');
+        await AdminManager.loadUsers();
+      } else {
+        alert(res?.pesan || 'Gagal mereset template.');
+      }
+    } catch (e) {
+      alert('Gagal mereset template: ' + e.message);
     }
   }
 };

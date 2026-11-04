@@ -17,6 +17,9 @@ export const authMiddleware = createMiddleware<{
     const match = cookieHeader.match(/lhk_auth_token=([^;]+)/);
     if (match) {
       token = match[1];
+    } else {
+      // Coba baca dari query parameter (untuk download berkas langsung)
+      token = c.req.query('token') || '';
     }
   }
 

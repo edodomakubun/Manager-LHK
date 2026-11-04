@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
     folder_db_id TEXT,                         -- ID Sub-folder: SpreadsheetDB
     spreadsheet_id TEXT,                       -- ID File Google Spreadsheet Guru (di folder SpreadsheetDB)
     template_doc_id TEXT,                      -- ID File Template Google Docs Guru (di folder Template)
+    custom_template_r2_key TEXT,               -- Key Objek Template Spesifik Guru di Cloudflare R2
     foto_profil TEXT,                          -- URL / Base64 / ID Foto Profil Guru
     is_active INTEGER NOT NULL DEFAULT 1,
     is_frozen INTEGER NOT NULL DEFAULT 0,      -- 0: aktif, 1: dibekukan karena belum bayar
@@ -131,6 +132,7 @@ INSERT OR IGNORE INTO system_settings (key, value, description) VALUES
 ('master_parent_folder_id', '1r271Uodmsj9R645hC__yeG-rU15JGexr', 'Folder Master Utama LHK di Drive Admin'),
 ('master_template_sheet_id', '1ADGABBavrjHExqvPRUVCyz8gQXUUPIFgflPHEfiKqJk', 'Master Template Spreadsheet'),
 ('master_template_doc_id', '1FnlDbYxiQUGOnK8yv4527j2Q_TutNTb_9AQCfO1lOHU', 'Master Template Google Docs'),
+('r2_master_template_key', 'templates/master_template_lhk.docx', 'Key Master Template LHK di Cloudflare R2'),
 ('gas_bridge_url', '', 'URL Web App Google Apps Script Bridge'),
 ('gas_secret_token', 'SECRET_LHK_TOKEN_2026', 'Token Pengaman Webhook Bridge'),
 ('payment_feature_enabled', 'true', 'Sakelar Fitur Pembayaran & QR Code (true/false)'),

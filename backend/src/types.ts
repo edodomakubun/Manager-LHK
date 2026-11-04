@@ -1,5 +1,6 @@
 export interface Env {
   DB: D1Database;
+  STORAGE: R2Bucket;
   JWT_SECRET: string;
   ENVIRONMENT?: string;
   ASSETS?: Fetcher;
@@ -33,6 +34,7 @@ export interface UserRecord {
   folder_db_id?: string;
   spreadsheet_id?: string;
   template_doc_id?: string;
+  custom_template_r2_key?: string;
   foto_profil?: string;
   is_active: number;
   is_frozen?: number;

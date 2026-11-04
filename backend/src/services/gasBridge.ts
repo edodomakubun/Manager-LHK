@@ -179,6 +179,28 @@ export class GasBridgeService {
   }
 
   /**
+   * 6. Konversi DOCX Base64 ke PDF di Google Drive
+   */
+  async convertDocxToPdf(params: {
+    folderDokLaporanId: string;
+    namaFile: string;
+    docxBase64: string;
+  }): Promise<GasResponse> {
+    if (!this.isConfigured()) {
+      return {
+        sukses: true,
+        format: 'pdf',
+        namaFile: params.namaFile.replace(/\.docx$/i, '.pdf'),
+        url: 'https://docs.google.com/document/d/simulation/export?format=pdf',
+        viewUrl: 'https://docs.google.com/document/d/simulation/view',
+        pesan: 'Mode Simulasi: PDF berhasil dikonversi dari DOCX!'
+      };
+    }
+
+    return await this.callGas('convert_docx_to_pdf', params);
+  }
+
+  /**
    * Helper internal untuk memanggil Apps Script doPost
    */
   private async callGas(action: string, data: any): Promise<GasResponse> {

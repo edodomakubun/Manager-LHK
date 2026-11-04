@@ -162,6 +162,49 @@ const Api = {
     body: JSON.stringify({ newPassword })
   }),
 
+  // --- TEMPLATE MANAGEMENT (CLOUDFLARE R2) ---
+  downloadMasterTemplate: () => {
+    const token = Api.getToken();
+    const url = (Api.baseUrl || '') + `/api/admin/templates/master?token=${encodeURIComponent(token)}`;
+    window.open(url, '_blank');
+  },
+
+  uploadMasterTemplate: async (formData) => {
+    const token = Api.getToken();
+    const url = (Api.baseUrl || '') + '/api/admin/templates/master';
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+    return await res.json();
+  },
+
+  downloadUserTemplate: (userId) => {
+    const token = Api.getToken();
+    const url = (Api.baseUrl || '') + `/api/admin/users/${userId}/template?token=${encodeURIComponent(token)}`;
+    window.open(url, '_blank');
+  },
+
+  uploadUserTemplate: async (userId, formData) => {
+    const token = Api.getToken();
+    const url = (Api.baseUrl || '') + `/api/admin/users/${userId}/template`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+    return await res.json();
+  },
+
+  resetUserTemplate: (userId) => Api.request(`/api/admin/users/${userId}/template`, {
+    method: 'DELETE'
+  }),
+
   provisionUserDrive: (id) => Api.request(`/api/admin/users/${id}/provision-drive`, {
     method: 'POST'
   }),

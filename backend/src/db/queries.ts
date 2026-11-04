@@ -64,7 +64,7 @@ export class DatabaseQueries {
     const allowed = [
       'nama_lengkap', 'nip', 'pangkat_golongan', 'jabatan', 'mapel', 'nama_sekolah',
       'folder_guru_id', 'folder_dokumentasi_id', 'folder_dok_laporan_id', 'folder_template_id', 'folder_db_id',
-      'spreadsheet_id', 'template_doc_id', 'foto_profil', 'is_active', 'password_hash',
+      'spreadsheet_id', 'template_doc_id', 'custom_template_r2_key', 'foto_profil', 'is_active', 'password_hash',
       'is_frozen', 'subscription_status', 'subscription_period'
     ];
 
