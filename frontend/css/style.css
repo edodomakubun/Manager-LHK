@@ -393,9 +393,47 @@ body {
 }
 
 /* LIGHTBOX & GALERI FOTO INTERAKTIF */
+#modalGaleriFoto .modal-galeri-dialog {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100% - 3.5rem);
+  margin: 1.75rem auto;
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  width: fit-content;
+  max-width: 94vw;
+}
+
+#modalGaleriFoto .modal-galeri-content {
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  width: fit-content;
+  min-width: 280px;
+  max-width: 94vw;
+  margin: 0 auto;
+  transition: max-width 0.25s ease, width 0.25s ease;
+}
+
+#modalGaleriFoto .galeri-img-wrapper {
+  display: inline-block;
+  position: relative;
+  max-width: 100%;
+}
+
+#modalGaleriFoto #galeriModalImg {
+  max-height: 65vh;
+  max-width: 88vw;
+  width: auto;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
 .btn-galeri-nav {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -407,11 +445,11 @@ body {
 .btn-galeri-nav:hover {
   background: #10b981 !important;
   border-color: #10b981 !important;
-  transform: translateY(-50%) scale(1.1);
+  transform: translateY(-50%) scale(1.08);
 }
 .galeri-thumb-item {
-  width: 58px;
-  height: 58px;
+  width: 52px;
+  height: 52px;
   border-radius: 8px;
   cursor: pointer;
   object-fit: cover;

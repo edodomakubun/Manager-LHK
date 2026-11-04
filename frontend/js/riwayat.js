@@ -345,11 +345,22 @@ const Riwayat = {
     if (imgEl) {
       imgEl.style.opacity = '0.5';
       imgEl.src = imgUrl;
-      imgEl.onload = () => { imgEl.style.opacity = '1'; };
-      imgEl.onerror = () => {
+
+      const onImageLoaded = () => {
         imgEl.style.opacity = '1';
-        imgEl.src = 'https://placehold.co/600x400?text=Gagal+Memuat+Foto';
+        Riwayat.adjustGalleryModalSize();
       };
+
+      if (imgEl.complete && imgEl.naturalWidth > 0) {
+        onImageLoaded();
+      } else {
+        imgEl.onload = onImageLoaded;
+        imgEl.onerror = () => {
+          imgEl.style.opacity = '1';
+          imgEl.src = 'https://placehold.co/600x400?text=Gagal+Memuat+Foto';
+          setTimeout(() => Riwayat.adjustGalleryModalSize(), 50);
+        };
+      }
     }
 
     // Tombol Download / Buka Asli
@@ -360,8 +371,12 @@ const Riwayat = {
 
     // Counter (Foto X dari Y)
     const elCounter = document.getElementById('galeriCounter');
-    if (elCounter) {
-      elCounter.textContent = `Foto ${g.currentIndex + 1} dari ${total}`;
+    const counterContainer = document.getElementById('galeriCounterContainer');
+    if (total > 1) {
+      if (counterContainer) counterContainer.classList.remove('d-none');
+      if (elCounter) elCounter.textContent = `Foto ${g.currentIndex + 1} dari ${total}`;
+    } else {
+      if (counterContainer) counterContainer.classList.add('d-none');
     }
 
     // Navigasi Prev & Next Buttons (Sembunyikan jika hanya 1 foto)
@@ -400,6 +415,22 @@ const Riwayat = {
       }
     } else if (stripWrapper) {
       stripWrapper.classList.add('d-none');
+    }
+  },
+
+  adjustGalleryModalSize: function () {
+    const imgEl = document.getElementById('galeriModalImg');
+    const modalContent = document.querySelector('#modalGaleriFoto .modal-galeri-content');
+    if (!imgEl || !modalContent) return;
+
+    const rect = imgEl.getBoundingClientRect();
+    const imgWidth = rect.width;
+    if (imgWidth > 0) {
+      const padding = 24;
+      const maxAvailable = Math.floor(window.innerWidth * 0.94);
+      const targetWidth = Math.max(280, Math.min(Math.ceil(imgWidth + padding), maxAvailable));
+      modalContent.style.maxWidth = `${targetWidth}px`;
+      modalContent.style.width = `${targetWidth}px`;
     }
   },
 
@@ -491,7 +522,7 @@ const Riwayat = {
   }
 };
 
-// Keyboard navigation listener untuk Galeri Foto
+// Keyboard navigation & resize listener untuk Galeri Foto
 document.addEventListener('keydown', function (e) {
   const modalGaleri = document.getElementById('modalGaleriFoto');
   if (modalGaleri && modalGaleri.classList.contains('show')) {
@@ -500,6 +531,26 @@ document.addEventListener('keydown', function (e) {
     } else if (e.key === 'ArrowLeft') {
       Riwayat.prevPhoto();
     }
+  }
+});
+
+window.addEventListener('resize', function () {
+  const modalGaleri = document.getElementById('modalGaleriFoto');
+  if (modalGaleri && modalGaleri.classList.contains('show')) {
+    Riwayat.adjustGalleryModalSize();
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  const modalGaleriEl = document.getElementById('modalGaleriFoto');
+  if (modalGaleriEl) {
+    modalGaleriEl.addEventListener('hidden.bs.modal', function () {
+      const content = modalGaleriEl.querySelector('.modal-galeri-content');
+      if (content) {
+        content.style.maxWidth = '';
+        content.style.width = '';
+      }
+    });
   }
 });
 
