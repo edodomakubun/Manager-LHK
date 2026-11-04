@@ -117,8 +117,8 @@ const Auth = {
     }
   },
 
-  logout: function () {
-    if (confirm('Apakah Anda yakin ingin keluar dari akun CMS?')) {
+  logout: async function () {
+    if (await CMSDialog.confirm('Apakah Anda yakin ingin keluar dari akun CMS?', { title: 'Konfirmasi Keluar', confirmText: 'Ya, Keluar', isDanger: true })) {
       if (window.SubscriptionManager) {
         SubscriptionManager.hideFreezeOverlay();
       }

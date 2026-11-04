@@ -398,34 +398,34 @@ const AdminManager = {
   },
 
   provisionDrive: async function (id) {
-    if (!confirm('Inisialisasi 4 sub-folder Google Drive sekarang untuk guru ini?')) return;
+    if (!await CMSDialog.confirm('Inisialisasi sub-folder Google Drive sekarang untuk guru ini?', { title: 'Inisialisasi Google Drive' })) return;
     try {
       const res = await Api.provisionUserDrive(id);
       if (res && res.sukses) {
-        alert('Ruang Google Drive guru berhasil dibuat! Folder & Spreadsheet siap digunakan.');
+        CMSDialog.success('Ruang Google Drive guru berhasil dibuat! Folder & Spreadsheet siap digunakan.');
         AdminManager.loadUsers();
       } else {
         throw new Error(res.pesan || 'Gagal membuat Google Drive.');
       }
     } catch (err) {
-      alert('Error: ' + err.message);
+      CMSDialog.error('Error: ' + err.message);
     }
   },
 
   resetPassword: async function (id, nama) {
-    const newPass = prompt(`Masukkan kata sandi baru untuk ${nama}:`, 'guru123');
+    const newPass = await CMSDialog.prompt(`Masukkan kata sandi baru untuk ${nama}:`, 'guru123', { title: 'Reset Kata Sandi' });
     if (!newPass) return;
 
     try {
       const res = await Api.resetUserPassword(id, newPass);
-      alert(res.pesan || 'Kata sandi berhasil direset!');
+      CMSDialog.success(res.pesan || 'Kata sandi berhasil direset!');
     } catch (err) {
-      alert('Gagal mereset kata sandi: ' + err.message);
+      CMSDialog.error('Gagal mereset kata sandi: ' + err.message);
     }
   },
 
   deleteUser: async function (id, nama) {
-    if (!confirm(`Hapus akun ${nama}? Seluruh data LHK guru ini di database akan dihapus.`)) return;
+    if (!await CMSDialog.confirm(`Hapus akun ${nama}? Seluruh data LHK guru ini di database akan dihapus.`, { title: 'Hapus Akun Guru', confirmText: 'Ya, Hapus Akun', isDanger: true })) return;
 
     try {
       const res = await Api.deleteAdminUser(id);
@@ -843,7 +843,7 @@ const AdminManager = {
 
   toggleFreeze: async function (userId, currentlyFrozen, nama) {
     const actionText = currentlyFrozen ? 'membuka pembekuan akses akun' : 'membekukan tampilan akun';
-    if (!confirm(`Apakah Anda yakin ingin ${actionText} untuk ${nama}?`)) return;
+    if (!await CMSDialog.confirm(`Apakah Anda yakin ingin ${actionText} untuk ${nama}?`, { title: 'Ubah Status Akun', isDanger: !currentlyFrozen })) return;
 
     try {
       const res = await Api.freezeUser(userId, currentlyFrozen ? 0 : 1);
@@ -909,10 +909,10 @@ const AdminManager = {
 
     let notes = '';
     if (status === 'rejected') {
-      notes = prompt('Masukkan alasan penolakan bukti pembayaran:', 'Nominal tidak sesuai / Bukti tidak jelas');
+      notes = await CMSDialog.prompt('Masukkan alasan penolakan bukti pembayaran:', 'Nominal tidak sesuai / Bukti tidak jelas', { title: 'Tolak Pembayaran', confirmText: 'Tolak Pembayaran' });
       if (notes === null) return; // Batal
     } else {
-      if (!confirm('Verifikasi bukti transfer ini sah dan buka pembekuan akun guru sekarang?')) return;
+      if (!await CMSDialog.confirm('Verifikasi bukti transfer ini sah dan buka pembekuan akun guru sekarang?', { title: 'Verifikasi Pembayaran', confirmText: 'Ya, Verifikasi' })) return;
     }
 
     try {
@@ -1138,7 +1138,7 @@ const AdminManager = {
     const userId = document.getElementById('editUserId').value;
     if (!userId) return;
 
-    if (!confirm('Kembalikan template guru ini ke Master Template Cloudflare R2 bawaan? Template kustom di R2 akan dihapus.')) {
+    if (!await CMSDialog.confirm('Kembalikan template guru ini ke Master Template Cloudflare R2 bawaan? Template kustom di R2 akan dihapus.', { title: 'Reset Template Guru', isDanger: true, confirmText: 'Ya, Kembalikan ke Master' })) {
       return;
     }
 

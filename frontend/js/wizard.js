@@ -258,10 +258,14 @@ const Wizard = {
     fotoDiv.id = `wadahFotoNtm${idx}`;
     fotoDiv.innerHTML = `
       <label class="form-label text-primary fw-bold"><i class="bi bi-camera me-2"></i>Dokumentasi Non Tatap Muka ${idx}</label>
-      <input type="file" class="form-control mb-2 file-foto-ntm" accept="image/*" onchange="Wizard.handleFileSelected(this, ${idx})">
-      <div class="d-flex align-items-center gap-2">
-        <img id="previewFoto${idx}" class="img-thumbnail rounded-3 d-none shadow-sm" style="max-height: 120px;">
-        <span id="infoKompresi${idx}" class="small text-muted"></span>
+      <div class="row g-3 align-items-center">
+        <div class="col-12 col-md-7">
+          <input type="file" class="form-control mb-2 mb-md-0 file-foto-ntm" accept="image/*,image/heic,image/heif,image/webp,.heic,.heif,.webp" onchange="Wizard.handleFileSelected(this, ${idx})">
+        </div>
+        <div class="col-12 col-md-5 d-flex align-items-center gap-2">
+          <img id="previewFoto${idx}" class="img-thumbnail rounded-3 d-none shadow-sm" style="max-height: 120px;">
+          <span id="infoKompresi${idx}" class="small text-muted"></span>
+        </div>
       </div>
     `;
     fotoContainer.appendChild(fotoDiv);
@@ -362,7 +366,7 @@ const Wizard = {
 
       if (infoSpan) {
         if (existingOldId) {
-          infoSpan.innerHTML = `<span class="badge bg-warning text-dark"><i class="bi bi-arrow-repeat me-1"></i>Foto Baru Pengganti</span> <small class="text-muted d-block">Foto lama di Drive akan dihapus (${res.compressedKb} KB)</small>`;
+          infoSpan.innerHTML = `<span class="badge bg-warning text-dark"><i class="bi bi-arrow-repeat me-1"></i>Foto Baru Pengganti</span> <small class="text-muted d-block">Foto lama akan dihapus (${res.compressedKb} KB)</small>`;
         } else {
           infoSpan.innerHTML = `<span class="badge bg-success"><i class="bi bi-check2 me-1"></i>Foto Terkompresi</span> (${res.compressedKb} KB)`;
         }
@@ -426,11 +430,11 @@ const Wizard = {
 
     container.innerHTML = `
       <div class="row g-3">
-        <div class="col-6">
+        <div class="col-12 col-md-6">
           <small class="text-muted d-block">Waktu Pelaksanaan</small>
           <strong>${tgl} (${bln} - ${thn})</strong>
         </div>
-        <div class="col-6">
+        <div class="col-12 col-md-6">
           <small class="text-muted d-block">Total Volume</small>
           <span class="badge bg-success fs-6">${vol} Kegiatan</span>
         </div>
@@ -446,7 +450,7 @@ const Wizard = {
         </div>
         <div class="col-12 border-top pt-2">
           <small class="text-muted d-block"><i class="bi bi-camera me-1"></i>Dokumentasi Foto</small>
-          <strong>${fotoCount} Foto ${isEdit ? 'Tersimpan / Terpilih' : 'Terkompresi Siap Dikirim ke Google Drive'}</strong>
+          <strong>${fotoCount} Foto ${isEdit ? 'Tersimpan / Terpilih' : 'Terkompresi Siap Dikirim.'}</strong>
         </div>
       </div>
     `;
@@ -459,7 +463,7 @@ const Wizard = {
 
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${isEdit ? 'Memperbarui di Web & Google Drive...' : 'Menyimpan ke Cloudflare & Google Drive...'}`;
+      btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${isEdit ? 'Memperbarui agenda...' : 'Menyimpan...'}`;
     }
 
     try {
@@ -512,7 +516,7 @@ const Wizard = {
       if (isEdit) {
         const res = await Api.updateLhk(Wizard.editingId, payload);
         if (res && res.sukses) {
-          alert('Alhamdulillah! Perubahan agenda dan foto berhasil diperbarui di Database & Google Drive! 🎉');
+          alert('Puji Tuhan Perubahan agenda dan foto berhasil diperbarui.');
           Wizard.cancelEdit();
           CmsRouter.navigate('riwayat');
         } else {
@@ -521,7 +525,7 @@ const Wizard = {
       } else {
         const res = await Api.saveLhk(payload);
         if (res && res.sukses) {
-          alert('Alhamdulillah! Laporan agenda harian berhasil disimpan ke Database & Google Drive! 🎉');
+          alert('Puji Tuhan Laporan agenda harian berhasil disimpan.');
           Wizard.resetForm();
           CmsRouter.navigate('riwayat');
         } else {
@@ -533,7 +537,7 @@ const Wizard = {
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.innerHTML = isEdit 
+        btn.innerHTML = isEdit
           ? 'Simpan Perubahan Agenda <i class="bi bi-check2-circle ms-2"></i>'
           : 'Kirim Data <i class="bi bi-send-fill ms-2"></i>';
       }
@@ -627,7 +631,7 @@ const Wizard = {
         preview0.classList.remove('d-none');
       }
       if (info0) {
-        info0.innerHTML = '<span class="badge bg-success-subtle text-success border border-success"><i class="bi bi-image me-1"></i>Foto Tersimpan di Drive</span> <small class="text-muted d-block">Pilih file baru jika ingin mengganti</small>';
+        info0.innerHTML = '<span class="badge bg-success-subtle text-success border border-success"><i class="bi bi-image me-1"></i>Foto Tersimpan</span> <small class="text-muted d-block">Pilih file baru jika ingin mengganti</small>';
       }
     } else {
       if (preview0) preview0.classList.add('d-none');
@@ -663,7 +667,7 @@ const Wizard = {
           prevEl.classList.remove('d-none');
         }
         if (infoEl) {
-          infoEl.innerHTML = '<span class="badge bg-success-subtle text-success border border-success"><i class="bi bi-image me-1"></i>Foto Tersimpan di Drive</span> <small class="text-muted d-block">Pilih file baru jika ingin mengganti</small>';
+          infoEl.innerHTML = '<span class="badge bg-success-subtle text-success border border-success"><i class="bi bi-image me-1"></i>Foto Tersimpan</span> <small class="text-muted d-block">Pilih file baru jika ingin mengganti</small>';
         }
       }
     }

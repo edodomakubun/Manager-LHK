@@ -343,12 +343,11 @@ const Riwayat = {
     // Gambar Utama
     const imgEl = document.getElementById('galeriModalImg');
     if (imgEl) {
-      imgEl.style.opacity = '0.5';
+      imgEl.style.opacity = '0.4';
       imgEl.src = imgUrl;
 
       const onImageLoaded = () => {
         imgEl.style.opacity = '1';
-        Riwayat.adjustGalleryModalSize();
       };
 
       if (imgEl.complete && imgEl.naturalWidth > 0) {
@@ -358,7 +357,6 @@ const Riwayat = {
         imgEl.onerror = () => {
           imgEl.style.opacity = '1';
           imgEl.src = 'https://placehold.co/600x400?text=Gagal+Memuat+Foto';
-          setTimeout(() => Riwayat.adjustGalleryModalSize(), 50);
         };
       }
     }
@@ -419,19 +417,7 @@ const Riwayat = {
   },
 
   adjustGalleryModalSize: function () {
-    const imgEl = document.getElementById('galeriModalImg');
-    const modalContent = document.querySelector('#modalGaleriFoto .modal-galeri-content');
-    if (!imgEl || !modalContent) return;
-
-    const rect = imgEl.getBoundingClientRect();
-    const imgWidth = rect.width;
-    if (imgWidth > 0) {
-      const padding = 24;
-      const maxAvailable = Math.floor(window.innerWidth * 0.94);
-      const targetWidth = Math.max(280, Math.min(Math.ceil(imgWidth + padding), maxAvailable));
-      modalContent.style.maxWidth = `${targetWidth}px`;
-      modalContent.style.width = `${targetWidth}px`;
-    }
+    // Ukuran bingkai kini stabil & foto otomatis menyesuaikan via CSS (object-fit: contain)
   },
 
   // --- EDIT AGENDA (MEMBUKA FORM WIZARD INPUT DALAM MODE EDIT) ---
@@ -531,26 +517,6 @@ document.addEventListener('keydown', function (e) {
     } else if (e.key === 'ArrowLeft') {
       Riwayat.prevPhoto();
     }
-  }
-});
-
-window.addEventListener('resize', function () {
-  const modalGaleri = document.getElementById('modalGaleriFoto');
-  if (modalGaleri && modalGaleri.classList.contains('show')) {
-    Riwayat.adjustGalleryModalSize();
-  }
-});
-
-document.addEventListener('DOMContentLoaded', function () {
-  const modalGaleriEl = document.getElementById('modalGaleriFoto');
-  if (modalGaleriEl) {
-    modalGaleriEl.addEventListener('hidden.bs.modal', function () {
-      const content = modalGaleriEl.querySelector('.modal-galeri-content');
-      if (content) {
-        content.style.maxWidth = '';
-        content.style.width = '';
-      }
-    });
   }
 });
 

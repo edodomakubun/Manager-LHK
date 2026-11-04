@@ -177,7 +177,7 @@ const CpTpManager = {
   },
 
   deleteItem: async function (id) {
-    if (!confirm('Hapus CP & TP ini dari bank data?')) return;
+    if (!await CMSDialog.confirm('Hapus CP & TP ini dari bank data?', { title: 'Hapus CP & TP', confirmText: 'Ya, Hapus', isDanger: true })) return;
     try {
       await Api.deleteCpTp(id);
       CpTpManager.refreshList();

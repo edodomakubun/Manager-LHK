@@ -392,60 +392,98 @@ body {
   100% { background-position: -200% 0; }
 }
 
-/* LIGHTBOX & GALERI FOTO INTERAKTIF */
+/* LIGHTBOX & GALERI FOTO INTERAKTIF (BINGKAI KONSISTEN & FOTO ADAPTIF) */
+#modalGaleriFoto .modal-dialog,
 #modalGaleriFoto .modal-galeri-dialog {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(100% - 3.5rem);
-  margin: 1.75rem auto;
-  width: -webkit-fit-content;
-  width: -moz-fit-content;
-  width: fit-content;
-  max-width: 94vw;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 95vw !important;
+  max-width: 800px !important;
+  margin: 1.25rem auto !important;
 }
 
+#modalGaleriFoto .modal-content,
 #modalGaleriFoto .modal-galeri-content {
-  width: -webkit-fit-content;
-  width: -moz-fit-content;
-  width: fit-content;
-  min-width: 280px;
-  max-width: 94vw;
-  margin: 0 auto;
-  transition: max-width 0.25s ease, width 0.25s ease;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  background: #0f172a !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6) !important;
+  border-radius: 1.25rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+#modalGaleriFoto .modal-body {
+  padding: 1rem !important;
 }
 
 #modalGaleriFoto .galeri-img-wrapper {
-  display: inline-block;
-  position: relative;
-  max-width: 100%;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  width: 100% !important;
+  height: 54vh !important;
+  min-height: 350px !important;
+  max-height: 540px !important;
+  background: #020617 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden !important;
+  padding: 8px !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 576px) {
+  #modalGaleriFoto .modal-dialog,
+  #modalGaleriFoto .modal-galeri-dialog {
+    width: 96vw !important;
+    margin: 0.5rem auto !important;
+  }
+  #modalGaleriFoto .modal-body {
+    padding: 0.5rem !important;
+  }
+  #modalGaleriFoto .galeri-img-wrapper {
+    height: 48vh !important;
+    min-height: 280px !important;
+    padding: 4px !important;
+  }
 }
 
 #modalGaleriFoto #galeriModalImg {
-  max-height: 65vh;
-  max-width: 88vw;
-  width: auto;
-  height: auto;
-  display: block;
-  margin: 0 auto;
-  object-fit: contain;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  width: auto !important;
+  height: auto !important;
+  display: block !important;
+  margin: auto !important;
+  object-fit: contain !important;
+  border-radius: 0.35rem !important;
+  transition: opacity 0.2s ease !important;
+  user-select: none !important;
 }
 
 .btn-galeri-nav {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.65) !important;
+  background: rgba(15, 23, 42, 0.75) !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
   color: #fff !important;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   transition: all 0.2s ease;
+  z-index: 10;
 }
 .btn-galeri-nav:hover {
   background: #10b981 !important;
   border-color: #10b981 !important;
-  transform: translateY(-50%) scale(1.08);
+  transform: translateY(-50%) scale(1.1);
 }
 .galeri-thumb-item {
   width: 52px;
@@ -466,6 +504,70 @@ body {
   border-color: #10b981 !important;
   opacity: 1;
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+}
+
+/* ========================================================
+   CUSTOM DIALOG MODAL (PENGGANTI POPUP BROWSER)
+   ======================================================== */
+#modalCustomDialog .modal-content {
+  border-radius: 1.25rem !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22) !important;
+  animation: dialogPopIn 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes dialogPopIn {
+  from {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+#dialogIconBox {
+  transition: transform 0.2s ease;
+}
+
+#dialogIconBox i {
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.12));
+}
+
+/* ========================================================
+   HALAMAN INPUT LHK WIZARD: FULL LAYAR PADA PC / LAPTOP
+   ======================================================== */
+#view-input .card-cms {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 0 2rem 0 !important;
+}
+
+@media (min-width: 992px) {
+  #view-input .card-cms-body {
+    padding: 2rem 2.5rem !important;
+  }
+  #view-input .step-indicator {
+    padding: 0.5rem 0.5rem;
+    margin-bottom: 1.75rem;
+  }
+  #view-input .step-indicator span {
+    font-size: 0.92rem;
+    font-weight: 700;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    background: #f1f5f9;
+  }
+  #view-input .step-indicator span.active {
+    background: #ecfdf5;
+    color: #059669;
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.15);
+  }
+  #view-input .step-indicator span.done {
+    background: #f0fdf4;
+    color: #10b981;
+  }
 }
 
 

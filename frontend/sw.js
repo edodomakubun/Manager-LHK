@@ -3,7 +3,7 @@
  * Versi Cache: v1.0.0
  */
 
-const CACHE_NAME = 'lhk-cms-v1.8';
+const CACHE_NAME = 'lhk-cms-v2.7';
 
 const STATIC_ASSETS = [
   '/',
@@ -12,6 +12,7 @@ const STATIC_ASSETS = [
   '/css/style.css',
   '/css/mobile-first.css',
   '/css/cms-desktop.css',
+  '/js/dialog.js',
   '/js/api.js',
   '/js/auth.js',
   '/js/cms-router.js',

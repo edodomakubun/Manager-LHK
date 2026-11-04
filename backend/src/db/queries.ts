@@ -260,8 +260,12 @@ export class DatabaseQueries {
     return res.meta.last_row_id as number;
   }
 
-  async deleteUserDocument(id: number): Promise<void> {
-    await this.db.prepare('DELETE FROM user_documents WHERE id = ?').bind(id).run();
+  async deleteUserDocument(id: number, userId?: string, role?: string): Promise<void> {
+    if (role === 'admin' || !userId) {
+      await this.db.prepare('DELETE FROM user_documents WHERE id = ?').bind(id).run();
+    } else {
+      await this.db.prepare('DELETE FROM user_documents WHERE id = ? AND user_id = ?').bind(id, userId).run();
+    }
   }
 
   // ========================================================

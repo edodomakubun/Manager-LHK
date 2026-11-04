@@ -1,6 +1,6 @@
 /**
  * ========================================================
- * 📂 ARSIP DOKUMEN LAPORAN & GENERATOR DOKUMEN (PDF/WORD)
+ * 📂 ARSIP DOKUMEN LAPORAN & GENERATOR DOKUMEN WORD (.DOCX)
  * ========================================================
  */
 
@@ -82,19 +82,18 @@ const Dokumen = {
     `;
 
     docs.forEach(doc => {
-      const isPdf = doc.format === 'pdf';
       const timeInfo = Dokumen.formatWaktuLengkap(doc.generated_at);
       html += `
         <div class="card-cms p-3 mb-3">
           <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <div class="d-flex align-items-center gap-3">
-              <div class="rounded-3 p-2 ${isPdf ? 'bg-danger-subtle text-danger' : 'bg-primary-subtle text-primary'}" style="font-size: 1.8rem;">
-                <i class="bi ${isPdf ? 'bi-file-earmark-pdf-fill' : 'bi-file-earmark-word-fill'}"></i>
+              <div class="rounded-3 p-2 bg-primary-subtle text-primary" style="font-size: 1.8rem;">
+                <i class="bi bi-file-earmark-word-fill"></i>
               </div>
               <div>
                 <h6 class="mb-1 fw-bold text-dark">${doc.nama_file}</h6>
                 <div class="small text-muted d-flex flex-wrap align-items-center gap-2">
-                  <span class="badge ${isPdf ? 'bg-danger' : 'bg-primary'}">${doc.format.toUpperCase()}</span>
+                  <span class="badge bg-primary">${(doc.format || 'docx').toUpperCase()}</span>
                   <span><i class="bi bi-calendar-check me-1 text-success"></i>Periode: <strong>${doc.bulan} (${doc.tahun_ajaran})</strong></span>
                   <span>•</span>
                   <span><i class="bi bi-layers me-1 text-info"></i>${doc.total_kegiatan} Kegiatan</span>
@@ -112,7 +111,7 @@ const Dokumen = {
               <button class="btn btn-sm btn-light border rounded-pill px-2" onclick="Dokumen.salinLink('${doc.doc_url.startsWith('/') ? window.location.origin + doc.doc_url + '?token=' + encodeURIComponent(Api.getToken()) : doc.doc_url}')" title="Salin Tautan">
                 <i class="bi bi-clipboard"></i>
               </button>
-              <button class="btn btn-sm btn-outline-danger border-0 rounded-pill px-2" onclick="Dokumen.hapusArsip(${doc.id})" title="Hapus dari Arsip">
+              <button class="btn btn-sm btn-outline-danger border-0 rounded-pill px-2" onclick="Dokumen.hapusArsip('${doc.id}')" title="Hapus dari Arsip">
                 <i class="bi bi-trash3"></i>
               </button>
             </div>
@@ -124,24 +123,36 @@ const Dokumen = {
     container.innerHTML = html;
   },
 
-  salinLink: function (url) {
+  salinLink: async function (url) {
     if (!url) return;
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(() => {
-        alert('Tautan dokumen berhasil disalin ke clipboard! 📋');
-      }).catch(() => prompt("Salin tautan dokumen:", url));
+        CMSDialog.success('Tautan dokumen berhasil disalin ke clipboard! 📋');
+      }).catch(async () => {
+        await CMSDialog.prompt("Salin tautan dokumen berikut:", url, { title: "Tautan Dokumen" });
+      });
     } else {
-      prompt("Salin tautan dokumen:", url);
+      await CMSDialog.prompt("Salin tautan dokumen berikut:", url, { title: "Tautan Dokumen" });
     }
   },
 
   hapusArsip: async function (id) {
-    if (!confirm('Hapus catatan arsip dokumen ini? (File di Google Drive tidak terhapus)')) return;
+    const yakin = await CMSDialog.confirm('Hapus catatan arsip dokumen ini? (File di Google Drive tidak terhapus)', {
+      title: 'Hapus Catatan Arsip',
+      confirmText: 'Ya, Hapus',
+      cancelText: 'Batal',
+      isDanger: true
+    });
+    if (!yakin) return;
     try {
-      await Api.deleteDocument(id);
-      Dokumen.load();
+      const res = await Api.deleteDocument(id);
+      if (res && res.sukses) {
+        Dokumen.load();
+      } else {
+        throw new Error((res && res.pesan) || 'Gagal menghapus arsip.');
+      }
     } catch (e) {
-      alert('Gagal menghapus arsip: ' + e.message);
+      CMSDialog.error('Gagal menghapus arsip: ' + (e.message || e));
     }
   },
 

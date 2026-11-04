@@ -166,9 +166,14 @@ documentRoutes.get('/download/*', async (c) => {
  * DELETE /api/documents/:id - Hapus catatan arsip dokumen
  */
 documentRoutes.delete('/:id', async (c) => {
-  const id = parseInt(c.req.param('id'), 10);
+  const session = c.get('user');
+  const rawId = c.req.param('id');
+  const id = parseInt(rawId, 10);
+  if (isNaN(id)) {
+    return c.json({ sukses: false, pesan: 'ID arsip dokumen tidak valid.' }, 400);
+  }
   const db = new DatabaseQueries(c.env.DB);
-  await db.deleteUserDocument(id);
+  await db.deleteUserDocument(id, session.id, session.role);
 
   return c.json({ sukses: true, pesan: 'Catatan arsip dokumen berhasil dihapus!' });
 });
