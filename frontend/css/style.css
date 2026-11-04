@@ -391,3 +391,41 @@ body {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* LIGHTBOX & GALERI FOTO INTERAKTIF */
+.btn-galeri-nav {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #fff !important;
+  transition: all 0.2s ease;
+}
+.btn-galeri-nav:hover {
+  background: #10b981 !important;
+  border-color: #10b981 !important;
+  transform: translateY(-50%) scale(1.1);
+}
+.galeri-thumb-item {
+  width: 58px;
+  height: 58px;
+  border-radius: 8px;
+  cursor: pointer;
+  object-fit: cover;
+  border: 2px solid transparent;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.galeri-thumb-item:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+.galeri-thumb-item.active {
+  border-color: #10b981 !important;
+  opacity: 1;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+}

@@ -161,9 +161,9 @@ const Riwayat = {
             <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
               <div class="d-flex align-items-center gap-1 flex-wrap">
                 <span class="timeline-date-badge"><i class="bi bi-calendar3 me-1"></i>${r.tanggal_teks || r.tanggal}</span>
-                ${r.kelas 
-                  ? `<span class="badge bg-success text-white px-2 py-1 shadow-sm"><i class="bi bi-mortarboard-fill me-1"></i>${r.kelas}</span>` 
-                  : '<span class="badge bg-secondary-subtle text-secondary border px-2 py-1"><i class="bi bi-briefcase me-1"></i>Non Tatap Muka</span>'}
+                ${r.kelas
+            ? `<span class="badge bg-success text-white px-2 py-1 shadow-sm"><i class="bi bi-mortarboard-fill me-1"></i>${r.kelas}</span>`
+            : '<span class="badge bg-secondary-subtle text-secondary border px-2 py-1"><i class="bi bi-briefcase me-1"></i>Non Tatap Muka</span>'}
               </div>
               <span class="badge bg-light text-dark border">Vol: <strong>${r.volume || 0} Kegiatan</strong></span>
             </div>
@@ -188,10 +188,10 @@ const Riwayat = {
 
             ${fotoArr.length > 0 ? `
             <div class="timeline-photos-grid">
-              ${fotoArr.map(id => `
+              ${fotoArr.map((id, fIdx) => `
                 <img src="https://lh3.googleusercontent.com/d/${id}" class="timeline-photo-thumb" 
                      onerror="this.src='https://placehold.co/100x100?text=Foto'" 
-                     onclick="Riwayat.openPhotoModal('${id}')" title="Klik untuk perbesar">
+                     onclick="Riwayat.openGalleryModal('${r.id}', ${fIdx})" title="Klik untuk perbesar galeri">
               `).join('')}
             </div>` : ''}
 
@@ -252,22 +252,154 @@ const Riwayat = {
     }
   },
 
+  // --- GALERI FOTO INTERAKTIF DENGAN PREVIEW & NAVIGASI MULTI-FOTO ---
+  currentGallery: {
+    photos: [],
+    currentIndex: 0,
+    title: '',
+    subtitle: ''
+  },
+
   openPhotoModal: function (driveId) {
+    Riwayat.currentGallery = {
+      photos: [driveId],
+      currentIndex: 0,
+      title: 'Dokumentasi Agenda',
+      subtitle: ''
+    };
+    Riwayat.updateGalleryDisplay();
     const modalEl = document.getElementById('modalGaleriFoto');
-    const imgEl = document.getElementById('galeriModalImg');
-    if (modalEl && imgEl) {
-      imgEl.src = `https://lh3.googleusercontent.com/d/${driveId}`;
+    if (modalEl) {
       const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
       bsModal.show();
     }
   },
 
-  openGalleryModal: function (recordId) {
+  openGalleryModal: function (recordId, startIndex = 0) {
     const record = Riwayat.activeRecords.find(r => r.id === recordId);
     if (!record) return;
-    const fotoArr = [record.foto_tm_id, record.foto_ntm1_id, record.foto_ntm2_id, record.foto_ntm3_id, record.foto_ntm4_id, record.foto_ntm5_id].filter(id => id && id.trim() !== '');
-    if (fotoArr.length > 0) {
-      Riwayat.openPhotoModal(fotoArr[0]);
+    const fotoArr = [
+      record.foto_tm_id,
+      record.foto_ntm1_id,
+      record.foto_ntm2_id,
+      record.foto_ntm3_id,
+      record.foto_ntm4_id,
+      record.foto_ntm5_id
+    ].filter(id => id && id.trim() !== '');
+
+    if (fotoArr.length === 0) return;
+
+    Riwayat.currentGallery = {
+      photos: fotoArr,
+      currentIndex: (startIndex >= 0 && startIndex < fotoArr.length) ? startIndex : 0,
+      title: 'Dokumentasi: ' + (record.kelas ? record.kelas + ' - ' : '') + (record.tanggal_teks || record.tanggal || 'Agenda'),
+      subtitle: (record.cp ? 'CP: ' + record.cp.substring(0, 60) + (record.cp.length > 60 ? '...' : '') : (record.non_tatap_muka ? 'Non Tatap Muka' : ''))
+    };
+
+    Riwayat.updateGalleryDisplay();
+
+    const modalEl = document.getElementById('modalGaleriFoto');
+    if (modalEl) {
+      const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      bsModal.show();
+    }
+  },
+
+  nextPhoto: function () {
+    const g = Riwayat.currentGallery;
+    if (!g.photos || g.photos.length <= 1) return;
+    // Opsi A: Infinite loop / carousel
+    g.currentIndex = (g.currentIndex + 1) % g.photos.length;
+    Riwayat.updateGalleryDisplay();
+  },
+
+  prevPhoto: function () {
+    const g = Riwayat.currentGallery;
+    if (!g.photos || g.photos.length <= 1) return;
+    // Opsi A: Infinite loop / carousel
+    g.currentIndex = (g.currentIndex - 1 + g.photos.length) % g.photos.length;
+    Riwayat.updateGalleryDisplay();
+  },
+
+  goToPhoto: function (index) {
+    const g = Riwayat.currentGallery;
+    if (!g.photos || index < 0 || index >= g.photos.length) return;
+    g.currentIndex = index;
+    Riwayat.updateGalleryDisplay();
+  },
+
+  updateGalleryDisplay: function () {
+    const g = Riwayat.currentGallery;
+    const total = g.photos.length;
+    const currentId = g.photos[g.currentIndex];
+    const imgUrl = `https://lh3.googleusercontent.com/d/${currentId}`;
+
+    // Header info
+    const elTitle = document.getElementById('galeriModalTitle');
+    const elSubtitle = document.getElementById('galeriModalSubtitle');
+    if (elTitle) elTitle.innerHTML = `<i class="bi bi-images text-success me-2"></i>${g.title || 'Dokumentasi Agenda'}`;
+    if (elSubtitle) elSubtitle.textContent = g.subtitle || '';
+
+    // Gambar Utama
+    const imgEl = document.getElementById('galeriModalImg');
+    if (imgEl) {
+      imgEl.style.opacity = '0.5';
+      imgEl.src = imgUrl;
+      imgEl.onload = () => { imgEl.style.opacity = '1'; };
+      imgEl.onerror = () => {
+        imgEl.style.opacity = '1';
+        imgEl.src = 'https://placehold.co/600x400?text=Gagal+Memuat+Foto';
+      };
+    }
+
+    // Tombol Download / Buka Asli
+    const btnDownload = document.getElementById('btnGaleriDownload');
+    if (btnDownload) {
+      btnDownload.href = imgUrl;
+    }
+
+    // Counter (Foto X dari Y)
+    const elCounter = document.getElementById('galeriCounter');
+    if (elCounter) {
+      elCounter.textContent = `Foto ${g.currentIndex + 1} dari ${total}`;
+    }
+
+    // Navigasi Prev & Next Buttons (Sembunyikan jika hanya 1 foto)
+    const btnPrev = document.getElementById('btnGaleriPrev');
+    const btnNext = document.getElementById('btnGaleriNext');
+    if (total > 1) {
+      if (btnPrev) btnPrev.classList.remove('d-none');
+      if (btnNext) btnNext.classList.remove('d-none');
+    } else {
+      if (btnPrev) btnPrev.classList.add('d-none');
+      if (btnNext) btnNext.classList.add('d-none');
+    }
+
+    // Thumbnail Strip Preview
+    const stripWrapper = document.getElementById('galeriThumbnailStripWrapper');
+    const stripContainer = document.getElementById('galeriThumbnailStrip');
+
+    if (total > 1 && stripWrapper && stripContainer) {
+      stripWrapper.classList.remove('d-none');
+      let thumbHtml = '';
+      g.photos.forEach((id, idx) => {
+        const isActive = idx === g.currentIndex;
+        thumbHtml += `
+          <img src="https://lh3.googleusercontent.com/d/${id}" 
+               class="galeri-thumb-item ${isActive ? 'active' : ''}" 
+               onclick="Riwayat.goToPhoto(${idx})"
+               onerror="this.src='https://placehold.co/60x60?text=Foto'"
+               title="Foto ke-${idx + 1}">
+        `;
+      });
+      stripContainer.innerHTML = thumbHtml;
+
+      const activeEl = stripContainer.querySelector('.galeri-thumb-item.active');
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    } else if (stripWrapper) {
+      stripWrapper.classList.add('d-none');
     }
   },
 
@@ -358,6 +490,18 @@ const Riwayat = {
     }
   }
 };
+
+// Keyboard navigation listener untuk Galeri Foto
+document.addEventListener('keydown', function (e) {
+  const modalGaleri = document.getElementById('modalGaleriFoto');
+  if (modalGaleri && modalGaleri.classList.contains('show')) {
+    if (e.key === 'ArrowRight') {
+      Riwayat.nextPhoto();
+    } else if (e.key === 'ArrowLeft') {
+      Riwayat.prevPhoto();
+    }
+  }
+});
 
 window.Riwayat = Riwayat;
 
