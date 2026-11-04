@@ -33,6 +33,28 @@ const Dokumen = {
     }
   },
 
+  formatWaktuLengkap: function (dateStr) {
+    if (!dateStr) return { tgl: '-', jam: '-', full: '-' };
+    let d = new Date(dateStr.includes('T') || dateStr.endsWith('Z') ? dateStr : dateStr.replace(' ', 'T') + 'Z');
+    if (isNaN(d.getTime())) {
+      d = new Date(dateStr);
+    }
+    if (isNaN(d.getTime())) return { tgl: dateStr, jam: '-', full: dateStr };
+
+    const jam = String(d.getHours()).padStart(2, '0');
+    const menit = String(d.getMinutes()).padStart(2, '0');
+    const detik = String(d.getSeconds()).padStart(2, '0');
+    const waktuJam = `${jam}:${menit}:${detik}`;
+
+    const tgl = d.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+
+    return { tgl, jam: waktuJam, full: `${tgl} • ${waktuJam}` };
+  },
+
   render: function (docs) {
     const container = document.getElementById('arsipDokumenContainer');
     if (!container) return;
@@ -61,6 +83,7 @@ const Dokumen = {
 
     docs.forEach(doc => {
       const isPdf = doc.format === 'pdf';
+      const timeInfo = Dokumen.formatWaktuLengkap(doc.generated_at);
       html += `
         <div class="card-cms p-3 mb-3">
           <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
@@ -70,10 +93,15 @@ const Dokumen = {
               </div>
               <div>
                 <h6 class="mb-1 fw-bold text-dark">${doc.nama_file}</h6>
-                <div class="small text-muted">
-                  <span class="badge ${isPdf ? 'bg-danger' : 'bg-primary'} me-2">${doc.format.toUpperCase()}</span>
-                  <span><i class="bi bi-calendar-check me-1"></i>Periode: <strong>${doc.bulan} (${doc.tahun_ajaran})</strong></span> • 
-                  <span>${doc.total_kegiatan} Kegiatan</span>
+                <div class="small text-muted d-flex flex-wrap align-items-center gap-2">
+                  <span class="badge ${isPdf ? 'bg-danger' : 'bg-primary'}">${doc.format.toUpperCase()}</span>
+                  <span><i class="bi bi-calendar-check me-1 text-success"></i>Periode: <strong>${doc.bulan} (${doc.tahun_ajaran})</strong></span>
+                  <span>•</span>
+                  <span><i class="bi bi-layers me-1 text-info"></i>${doc.total_kegiatan} Kegiatan</span>
+                  <span>•</span>
+                  <span class="badge bg-light text-dark border">
+                    <i class="bi bi-clock-history me-1 text-primary"></i>Waktu Download: <strong class="text-primary">${timeInfo.jam}</strong> <small class="text-muted">(${timeInfo.tgl})</small>
+                  </span>
                 </div>
               </div>
             </div>
@@ -178,6 +206,13 @@ const Dokumen = {
           document.getElementById('namaFileSukses').innerText = res.document.nama_file;
           document.getElementById('formatSukses').innerText = res.document.format.toUpperCase();
           document.getElementById('totalKegiatanSukses').innerText = res.document.total_kegiatan + ' Kegiatan';
+
+          const now = new Date();
+          const jam = String(now.getHours()).padStart(2, '0');
+          const menit = String(now.getMinutes()).padStart(2, '0');
+          const detik = String(now.getSeconds()).padStart(2, '0');
+          const elWaktu = document.getElementById('waktuUnduhSukses');
+          if (elWaktu) elWaktu.innerText = `${jam}:${menit}:${detik}`;
 
           const btnBuka = document.getElementById('btnBukaDokumen');
           if (btnBuka) {

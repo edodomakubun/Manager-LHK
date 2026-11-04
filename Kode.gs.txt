@@ -213,6 +213,51 @@ function buatLaporanBulanan(bulanTarget, tahunAjaranTarget, formatFile) {
       }
       
       if (!adaGambar) selFoto.setText("-");
+
+      // Normalisasi spasi paragraf dan bantalan sel (cell padding) agar rapat dan presisi sesuai template
+      for (let c = 0; c < barisBaru.getNumCells(); c++) {
+        const sel = barisBaru.getCell(c);
+        sel.setPaddingTop(3);
+        sel.setPaddingBottom(3);
+        sel.setPaddingLeft(5);
+        sel.setPaddingRight(5);
+
+        // Bersihkan paragraf kosong dan atur spasi 0pt & line spacing 1.0 (Single)
+        const numAnak = sel.getNumChildren();
+        for (let p = numAnak - 1; p >= 0; p--) {
+          const anak = sel.getChild(p);
+          if (anak.getType() === DocumentApp.ElementType.PARAGRAPH) {
+            const pObj = anak.asParagraph();
+            const teksP = pObj.getText().trim();
+            if (teksP === "" && sel.getNumChildren() > 1 && c !== 4) {
+              pObj.removeFromParent();
+            } else {
+              pObj.setSpacingBefore(0);
+              pObj.setSpacingAfter(0);
+              pObj.setLineSpacing(1.0);
+            }
+          }
+        }
+      }
+    }
+
+    // Pastikan baris header tabel juga memiliki spasi rapat dan padding yang rapi
+    if (table.getNumRows() > 0) {
+      const headerRow = table.getRow(0);
+      for (let c = 0; c < headerRow.getNumCells(); c++) {
+        const selH = headerRow.getCell(c);
+        selH.setPaddingTop(4);
+        selH.setPaddingBottom(4);
+        for (let p = 0; p < selH.getNumChildren(); p++) {
+          const anak = selH.getChild(p);
+          if (anak.getType() === DocumentApp.ElementType.PARAGRAPH) {
+            const pObj = anak.asParagraph();
+            pObj.setSpacingBefore(0);
+            pObj.setSpacingAfter(0);
+            pObj.setLineSpacing(1.0);
+          }
+        }
+      }
     }
     
     // Hapus baris template (indeks 1)
